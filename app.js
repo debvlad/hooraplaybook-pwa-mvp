@@ -775,3 +775,26 @@ function handleUpgrade(plan) { const user = currentUser(); if (user && plan !== 
 function shareGame(id) { const g = state.games.find(x=>x.id===id); if (navigator.share) navigator.share({title:g.title,text:g.shortDescription,url:location.href}); else navigator.clipboard?.writeText(location.href).then(()=>toast('Link copied.')); }
 function randomIcebreaker() { const prompts = ['Would you rather lead a game with no materials or too many materials?', 'What is one game you loved as a kid?', 'Trivia: Which animal gives birth to the biggest babies? The blue whale.', 'Dad joke: Did you hear about the watermelon wedding? They cantaloupe.', 'Quick challenge: In 20 seconds, name five things you can use as game supplies.']; byId('icebreaker-prompt').textContent = prompts[Math.floor(Math.random()*prompts.length)]; }
 function toast(message) { clearTimeout(toastTimer); let el = document.querySelector('.toast'); if (!el) { el = document.createElement('div'); el.className='toast'; document.body.appendChild(el); } el.textContent = message; toastTimer = setTimeout(()=>el.remove(), 3000); }
+window.testHooraSupabase = async function () {
+  if (!window.hooraSupabase) {
+    console.error('Supabase client is not loaded.');
+    return;
+  }
+
+  console.log('Testing HooraPlaybook Supabase connection...');
+
+  const authResult = await window.hooraSupabase.auth.getSession();
+  console.log('Auth session result:', authResult);
+
+  const gamesResult = await window.hooraSupabase
+    .from('games')
+    .select('id,title')
+    .limit(3);
+
+  console.log('Games query result:', gamesResult);
+
+  return {
+    auth: authResult,
+    games: gamesResult,
+  };
+};
