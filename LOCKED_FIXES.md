@@ -44,3 +44,17 @@ These fixes must never be reverted:
 - Plan page Available materials must be a navigation button, not a text input.
 - Plan materials selector must show a tappable cloud of materials with “No Materials” first.
 - `CODING_INSTRUCTIONS.MD` must not describe full-screen display mode functionality.
+## Locked update — Plan and Smart Finder materials
+
+- Smart Finder must label the materials control as `Available Materials`.
+- Smart Finder `Available Materials` must be a navigation button with a right arrow, not a text input.
+- Smart Finder must not show preview/result cards under the `Find 3 Great Games` button.
+- Plan page must not show the plan creation form section with Plan name, session type, total minutes, group size, category, and Save Plan.
+- Saved plan cards must show a `Modify` button with `assets/edit-246.svg` to the left of `Rename`.
+- Modify Plan must list all games in the plan.
+- Modify Plan must support drag-and-drop reordering.
+- Modify Plan removable game cards must support iOS-style swipe left to remove.
+- Swipe left must reveal a red ribbon labeled `Remove`; removal happens only after passing the threshold and releasing.
+- Swipe removal must use Pointer Events, preserve vertical scrolling, avoid accidental click activation, and include a visible accessible Remove button.
+- Header HooraPlaybook text must remain live text and approximately 20% smaller than the previous oversized header text.
+- The search row must not show a second filter icon/button beside the search input when the header already has the filter icon.

@@ -285,3 +285,12 @@ This build preserves `LOCKED_FIXES.md` and applies new fixes as surgical patches
 - Game detail pages do not show Download / Print PDF.
 - Game detail actions are Rate This Game, Add Notes, and Add to Plan.
 - Plan Available materials is a navigation button to material chips, with No Materials first.
+
+## Latest locked UI update
+
+- Smart Finder now uses `Available Materials` as a navigation button, not a text input.
+- Smart Finder no longer displays preview result cards under the `Find 3 Great Games` button.
+- Header wordmark text is live text and reduced by about 20%.
+- The Plan page now focuses on saved plans; the old plan creation form section is removed.
+- Saved plan cards now include Modify, Rename, and Delete.
+- Modify Plan supports drag reordering and iOS-style swipe-left Remove on plan games.

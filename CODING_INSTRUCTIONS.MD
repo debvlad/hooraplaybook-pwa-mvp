@@ -3044,3 +3044,49 @@ Every future change must preserve this route order and must pass the locked fixe
 - The Plan materials selector must use a cloud of tappable material chips.
 - “No Materials” must be the first material option.
 - Full-screen display-mode functionality must not be described or added back to the product specification.
+
+# Locked Update: Materials, Plan Page, and Swipe Removal
+
+These rules are permanent and must be preserved in every future code update.
+
+## Smart Finder Materials
+
+- The Smart Finder materials control must be labeled `Available Materials`.
+- It must not be a free-text input.
+- It must be a navigation-style button with a right arrow.
+- Tapping it opens a material selector with a cloud of material choices.
+- The first material choice must be `No Materials`.
+- The Smart Finder must not show preview/result cards directly under the `Find 3 Great Games` button.
+
+## Plan Page
+
+- The Plan page must not show the old plan creation form section.
+- Do not show Plan name, session type, total minutes, group size, category, or a Save Plan button as a large creation form on the Plan page.
+- The Plan page should focus on saved plans.
+- Saved plan games must remain clickable.
+- Saved plan cards must include `Modify`, `Rename`, and `Delete` actions.
+- The `Modify` button must use `assets/edit-246.svg` and appear to the left of `Rename`.
+
+## Modify Plan Interaction
+
+- The Modify Plan screen must list all games in the selected plan.
+- Users must be able to change the order by dragging games up or down.
+- Users must be able to remove a game with an iOS-style swipe left interaction.
+- Swipe left should reveal a red removal ribbon behind the card on the right.
+- The ribbon must say `Remove` in white.
+- Do not remove the game when the swipe starts.
+- Remove the game only after the user swipes past the threshold and releases.
+- If the user releases before the threshold, the card must snap back.
+- Use Pointer Events for touch and mouse support.
+- Keep vertical scrolling working.
+- Only removable list cards should use swipe behavior.
+- Include an accessible visible `Remove` control for keyboard and screen reader users.
+- Do not use browser `confirm()` popups for this interaction.
+
+## Header Text Size Rule
+
+The HooraPlaybook header wordmark must be live styled text, not a wordmark image. It must remain approximately 20% smaller than the previous oversized version while preserving the purple `Hoora` and navy `Playbook` styling.
+
+## Search Row Filter Rule
+
+Do not place a second filter button beside the search field when the header already contains the filter icon.
