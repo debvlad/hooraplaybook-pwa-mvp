@@ -20,7 +20,7 @@ This generated MVP includes:
 - Admin user management with visible Grant 30 days and Disable controls
 - Admin coupon generation and redemption
 - Staff/admin submission publishing
-- Presentation view
+- Saved plan view
 - Supabase database schema
 - Supabase Edge Function starter files for Stripe Checkout, Stripe webhook, coupon generation, coupon redemption, and batch Markdown import
 
@@ -225,7 +225,7 @@ The entire game card is explicitly clickable from the Games section and Smart Fi
 - Game detail pages render with one header only: back arrow, HooraPlaybook logo, and Apple-style share icon.
 - Share actions copy/share only the canonical game URL, not the description text.
 - Display typography has been reduced by roughly 30% in visual weight for a lighter Fredoka look.
-- Game detail cards no longer show a Presentation View action.
+- Game detail cards no longer show full-screen display actions.
 
 ## Latest visual refresh
 
@@ -267,14 +267,21 @@ This build preserves `LOCKED_FIXES.md` and applies new fixes as surgical patches
 - Game detail header includes circular back chevron, logo mark, wordmark, and iOS share icon.
 - Add Game, Smart Finder, filtering, search, and My Plans use **Categories**, not a user-facing Purpose selector.
 - Standard categories are: Quick and simple, Wet-n-Wild, Team-building, Teams, Circle, Icebreakers, Adventure, Tag, Sport-n-fitness, Theatrical, Relays.
-- Visible Projector Mode entry points are removed.
+- Full-screen display-mode entry points are removed.
 - My Plans supports naming, saving, viewing, renaming, deleting, and clickable games.
 - Admin > Users uses responsive cards with Grant 30 Days and Disable/Enable visible without horizontal scrolling.
 
 ## Latest locked patch
 
-- All app headers use `assets/back-arrow-previous-page-button.jpg` for the back chevron.
+- All app headers use `assets/back_button.png` for the back chevron.
 - Header back behavior uses the internal route stack so opening a game from My Plans returns to the current Plan page.
 - Game/detail headers remain light and single-header only.
 - Add Game, Smart Finder, and My Plans use Categories, not Purpose.
-- Visible Projector Mode entry points remain removed.
+- Full-screen display-mode entry points remain removed.
+
+
+## Locked UI Rules
+
+- Game detail pages do not show Download / Print PDF.
+- Game detail actions are Rate This Game, Add Notes, and Add to Plan.
+- Plan Available materials is a navigation button to material chips, with No Materials first.

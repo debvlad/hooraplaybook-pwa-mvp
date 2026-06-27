@@ -1,9 +1,14 @@
 const APP_NAME = 'HooraPlaybook';
-const APP_LOGO = '<span class="brand-lockup"><img class="brand-mark" src="/assets/hooraplaybook-logo.png" alt=""><span class="brand-word"><span class="brand-hoora">Hoora</span><span class="brand-playbook">Playbook</span></span></span>';
-const BACK_BUTTON_IMG = '<img class="back-button-img" src="/assets/back_button.png" alt="">';
+const APP_LOGO = '<span class="brand-hoora">Hoora</span><span class="brand-playbook">Playbook</span>';
+const APP_BRAND = '<span class="brand-wrap"><img class="brand-logo-mark" src="/assets/hooraplaybook-logo.png" alt=""><span class="logo">' + APP_LOGO + '</span></span>';
+const BACK_BUTTON_HTML = '<img class="back-icon-img" src="/assets/back_button.png" alt="">';
+const FILTER_ICON_HTML = '<img class="header-icon-img" src="/assets/filter.png" alt="">';
+const SORT_ICON_HTML = '<img class="header-icon-img" src="/assets/sort.png" alt="">';
+const SHARE_ICON_HTML = '<img class="header-icon-img" src="/assets/ios-share.svg" alt="">';
+const STANDARD_CATEGORIES = ['Quick and simple','Wet-n-Wild','Team-building','Teams','Circle','Icebreakers','Adventure','Tag','Sport-n-fitness','Theatrical','Relays'];
+const MATERIAL_OPTIONS = ['No Materials','Cups','Paper','Balls','Chairs','Rope','Balloons','Cones','Tape','Hula hoops','Dice','Beanbags','Markers','Blindfolds','Pool noodles','Buckets','Music speaker'];
 const APP_KEY = 'hooraplaybook_pwa_state_v2';
 const COUPON_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const STANDARD_CATEGORIES = ['Quick and simple', 'Wet-n-Wild', 'Team-building', 'Teams', 'Circle', 'Icebreakers', 'Adventure', 'Tag', 'Sport-n-fitness', 'Theatrical', 'Relays'];
 
 const DEFAULT_GAMES = [
   {
@@ -61,7 +66,7 @@ const DEFAULT_GAMES = [
     debriefQuestions: ['What helped you remember?', 'How did the group respond to mistakes?'], bibleBridge: 'A gentle bridge to Galatians 6:2 about carrying one another’s burdens.', scripture: ['Galatians 6:2'], creator: 'HooraPlaybook Team', averageRating: 4.3, ratingCount: 7, reviewCount: 2, views: 110
   },
   {
-    id: 'four-corners-choice', slug: 'four-corners-choice', title: 'Four Corners Choice', accessLevel: 'free', featured: false, tested: true,
+    id: 'four-corners-choices', slug: 'four-corners-choices', title: 'Four Corners Choices', accessLevel: 'free', featured: false, tested: true,
     shortDescription: 'A movement icebreaker where corners of the room represent answers to simple questions.',
     description: 'A low-prep way to get a group moving and learning about each other.',
     purpose: ['Icebreaker', 'Fun', 'Classroom'], tags: ['All Play', 'Indoor', 'No Materials', 'Good for Newcomers', 'Low Prep'],
@@ -138,7 +143,6 @@ const SORT_OPTIONS = ['Best Match', 'Most Viewed', 'Most Reviewed', 'Highest Rat
 let state = loadState();
 let route = parseRoute();
 let toastTimer;
-let searchTimer;
 
 window.addEventListener('hashchange', () => { route = parseRoute(); render(); });
 window.addEventListener('online', render);
@@ -176,7 +180,8 @@ function loadState() {
     filters: [],
     sort: 'Best Match',
     search: '',
-    finder: { groupSize: 14, ageMin: 12, ageMax: 18, time: 20, space: 'indoor', materials: 'cups, paper', category: 'Team-building', safety: 'Low Risk', avoid: 'not embarrassing' }
+    finder: { groupSize: 14, ageMin: 12, ageMax: 18, time: 20, space: 'indoor', materials: 'cups, paper', category: 'Team-building', safety: 'Low Risk', avoid: 'not embarrassing' },
+    planMaterials: ['No Materials']
   };
   saveState(initial);
   return initial;
@@ -207,30 +212,29 @@ function escapeHTML(value = '') { return String(value).replace(/[&<>'"]/g, ch =>
 function slugify(value) { return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
 function byId(id) { return document.getElementById(id); }
 function appRoot() { return byId('app'); }
-function routeStack() {
-  try { return JSON.parse(sessionStorage.getItem('hp_route_stack') || '[]'); } catch (_) { return []; }
-}
-function saveRouteStack(stack) { sessionStorage.setItem('hp_route_stack', JSON.stringify(stack.slice(-30))); }
+let routeStack = JSON.parse(sessionStorage.getItem('hooraplaybook_route_stack') || '[]');
+function saveRouteStack() { sessionStorage.setItem('hooraplaybook_route_stack', JSON.stringify(routeStack.slice(-30))); }
 function go(path) {
-  const current = parseRoute().raw;
-  if (current !== path) {
-    const stack = routeStack();
-    stack.push(current);
-    saveRouteStack(stack);
+  if (route?.raw && route.raw !== path && !window.__skipRouteStack) {
+    routeStack.push(route.raw);
+    saveRouteStack();
   }
   window.__pendingScrollTop = true;
   window.location.hash = path;
 }
 function goBack() {
-  const current = parseRoute().raw;
-  const stack = routeStack();
-  let previous = stack.pop();
-  while (previous && previous === current) previous = stack.pop();
-  saveRouteStack(stack);
-  window.__pendingScrollTop = true;
-  if (previous) window.location.hash = previous;
-  else if (window.history.length > 1) window.history.back();
-  else window.location.hash = '/app/find';
+  let previous = routeStack.pop();
+  saveRouteStack();
+  while (previous && previous === route.raw) { previous = routeStack.pop(); saveRouteStack(); }
+  if (previous) {
+    window.__skipRouteStack = true;
+    window.__pendingScrollTop = true;
+    window.location.hash = previous;
+    setTimeout(() => { window.__skipRouteStack = false; }, 0);
+    return;
+  }
+  if (history.length > 1) history.back();
+  else go('/app/find');
 }
 
 function parseRoute() {
@@ -252,11 +256,9 @@ function render() {
   else root.innerHTML = renderPrivateRoute();
   bindEvents();
   if (window.__pendingScrollTop) {
-    requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      document.querySelectorAll('.app-frame, .content, main').forEach(el => { el.scrollTop = 0; });
-      window.__pendingScrollTop = false;
-    });
+    window.__pendingScrollTop = false;
+    window.scrollTo(0, 0);
+    document.querySelectorAll('.app-frame, .content, main').forEach(el => { try { el.scrollTop = 0; } catch (_) {} });
   }
 }
 
@@ -278,14 +280,14 @@ function publicShell(inner) {
 function renderLanding() {
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:36px">
-      <div class="logo" style="text-align:left">${APP_LOGO}</div>
+      <div class="brand-area" style="text-align:left">${APP_BRAND}</div>
       <div style="display:flex;gap:10px"><button class="btn btn-secondary" data-go="/login">Log in</button><button class="btn btn-primary" data-go="/signup">Start free</button></div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;align-items:center">
       <div>
         <div class="pro-badge" style="background:rgba(184,215,122,.2);color:#d7f49a;margin-bottom:14px">PWA MVP</div>
         <h1 style="font-size:clamp(42px,7vw,76px);line-height:.92;margin:0 0 18px;letter-spacing:-.07em">Find the right group game in 30 seconds.</h1>
-        <p style="font-size:20px;line-height:1.45;color:#d8dde2;max-width:620px">Tell HooraPlaybook your group size, age, time, space, category, and materials. Get safe, ready-to-lead games that fit the moment.</p>
+        <p style="font-size:20px;line-height:1.45;color:#d8dde2;max-width:620px">Tell HooraPlaybook your group size, age, time, space, categories, and materials. Get safe, ready-to-lead games that fit the moment.</p>
         <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:26px"><button class="btn btn-primary" data-go="/signup">Create account</button><button class="btn btn-secondary" data-go="/pricing">View pricing</button></div>
       </div>
       <div class="hero-card" style="color:var(--gp-text);padding:24px">
@@ -295,34 +297,40 @@ function renderLanding() {
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:34px">
-      ${['Group Leaders','Team Builders','Ministry Leaders'].map((t,i)=>`<div class="card" style="padding:20px;color:var(--gp-text)"><h3 style="margin:0 0 8px">${t}</h3><p style="margin:0;color:var(--gp-muted)">${['Games that fit your people, place, time, and supplies.','Purposeful activities for trust, communication, and leadership.','Games with optional Scripture bridges and discussion prompts.'][i]}</p></div>`).join('')}
+      ${['Group Leaders','Team Builders','Ministry Leaders'].map((t,i)=>`<div class="card" style="padding:20px;color:var(--gp-text)"><h3 style="margin:0 0 8px">${t}</h3><p style="margin:0;color:var(--gp-muted)">${['Games that fit your people, place, time, and supplies.','Category-based activities for trust, communication, and leadership.','Games with optional Scripture bridges and discussion prompts.'][i]}</p></div>`).join('')}
     </div>`;
 }
 function miniResult(g) { return `<div style="padding:12px 0;border-top:1px solid var(--gp-border)"><strong>${g.title}</strong><div style="color:var(--gp-muted);font-size:14px">${g.timeMin}–${g.timeMax} min · ${g.groupSizeMin}–${g.groupSizeMax} players · ${g.safety}</div></div>`; }
 
 function renderLogin() {
-  return `<div style="max-width:460px;margin:28px auto"><div class="logo" style="margin-bottom:24px">${APP_LOGO}</div><div class="card" style="padding:26px;color:var(--gp-text)"><h1>Log in</h1><p class="help">Demo accounts: admin@hooraplaybook.app / admin123, staff@hooraplaybook.app / staff123, pro@hooraplaybook.app / pro123, free@hooraplaybook.app / free123.</p><form id="login-form" class="form-grid"><label><span class="label">Email</span><input class="input" name="email" type="email" value="admin@hooraplaybook.app" required></label><label><span class="label">Password</span><input class="input" name="password" type="password" value="admin123" required></label><button class="btn btn-primary full">Log in</button><button type="button" class="btn btn-secondary full" data-go="/signup">Create account</button></form></div></div>`;
+  return `<div style="max-width:460px;margin:28px auto"><div class="brand-area" style="margin-bottom:24px">${APP_BRAND}</div><div class="card" style="padding:26px;color:var(--gp-text)"><h1>Log in</h1><p class="help">Demo accounts: admin@hooraplaybook.app / admin123, staff@hooraplaybook.app / staff123, pro@hooraplaybook.app / pro123, free@hooraplaybook.app / free123.</p><form id="login-form" class="form-grid"><label><span class="label">Email</span><input class="input" name="email" type="email" value="admin@hooraplaybook.app" required></label><label><span class="label">Password</span><input class="input" name="password" type="password" value="admin123" required></label><button class="btn btn-primary full">Log in</button><button type="button" class="btn btn-secondary full" data-go="/signup">Create account</button></form></div></div>`;
 }
 function renderSignup() {
-  return `<div style="max-width:460px;margin:28px auto"><div class="logo" style="margin-bottom:24px">${APP_LOGO}</div><div class="card" style="padding:26px;color:var(--gp-text)"><h1>Create account</h1><form id="signup-form" class="form-grid"><label><span class="label">Full name</span><input class="input" name="fullName" required></label><label><span class="label">Email</span><input class="input" name="email" type="email" required></label><label><span class="label">Password</span><input class="input" name="password" type="password" minlength="6" required></label><button class="btn btn-primary full">Start free</button><button type="button" class="btn btn-secondary full" data-go="/login">I already have an account</button></form></div></div>`;
+  return `<div style="max-width:460px;margin:28px auto"><div class="brand-area" style="margin-bottom:24px">${APP_BRAND}</div><div class="card" style="padding:26px;color:var(--gp-text)"><h1>Create account</h1><form id="signup-form" class="form-grid"><label><span class="label">Full name</span><input class="input" name="fullName" required></label><label><span class="label">Email</span><input class="input" name="email" type="email" required></label><label><span class="label">Password</span><input class="input" name="password" type="password" minlength="6" required></label><button class="btn btn-primary full">Start free</button><button type="button" class="btn btn-secondary full" data-go="/login">I already have an account</button></form></div></div>`;
 }
 function renderPricing() {
-  return `<div style="margin:24px auto;max-width:900px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><div class="logo">${APP_LOGO}</div><button class="btn btn-secondary" data-go="/app/find">Open app</button></div><h1 style="font-size:48px;line-height:1;margin:0 0 12px">Choose your plan</h1><p style="font-size:19px;color:#d8dde2">Launch-ready PWA flow: Stripe Payment Link now, authenticated Checkout + webhook in production.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:26px">${pricingCard('Free','$0','50 free games, basic search, 3 favorites',['Basic search','Rate games','Submit games'],false)}${pricingCard('PRO','$50/year','Full library, advanced filters, unlimited favorites, session builder',['Advanced filters','Session builder','PDF downloads','All future games'],true)}${pricingCard('Team','$149/year','Up to 5 seats, shared collections, private library',['Shared collections','Private tags','Admin controls'],false)}</div></div>`;
+  return `<div style="margin:24px auto;max-width:900px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><div class="brand-area">${APP_BRAND}</div><button class="btn btn-secondary" data-go="/app/find">Open app</button></div><h1 style="font-size:48px;line-height:1;margin:0 0 12px">Choose your plan</h1><p style="font-size:19px;color:#d8dde2">Launch-ready PWA flow: Stripe Payment Link now, authenticated Checkout + webhook in production.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:26px">${pricingCard('Free','$0','50 free games, basic search, 3 favorites',['Basic search','Rate games','Submit games'],false)}${pricingCard('PRO','$50/year','Full library, advanced filters, unlimited favorites, session builder',['Advanced filters','Session builder','Unlimited plans','All future games'],true)}${pricingCard('Team','$149/year','Up to 5 seats, shared collections, private library',['Shared collections','Private tags','Admin controls'],false)}</div></div>`;
 }
 function pricingCard(name, price, sub, items, featured) { return `<div class="card" style="padding:22px;color:var(--gp-text);border:${featured?'2px solid var(--gp-lime)':'0'}"><div class="pro-badge">${name}</div><h2 style="font-size:36px;margin:14px 0 4px">${price}</h2><p style="color:var(--gp-muted)">${sub}</p><ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul><button class="btn ${featured?'btn-primary':'btn-secondary'} full" data-upgrade="${name}">${featured?'Upgrade to PRO':'Get started'}</button></div>`; }
 function renderBillingSuccess() { return `<div class="card" style="padding:28px;color:var(--gp-text);max-width:560px;margin:auto"><h1>Thank you!</h1><p>Your payment was received. In production, HooraPlaybook polls Supabase subscription status and unlocks after the Stripe webhook updates access.</p><button class="btn btn-primary" data-go="/app/find">Open HooraPlaybook</button></div>`; }
+
+function isStandaloneGameRoute() {
+  return route.parts[0] === 'app' && route.parts[1] === 'games' && !!route.parts[2];
+}
 
 function renderPrivateRoute() {
   const main = route.parts[0];
   if (main === 'admin') return renderAdminRoute();
   if (main === 'staff') return renderStaffRoute();
   if (main === 'filter') return renderFilterScreen();
+  if (isStandaloneGameRoute()) return renderAppRoute();
   return renderAppShell(renderAppRoute());
 }
 
 function renderAppShell(inner, opts = {}) {
   const title = opts.title || '';
-  return `<div class="app-frame">${!navigator.onLine ? '<div class="offline-banner">Offline mode: payments, uploads, and submissions are disabled.</div>' : ''}<header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_IMG}</button><div class="${title ? 'topbar-title' : 'logo'}">${title || APP_LOGO}</div><div class="header-actions"><button class="icon-btn icon-img-btn" data-open-sort title="Sort" aria-label="Sort games"><img src="/assets/sort.png" alt=""></button><button class="icon-btn icon-img-btn" data-go="/filter" title="Filter" aria-label="Filter games"><img src="/assets/filter.png" alt=""></button></div></header>${inner}${renderBottomNav()}</div>`;
+  const back = opts.back;
+  return `<div class="app-frame">${!navigator.onLine ? '<div class="offline-banner">Offline mode: payments, uploads, and submissions are disabled.</div>' : ''}<header class="topbar"><button class="icon-btn back-btn" ${back ? `data-go="${back}"` : 'data-back'} aria-label="Back">${BACK_BUTTON_HTML}</button><div class="${title ? 'topbar-title' : 'brand-area'}">${title || APP_BRAND}</div><div class="header-actions"><button class="icon-btn" data-open-sort title="Sort" aria-label="Sort games">${SORT_ICON_HTML}</button><button class="icon-btn" data-go="/filter" title="Filter" aria-label="Filter games">${FILTER_ICON_HTML}</button></div></header>${inner}${renderBottomNav()}</div>`;
 }
 
 function renderBottomNav() {
@@ -342,6 +350,7 @@ function renderAppRoute() {
   if (p[1] === 'games' && p[2]) return renderGameDetail(p[2]);
   if (p[1] === 'favorites') return renderFavorites();
   if (p[1] === 'submit') return renderSubmit();
+  if (p[1] === 'plan' && p[2] === 'materials') return renderPlanMaterials();
   if (p[1] === 'plan') return renderPlan();
   if (p[1] === 'tools') return renderTools();
   if (p[1] === 'account') return renderAccount();
@@ -351,21 +360,20 @@ function renderAppRoute() {
 function renderFind() {
   const games = getFilteredGames();
   const user = currentUser();
-  return `<main class="content"><div class="search-row"><div class="search-box"><span class="search-icon">⌕</span><input id="search-input" value="${escapeHTML(state.search)}" placeholder="Search games, categories, materials…"></div></div>${renderMagicFinder()}<div class="section-title"><h2>Explore… ${games.length} games</h2><span>${hasProAccess(user)?'PRO access':'Free plan'}</span></div><div class="sort-row"><strong style="font-size:20px;color:var(--gp-muted);font-style:italic">SORT GAMES BY:</strong><button class="sort-trigger" data-open-sort>${state.sort}<span>⌄</span></button></div><div class="game-list">${games.map(renderGameCard).join('') || renderNoResults()}</div></main>${renderSortModalIfNeeded()}`;
+  return `<main class="content"><div class="search-row search-row-single"><div class="search-box"><span class="search-icon">⌕</span><input id="search-input" value="${escapeHTML(state.search)}" placeholder="Search games, categories, materials…"></div></div>${renderMagicFinder()}<div class="section-title"><h2>Explore… ${games.length} games</h2><span>${hasProAccess(user)?'PRO access':'Free plan'}</span></div><div class="sort-row"><strong style="font-size:20px;color:var(--gp-muted);font-style:italic">SORT GAMES BY:</strong><button class="sort-trigger" data-open-sort>${state.sort}<span>⌄</span></button></div><div class="game-list">${games.map(renderGameCard).join('') || renderNoResults()}</div></main>${renderSortModalIfNeeded()}`;
 }
 
 function renderMagicFinder() {
   const f = state.finder;
-  const selectedCategory = f.category || f.purpose || 'Team-building';
-  const results = scoreGames().slice(0,3);
-  return `<section class="hero-card"><h1>Tell us what you have.</h1><p>Smart Finder recommends games by age, group size, time, space, category, materials, and safety.</p><form id="finder-form" class="form-grid"><div class="two-col"><label><span class="label">Group size</span><input class="input" name="groupSize" type="number" value="${f.groupSize}"></label><label><span class="label">Minutes</span><input class="input" name="time" type="number" value="${f.time}"></label></div><div class="two-col"><label><span class="label">Ages from</span><input class="input" name="ageMin" type="number" value="${f.ageMin}"></label><label><span class="label">Ages to</span><input class="input" name="ageMax" type="number" value="${f.ageMax}"></label></div><label><span class="label">Materials</span><input class="input" name="materials" value="${escapeHTML(f.materials)}" placeholder="cups, paper, balls..."></label><div class="two-col"><label><span class="label">Space</span><select class="input" name="space"><option ${f.space==='indoor'?'selected':''}>indoor</option><option ${f.space==='outdoor'?'selected':''}>outdoor</option><option ${f.space==='both'?'selected':''}>both</option></select></label><label><span class="label">Category</span><select class="input" name="category">${STANDARD_CATEGORIES.map(x=>`<option ${selectedCategory===x?'selected':''}>${x}</option>`).join('')}</select></label></div><button class="btn btn-primary full">Find 3 Great Games</button></form><div style="margin-top:16px">${results.map(r=>`<div style="padding:12px;border-radius:14px;background:#f6f8f2;margin-top:8px"><strong>${r.game.title}</strong><div class="help">Fit score ${r.score}/100 · ${r.reason}</div></div>`).join('')}</div></section>`;
+  const results = scoreGames(state.games).slice(0,3);
+  return `<section class="hero-card"><h1>Tell us what you have.</h1><p>Smart Finder recommends games by age, group size, time, space, categories, materials, and safety.</p><form id="finder-form" class="form-grid"><div class="two-col"><label><span class="label">Group size</span><input class="input" name="groupSize" type="number" value="${f.groupSize}"></label><label><span class="label">Minutes</span><input class="input" name="time" type="number" value="${f.time}"></label></div><div class="two-col"><label><span class="label">Ages from</span><input class="input" name="ageMin" type="number" value="${f.ageMin}"></label><label><span class="label">Ages to</span><input class="input" name="ageMax" type="number" value="${f.ageMax}"></label></div><label><span class="label">Materials</span><input class="input" name="materials" value="${escapeHTML(f.materials)}" placeholder="cups, paper, balls..."></label><div class="two-col"><label><span class="label">Space</span><select class="input" name="space"><option ${f.space==='indoor'?'selected':''}>indoor</option><option ${f.space==='outdoor'?'selected':''}>outdoor</option><option ${f.space==='both'?'selected':''}>both</option></select></label><label><span class="label">Category</span><select class="input" name="category">${STANDARD_CATEGORIES.map(x=>`<option ${f.category===x?'selected':''}>${x}</option>`).join('')}</select></label></div><button class="btn btn-primary full">Find 3 Great Games</button></form><div style="margin-top:16px">${results.map(r=>`<div style="padding:12px;border-radius:14px;background:#f6f8f2;margin-top:8px"><strong>${r.game.title}</strong><div class="help">Fit score ${r.score}/100 · ${r.reason}</div></div>`).join('')}</div></section>`;
 }
 
 function renderGameCard(game) {
   const user = currentUser();
   const locked = game.accessLevel === 'pro' && !hasProAccess(user);
   const fav = isFavorite(game.id);
-  return `<article class="game-card" data-game-card="${game.id}"><div class="game-card-top"><div class="thumb ${game.thumb}"><span>${game.title}</span></div><div><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><h3 class="game-title">${game.title}</h3>${game.accessLevel==='pro'?'<span class="pro-badge">PRO</span>':''}</div><div class="game-desc">${game.shortDescription}</div></div></div><div class="tag-list">${fitTags(game).map(t=>`<span class="tag">${t}</span>`).join('')}</div><div class="card-divider"></div><div class="rating-row"><div>${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span></div><div class="inline-actions"><button class="icon-btn heart ${fav?'active':''}" data-toggle-favorite="${game.id}" aria-label="Favorite">♥</button><button class="icon-btn check" data-add-session="${game.id}" aria-label="Add to session">□</button></div></div>${locked?`<div class="lock-card" style="margin-top:12px"><strong>PRO preview</strong><div class="help">Upgrade to unlock full instructions and printable plans.</div></div>`:''}</article>`;
+  return `<article class="game-card" data-game-card="${game.id}"><div class="game-card-top"><div class="thumb ${game.thumb}"><span>${game.title}</span></div><div><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><h3 class="game-title">${game.title}</h3>${game.accessLevel==='pro'?'<span class="pro-badge">PRO</span>':''}</div><div class="game-desc">${game.shortDescription}</div></div></div><div class="tag-list">${fitTags(game).map(t=>`<span class="tag">${t}</span>`).join('')}</div><div class="card-divider"></div><div class="rating-row"><div>${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span></div><div class="inline-actions"><button class="icon-btn heart ${fav?'active':''}" data-toggle-favorite="${game.id}" aria-label="Favorite">♥</button><button class="icon-btn check" data-add-session="${game.id}" aria-label="Add to session">□</button></div></div>${locked?`<div class="lock-card" style="margin-top:12px"><strong>PRO preview</strong><div class="help">Upgrade to unlock full instructions and My Plans tools.</div></div>`:''}</article>`;
 }
 function fitTags(g) { return [`Ages ${g.bestAgeMin}–${g.bestAgeMax}`, `${g.groupSizeMin}–${g.groupSizeMax} players`, `${g.timeMin}–${g.timeMax} min`, g.materials.length ? g.materials.join(', ') : 'No materials', g.safety].slice(0,5); }
 function stars(rating, small=false) { const full = Math.round(rating); return `<span class="stars ${small?'small':''}">${[1,2,3,4,5].map(i=>`<span class="${i<=full?'':'star-empty'}">★</span>`).join('')}</span>`; }
@@ -374,7 +382,7 @@ function renderNoResults() { return `<div class="card" style="padding:24px"><h2>
 function getFilteredGames() {
   const q = state.search.trim().toLowerCase();
   let games = state.games.filter(g => g.status !== 'archived');
-  if (q) games = games.filter(g => [g.title,g.shortDescription,g.description,g.materials.join(' '),g.tags.join(' '),getGameCategories(g).join(' ')].join(' ').toLowerCase().includes(q));
+  if (q) games = games.filter(g => [g.title,g.shortDescription,g.description,g.materials.join(' '),g.tags.join(' '),(g.categories||[]).join(' '),(g.purpose||[]).join(' ')].join(' ').toLowerCase().includes(q));
   const filters = state.filters;
   filters.forEach(f => {
     const n = f.toLowerCase();
@@ -388,7 +396,7 @@ function getFilteredGames() {
     else if (['Indoor','Outdoor'].includes(f)) games = games.filter(g => g.indoorOutdoor === f.toLowerCase() || g.indoorOutdoor === 'both');
     else if (f === 'Low Risk') games = games.filter(g => g.safety === 'Low Risk');
     else if (f === 'Moderate Risk') games = games.filter(g => g.safety === 'Moderate Risk');
-    else games = games.filter(g => g.tags.map(x=>x.toLowerCase()).includes(n) || getGameCategories(g).map(x=>x.toLowerCase()).includes(n) || g.materials.map(x=>x.toLowerCase()).includes(n));
+    else games = games.filter(g => g.tags.map(x=>x.toLowerCase()).includes(n) || (g.categories||[]).map(x=>x.toLowerCase()).includes(n) || (g.purpose||[]).map(x=>x.toLowerCase()).includes(n) || g.materials.map(x=>x.toLowerCase()).includes(n));
   });
   return sortGames(games);
 }
@@ -420,7 +428,7 @@ function scoreGames(games = state.games) {
     else if (required.every(m => materials.includes(m))) { score += 15; reasons.push('materials match'); }
     else score -= 20;
     if (f.space === 'both' || game.indoorOutdoor === 'both' || game.indoorOutdoor === f.space) { score += 10; reasons.push('space match'); } else score -= 15;
-    if (getGameCategories(game).includes(f.category || f.purpose)) { score += 10; reasons.push('category match'); }
+    if ((game.categories||game.tags||[]).includes(f.category)) { score += 10; reasons.push('category match'); }
     if (game.safety === 'Low Risk' || f.safety !== 'Low Risk') score += 10;
     score += Math.min(5, Math.round(game.averageRating));
     if (f.avoid.toLowerCase().includes('not embarrassing') && game.embarrassment === 'Low') score += 5;
@@ -429,27 +437,35 @@ function scoreGames(games = state.games) {
 }
 
 function renderFilterScreen() {
-  return `<div class="app-frame fullscreen-page"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_IMG}</button><div class="topbar-title">FILTER BY</div><div></div></header><main class="filter-body">${FILTER_SECTIONS.map(sec=>`<section class="filter-group"><h2>${sec.title}</h2><div class="filter-chip-grid">${sec.options.map(o=>`<button class="filter-chip ${state.filters.includes(o)?'active':''}" data-filter-chip="${o}">${o}</button>`).join('')}</div></section>`).join('')}</main><div class="filter-bottom"><button class="btn btn-primary" data-clear-filters>Clear</button><button class="btn btn-secondary" data-go="/app/find">Apply</button></div></div>`;
+  return `<div class="app-frame fullscreen-page"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_HTML}</button><div class="topbar-title">FILTER BY</div><div></div></header><main class="filter-body">${FILTER_SECTIONS.map(sec=>`<section class="filter-group"><h2>${sec.title}</h2><div class="filter-chip-grid">${sec.options.map(o=>`<button class="filter-chip ${state.filters.includes(o)?'active':''}" data-filter-chip="${o}">${o}</button>`).join('')}</div></section>`).join('')}</main><div class="filter-bottom"><button class="btn btn-primary" data-clear-filters>Clear</button><button class="btn btn-secondary" data-go="/app/find">Apply</button></div></div>`;
 }
 
 function renderSortModalIfNeeded() { return window.__sortOpen ? `<div class="modal-backdrop" data-close-sort><div class="bottom-sheet" onclick="event.stopPropagation()"><h2>Sort by</h2>${SORT_OPTIONS.map(o=>`<label class="radio-row ${state.sort===o?'active':''}" data-set-sort="${o}"><span class="radio-circle"></span><span>${o}</span></label>`).join('')}<button class="btn btn-primary full" data-close-sort>Apply</button><button class="btn btn-secondary full" style="margin-top:12px" data-close-sort>Cancel</button></div></div>` : ''; }
 
 function renderGameDetail(id) {
   const game = state.games.find(g => g.id === id);
-  if (!game) return renderAppShell(`<main class="content"><h1>Game not found</h1></main>`);
+  if (!game) return `<div class="app-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_HTML}</button><div class="brand-area">${APP_BRAND}</div><div></div></header><main class="content"><h1>Game not found</h1></main></div>`;
   game.views += 1; saveState();
   const locked = !canViewGame(game);
-  return `<div class="app-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_IMG}</button><div class="logo">${APP_LOGO}</div><div class="header-actions"><button class="icon-btn icon-img-btn" data-share-game="${game.id}" aria-label="Share"><img src="/assets/ios-share.svg" alt=""></button></div></header><div class="detail-title-block"><h1>${game.title}</h1><div class="rating-row" style="justify-content:flex-start;gap:12px">${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span><button class="icon-btn heart ${isFavorite(game.id)?'active':''}" data-toggle-favorite="${game.id}">♥</button></div><p><a class="link" data-go="/app/games/${game.id}/reviews">View Reviews</a></p></div><main class="content" style="padding-top:0;padding-bottom:116px"><div class="media-hero thumb ${game.thumb}"><span>${game.title}</span>${game.title.includes('Video')?'<span class="play">▶</span>':''}</div><div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div><section class="content-section"><h2>Description:</h2><p>${game.description}</p></section><section class="content-section"><h2>Quick Facts:</h2><div class="quick-facts">${quickFacts(game).map(([k,v])=>`<div class="fact"><strong>${k}</strong><span>${v}</span></div>`).join('')}</div></section>${locked ? renderLockedGame(game) : renderFullGameDetails(game)}<section class="content-section"><h2>Filters:</h2><div class="tag-list">${game.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></section><section class="content-section"><h2>Creators:</h2><p>${game.creator}</p></section></main><div class="sticky-actions"><button class="btn btn-primary" data-go="/app/games/${game.id}/rate">Rate This Game</button><button class="btn btn-secondary" data-go="/app/games/${game.id}/notes">Add Notes</button></div></div>`;
+  return `<div class="app-frame game-page-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_HTML}</button><div class="brand-area">${APP_BRAND}</div><div class="header-actions"><button class="icon-btn" data-share-game="${game.id}" aria-label="Share">${SHARE_ICON_HTML}</button></div></header><div class="detail-title-block"><h1>${game.title}</h1><div class="rating-row" style="justify-content:flex-start;gap:12px">${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span><button class="icon-btn heart ${isFavorite(game.id)?'active':''}" data-toggle-favorite="${game.id}">♥</button></div><p><a class="link" data-go="/app/games/${game.id}/reviews">View Reviews</a></p></div><main class="content" style="padding-top:0;padding-bottom:116px"><div class="media-hero thumb ${game.thumb}"><span>${game.title}</span>${game.title.includes('Video')?'<span class="play">▶</span>':''}</div><div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div><section class="content-section"><h2>Description:</h2><p>${game.description}</p></section><section class="content-section"><h2>Quick Facts:</h2><div class="quick-facts">${quickFacts(game).map(([k,v])=>`<div class="fact"><strong>${k}</strong><span>${v}</span></div>`).join('')}</div></section>${locked ? renderLockedGame(game) : renderFullGameDetails(game)}<section class="content-section"><h2>Filters:</h2><div class="tag-list">${game.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></section><section class="content-section"><h2>Creators:</h2><p>${game.creator}</p></section></main><div class="sticky-actions sticky-actions-three"><button class="btn btn-primary" data-go="/app/games/${game.id}/rate">Rate This Game</button><button class="btn btn-secondary" data-go="/app/games/${game.id}/notes">Add Notes</button><button class="btn btn-secondary" data-open-add-to-plan="${game.id}">Add to Plan</button></div>${renderAddToPlanModal(game.id)}</div>`;
 }
 function quickFacts(g) { return [['Ages', `${g.bestAgeMin}–${g.bestAgeMax}`], ['Players', `${g.groupSizeMin}–${g.groupSizeMax}`], ['Time', `${g.timeMin}–${g.timeMax} min`], ['Space', g.space], ['Energy', g.energy], ['Materials', g.materials.length?g.materials.join(', '):'None'], ['Safety', g.safety], ['Prep', `${g.prep} min`]]; }
-function renderLockedGame(game) { return `<section class="content-section lock-card"><h2>Unlock this PRO game</h2><p>Free users can preview the title, summary, quick facts, rating, and tags. Upgrade to PRO for full instructions, PDF download and session builder.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></section>`; }
-function renderFullGameDetails(game) { return `${section('What to Get:', game.materials.length ? [`Gather: ${game.materials.join(', ')}`] : ['No materials needed.'])}${section('What to Prep:', [game.setup])}${section('How to Play:', game.howToPlay)}${section('Leader Script:', [game.leaderScript])}${section('Safety Notes:', [game.safetyNotes, `Avoid with: ${game.avoidWith}`, `Requires: ${game.requires}`])}${section('Variations:', [game.variations])}${section('Make It Easier:', [game.easier])}${section('Make It Harder:', [game.harder])}${section('Debrief Questions:', game.debriefQuestions)}${section('Bible Bridge:', [game.bibleBridge, `References: ${game.scripture.join(', ')}`])}<section class="content-section"><button class="btn btn-primary full" data-print-game="${game.id}">Download / Print PDF</button></section>`; }
+function renderLockedGame(game) { return `<section class="content-section lock-card"><h2>Unlock this PRO game</h2><p>Free users can preview the title, summary, quick facts, rating, and tags. Upgrade to PRO for full instructions and My Plans tools.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></section>`; }
+function renderFullGameDetails(game) { return `${section('What to Get:', game.materials.length ? [`Gather: ${game.materials.join(', ')}`] : ['No materials needed.'])}${section('What to Prep:', [game.setup])}${section('How to Play:', game.howToPlay)}${section('Leader Script:', [game.leaderScript])}${section('Safety Notes:', [game.safetyNotes, `Avoid with: ${game.avoidWith}`, `Requires: ${game.requires}`])}${section('Variations:', [game.variations])}${section('Make It Easier:', [game.easier])}${section('Make It Harder:', [game.harder])}${section('Debrief Questions:', game.debriefQuestions)}${section('Bible Bridge:', [game.bibleBridge, `References: ${game.scripture.join(', ')}`])}`; }
 function section(title, items) { return `<section class="content-section"><h2>${title}</h2><ul>${items.filter(Boolean).map(i=>`<li>${escapeHTML(i)}</li>`).join('')}</ul></section>`; }
+
+
+function renderAddToPlanModal(gameId) {
+  if (window.__addToPlanGameId !== gameId) return '';
+  const user = currentUser();
+  const plans = user ? state.sessions.filter(s => s.userId === user.id).slice().reverse() : [];
+  return `<div class="modal-backdrop"><div class="modal-card add-plan-card"><div class="modal-head"><h2>Add to Plan</h2><button class="icon-btn" data-close-add-to-plan aria-label="Close">×</button></div><p class="help">Choose an existing plan or create a new one for this game.</p><div class="plan-choice-list">${plans.length ? plans.map(p=>`<button class="plan-choice" data-add-game-to-existing-plan="${p.id}" data-game-id="${gameId}"><strong>${escapeHTML(p.title)}</strong><span>${p.items.length} item${p.items.length===1?'':'s'}</span></button>`).join('') : '<div class="card" style="padding:14px"><p class="help">No saved plans yet.</p></div>'}</div><button class="btn btn-primary full" data-create-plan-from-game="${gameId}">Create New Plan</button></div></div>`;
+}
 
 function renderReviewsScreen(id) {
   const g = state.games.find(x=>x.id===id); if (!g) return '';
   const reviews = state.ratings.filter(r=>r.gameId===id && r.reviewStatus==='published');
-  return `<div class="app-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_IMG}</button><div class="topbar-title">REVIEWS</div><div></div></header><main class="content"><div class="card review-summary"><div class="review-score">${g.averageRating.toFixed(1)}</div><div>${stars(g.averageRating)}<div class="review-meta">${g.ratingCount} ratings and ${reviews.filter(r=>r.reviewText).length} reviews</div></div></div><button class="btn btn-primary full" style="margin:18px 0" data-go="/app/games/${id}/rate">Rate This Game</button><section><h2 style="text-transform:uppercase">Reviews:</h2>${reviews.map(renderReviewRow).join('') || '<p class="help">No written reviews yet.</p>'}</section></main>${renderBottomNav()}</div>`;
+  return `<div class="app-frame game-page-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_HTML}</button><div class="topbar-title">REVIEWS</div><div></div></header><main class="content"><div class="card review-summary"><div class="review-score">${g.averageRating.toFixed(1)}</div><div>${stars(g.averageRating)}<div class="review-meta">${g.ratingCount} ratings and ${reviews.filter(r=>r.reviewText).length} reviews</div></div></div><button class="btn btn-primary full" style="margin:18px 0" data-go="/app/games/${id}/rate">Rate This Game</button><section><h2 style="text-transform:uppercase">Reviews:</h2>${reviews.map(renderReviewRow).join('') || '<p class="help">No written reviews yet.</p>'}</section></main></div>`;
 }
 function renderReviewRow(r) { const u = state.users.find(x=>x.id===r.userId) || {fullName:'HooraPlaybook User'}; return `<div class="review-row"><div class="avatar">${initials(u.fullName)}</div><div><div class="review-name">${u.fullName}</div><div>${stars(r.rating,true)} <span class="review-meta">${new Date(r.createdAt).toLocaleString()}</span></div>${r.reviewText?`<p class="help" style="font-size:15px">${escapeHTML(r.reviewText)}</p>`:''}</div></div>`; }
 function initials(name='User') { return name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(); }
@@ -457,12 +473,12 @@ function initials(name='User') { return name.split(' ').map(x=>x[0]).join('').sl
 function renderRateScreen(id) {
   const game = state.games.find(g=>g.id===id); if (!game) return '';
   const existing = state.ratings.find(r=>r.gameId===id && r.userId===currentUser().id) || {};
-  return `<div class="app-frame fullscreen-page"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_IMG}</button><div class="topbar-title">RATE THIS GAME</div><div></div></header><main class="content no-bottom-nav"><form id="rate-form" data-game-id="${id}"><input type="hidden" name="rating" value="${existing.rating||0}"><div class="rate-card star-picker">${[1,2,3,4,5].map(i=>`<button type="button" class="${(existing.rating||0)>=i?'active':''}" data-star="${i}">☆</button>`).join('')}</div><label><span class="label">Review</span><textarea name="reviewText" placeholder="Write review">${escapeHTML(existing.reviewText||'')}</textarea></label><h2>IMAGES</h2><label class="upload-tile">+<input name="images" type="file" accept="image/*" multiple hidden></label><h2>VIDEOS</h2><label class="upload-tile">+<input name="videos" type="file" accept="video/*" multiple hidden></label></form></main><div class="sticky-actions" style="grid-template-columns:1fr"><button class="btn btn-primary full" form="rate-form">Submit</button></div></div>`;
+  return `<div class="app-frame fullscreen-page game-page-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_HTML}</button><div class="topbar-title">RATE THIS GAME</div><div></div></header><main class="content no-bottom-nav"><form id="rate-form" data-game-id="${id}"><input type="hidden" name="rating" value="${existing.rating||0}"><div class="rate-card star-picker">${[1,2,3,4,5].map(i=>`<button type="button" class="${(existing.rating||0)>=i?'active':''}" data-star="${i}">☆</button>`).join('')}</div><label><span class="label">Review</span><textarea name="reviewText" placeholder="Write review">${escapeHTML(existing.reviewText||'')}</textarea></label><h2>IMAGES</h2><label class="upload-tile">+<input name="images" type="file" accept="image/*" multiple hidden></label><h2>VIDEOS</h2><label class="upload-tile">+<input name="videos" type="file" accept="video/*" multiple hidden></label></form></main><div class="sticky-actions" style="grid-template-columns:1fr"><button class="btn btn-primary full" form="rate-form">Submit</button></div></div>`;
 }
 
 function renderNotesScreen(id) {
   const game = state.games.find(g=>g.id===id); const key = `${currentUser().id}:${id}`; const note = state.notes[key] || '';
-  return `<div class="app-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_IMG}</button><div class="topbar-title">ADD NOTES</div><div></div></header><main class="content no-bottom-nav"><div class="card" style="padding:18px"><h2>${game.title}</h2><form id="notes-form" data-game-id="${id}" class="form-grid"><textarea name="note" placeholder="Private leader notes...">${escapeHTML(note)}</textarea><button class="btn btn-primary full">Save Notes</button></form></div></main></div>`;
+  return `<div class="app-frame game-page-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_HTML}</button><div class="topbar-title">ADD NOTES</div><div></div></header><main class="content no-bottom-nav"><div class="card" style="padding:18px"><h2>${game.title}</h2><form id="notes-form" data-game-id="${id}" class="form-grid"><textarea name="note" placeholder="Private leader notes...">${escapeHTML(note)}</textarea><button class="btn btn-primary full">Save Notes</button></form></div></main></div>`;
 }
 
 function renderFavorites() {
@@ -472,21 +488,19 @@ function renderFavorites() {
 }
 
 function renderPlan() {
-  if (!hasProAccess()) return `<main class="content"><div class="lock-card"><h1>Session Builder is PRO</h1><p>Build a full youth night with warm-up game, main game, Bible bridge, backup game, materials list, and printable plan.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></div></main>`;
-  const myPlans = state.sessions.filter(s=>s.userId===currentUser().id).slice().reverse();
-  const latest = myPlans[0];
-  const selectedCategory = state.finder.category || 'Team-building';
-  return `<main class="content"><section class="hero-card"><h1>Build me a session plan</h1><p>Choose your constraints. HooraPlaybook will assemble a ready-to-lead flow.</p><form id="session-form" class="form-grid"><label><span class="label">Plan name</span><input class="input" name="title" value="Youth Night Plan"></label><label><span class="label">Session type</span><select class="input" name="type"><option>Youth Night</option><option>Camp Session</option><option>Classroom Activity</option><option>Team Building</option><option>Children’s Ministry</option></select></label><div class="two-col"><label><span class="label">Total minutes</span><input class="input" name="minutes" type="number" value="60"></label><label><span class="label">Group size</span><input class="input" name="groupSize" type="number" value="18"></label></div><label><span class="label">Available materials</span><input class="input" name="materials" value="cups, paper"></label><label><span class="label">Category</span><select class="input" name="category">${STANDARD_CATEGORIES.map(x=>`<option ${selectedCategory===x?'selected':''}>${x}</option>`).join('')}</select></label><button class="btn btn-primary full">Save Plan</button></form></section>${latest?renderSessionPlan(latest):''}${myPlans.length ? `<section class="content-section"><h2>Saved Plans</h2><div class="game-list">${myPlans.map(renderSavedPlanCard).join('')}</div></section>` : ''}</main>`;
+  if (!hasProAccess()) return `<main class="content"><div class="lock-card"><h1>Session Builder is PRO</h1><p>Build a full youth night with warm-up game, main game, Bible bridge, backup game, materials list, and saved plan tools.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></div></main>`;
+  const plans = state.sessions.filter(s=>s.userId===currentUser().id).slice().reverse();
+  const selectedMaterials = Array.isArray(state.planMaterials) && state.planMaterials.length ? state.planMaterials : ['No Materials'];
+  const materialLabel = selectedMaterials.includes('No Materials') ? 'No Materials' : selectedMaterials.join(', ');
+  return `<main class="content"><section class="hero-card"><h1>My Plans</h1><p>Build, name, save, view, rename, delete, and reopen plans. Games inside saved plans are clickable.</p><form id="session-form" class="form-grid"><label><span class="label">Plan name</span><input class="input" name="planName" value="Youth Night Plan"></label><label><span class="label">Session type</span><select class="input" name="type"><option>Youth Night</option><option>Camp Session</option><option>Classroom Activity</option><option>Team Building</option><option>Children’s Ministry</option></select></label><div class="two-col"><label><span class="label">Total minutes</span><input class="input" name="minutes" type="number" value="60"></label><label><span class="label">Group size</span><input class="input" name="groupSize" type="number" value="18"></label></div><div><span class="label">Available materials</span><button type="button" class="input nav-field" data-go="/app/plan/materials"><span>${escapeHTML(materialLabel)}</span><strong>›</strong></button></div><label><span class="label">Category</span><select class="input" name="category">${STANDARD_CATEGORIES.map(x=>`<option>${x}</option>`).join('')}</select></label><button class="btn btn-primary full">Save Plan</button></form></section><section class="content-section"><h2>Saved Plans</h2>${plans.length ? plans.map(renderSessionPlan).join('') : '<div class="card" style="padding:18px"><p class="help">No saved plans yet.</p></div>'}</section></main>`;
 }
 
-function renderSessionPlan(plan) {
-  return `<section class="card plan-output" style="padding:18px"><h2>${plan.title}</h2><p class="help">Combined materials: ${plan.materials.join(', ') || 'none'}</p>${plan.items.map(item=>`<div class="timeline-item"><div class="timeline-time">${item.start} · ${item.duration} min</div><div class="timeline-title">${item.type}: ${item.title}</div><p class="help">${item.gameId ? `<a class="link" data-go="/app/games/${item.gameId}">Open game card</a> · ` : ''}${item.notes}</p></div>`).join('')}<button class="btn btn-primary full" data-print-session>Download / Print</button></section>`;
+function renderPlanMaterials() {
+  const selected = Array.isArray(state.planMaterials) && state.planMaterials.length ? state.planMaterials : ['No Materials'];
+  return `<main class="content"><section class="hero-card"><h1>Available Materials</h1><p>Select what you actually have. Choose “No Materials” when you need games that require nothing.</p><div class="material-cloud">${MATERIAL_OPTIONS.map(m=>`<button class="material-chip ${selected.includes(m)?'active':''}" data-plan-material="${escapeHTML(m)}">${escapeHTML(m)}</button>`).join('')}</div></section><button class="btn btn-primary full" data-back>Done</button></main>`;
 }
 
-function renderSavedPlanCard(plan) {
-  const games = plan.items.filter(item => item.gameId);
-  return `<article class="card" style="padding:18px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:start"><div><h2 style="margin-top:0">${escapeHTML(plan.title)}</h2><p class="help">${games.length} clickable game cards</p></div><div class="inline-actions"><button class="btn btn-secondary" data-rename-plan="${plan.id}">Rename</button><button class="btn btn-danger" data-delete-plan="${plan.id}">Delete</button></div></div><div class="tag-list">${games.map(item=>`<button class="tag" data-go="/app/games/${item.gameId}">${escapeHTML(item.title)}</button>`).join('')}</div></article>`;
-}
+function renderSessionPlan(plan) { return `<section class="card plan-output" style="padding:18px;margin-bottom:16px"><h2>${escapeHTML(plan.title)}</h2><p class="help">Combined materials: ${plan.materials.join(', ') || 'none'}</p>${plan.items.map(item=>`<div class="timeline-item ${item.gameId?'clickable':''}" ${item.gameId?`data-go="/app/games/${item.gameId}"`:''}><div class="timeline-time">${item.start} · ${item.duration} min</div><div class="timeline-title">${item.type}: ${item.title}</div><p class="help">${item.notes}</p></div>`).join('')}<div class="two-col"><button class="btn btn-secondary" data-rename-plan="${plan.id}">Rename</button><button class="btn btn-danger" data-delete-plan="${plan.id}">Delete</button></div></section>`; }
 
 function renderSubmit() {
   const staffPublishControl = isStaff()
@@ -523,7 +537,7 @@ Low Risk
 
 ## Safety notes
 Use clear boundaries.</pre></details><button class="btn btn-primary full">Upload Markdown Games</button></form></section>
-  <form id="submit-game-form" class="form-grid"><div class="card" style="padding:18px"><h2>Add One Game</h2><p class="help">Use this form for a single game. It will be reviewed before publication.</p><label><span class="label">Game title</span><input class="input" name="title" required></label><label><span class="label">One-sentence description</span><input class="input" name="shortDescription" required></label></div><div class="card" style="padding:18px"><h2>2. Group Fit</h2><div class="two-col"><label><span class="label">Age min</span><input class="input" name="ageMin" type="number" required></label><label><span class="label">Age max</span><input class="input" name="ageMax" type="number" required></label></div><div class="two-col"><label><span class="label">Group min</span><input class="input" name="groupMin" type="number" required></label><label><span class="label">Group max</span><input class="input" name="groupMax" type="number" required></label></div></div><div class="card" style="padding:18px"><h2>3. Categories</h2><p class="help">Choose one or more standard categories.</p><div class="filter-chip-grid">${STANDARD_CATEGORIES.map(c=>`<label class="filter-chip"><input type="checkbox" name="categories" value="${c}"> ${c}</label>`).join('')}</div></div><div class="card" style="padding:18px"><h2>4. Materials & Setup</h2><label><span class="label">Materials needed</span><input class="input" name="materials" placeholder="cups, paper, balls"></label><label><span class="label">Setup instructions</span><textarea name="setup" required></textarea></label></div><div class="card" style="padding:18px"><h2>5. How to Play</h2><label><span class="label">Rules / how to play</span><textarea name="howToPlay" required></textarea></label><label><span class="label">Win or end condition</span><textarea name="winCondition" required></textarea></label></div><div class="card" style="padding:18px"><h2>6. Safety</h2><label><span class="label">Safety notes</span><textarea name="safetyNotes" required></textarea></label><label><span class="label">Overall safety rating</span><select class="input" name="safety"><option>Low Risk</option><option>Moderate Risk</option><option>Use With Caution</option></select></label></div><button class="btn btn-primary full">Submit for Review</button></form></main>`;
+  <form id="submit-game-form" class="form-grid"><div class="card" style="padding:18px"><h2>Add One Game</h2><p class="help">Use this form for a single game. It will be reviewed before publication.</p><label><span class="label">Game title</span><input class="input" name="title" required></label><label><span class="label">One-sentence description</span><input class="input" name="shortDescription" required></label></div><div class="card" style="padding:18px"><h2>2. Group Fit</h2><div class="two-col"><label><span class="label">Age min</span><input class="input" name="ageMin" type="number" required></label><label><span class="label">Age max</span><input class="input" name="ageMax" type="number" required></label></div><div class="two-col"><label><span class="label">Group min</span><input class="input" name="groupMin" type="number" required></label><label><span class="label">Group max</span><input class="input" name="groupMax" type="number" required></label></div></div><div class="card" style="padding:18px"><h2>3. Materials & Setup</h2><label><span class="label">Materials needed</span><input class="input" name="materials" placeholder="cups, paper, balls"></label><label><span class="label">Setup instructions</span><textarea name="setup" required></textarea></label></div><div class="card" style="padding:18px"><h2>4. How to Play</h2><label><span class="label">Rules / how to play</span><textarea name="howToPlay" required></textarea></label><label><span class="label">Win or end condition</span><textarea name="winCondition" required></textarea></label></div><div class="card" style="padding:18px"><h2>5. Categories & Safety</h2><label><span class="label">Categories</span><select class="input" name="categories" multiple>${STANDARD_CATEGORIES.map(c=>`<option>${c}</option>`).join('')}</select></label><label><span class="label">Safety notes</span><textarea name="safetyNotes" required></textarea></label><label><span class="label">Overall safety rating</span><select class="input" name="safety"><option>Low Risk</option><option>Moderate Risk</option><option>Use With Caution</option><option>Needs Review</option></select></label></div><button class="btn btn-primary full">Submit for Review</button></form></main>`;
 }
 
 function renderTools() { return `<main class="content"><section class="hero-card"><h1>Icebreaker</h1><p id="icebreaker-prompt">Which animal gives birth to the biggest babies in the world? The blue whale.</p><button class="btn btn-primary full" data-random-icebreaker>Break The Ice</button></section></main>`; }
@@ -540,7 +554,7 @@ function renderAdminRoute() {
   const tab = route.parts[1] || 'dashboard';
   const title = tab === 'dashboard' ? 'ADMIN' : tab.toUpperCase();
   const inner = tab === 'users' ? renderAdminUsers() : tab === 'coupons' ? renderAdminCoupons() : tab === 'submissions' ? renderAdminSubmissions() : tab === 'games' ? renderAdminGames() : renderAdminDashboard();
-  return `<div class="app-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_IMG}</button><div class="topbar-title">${title}</div><div></div></header><main class="content"><div class="chip-scroll"><button class="chip quick-chip" data-go="/admin">Dashboard</button><button class="chip quick-chip" data-go="/admin/users">Users</button><button class="chip quick-chip" data-go="/admin/coupons">Coupons</button><button class="chip quick-chip" data-go="/admin/submissions">Submissions</button><button class="chip quick-chip" data-go="/admin/games">Games</button></div>${inner}</main>${renderBottomNav()}</div>`;
+  return `<div class="app-frame"><header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back">${BACK_BUTTON_HTML}</button><div class="topbar-title">${title}</div><div></div></header><main class="content"><div class="chip-scroll"><button class="chip quick-chip" data-go="/admin">Dashboard</button><button class="chip quick-chip" data-go="/admin/users">Users</button><button class="chip quick-chip" data-go="/admin/coupons">Coupons</button><button class="chip quick-chip" data-go="/admin/submissions">Submissions</button><button class="chip quick-chip" data-go="/admin/games">Games</button></div>${inner}</main>${renderBottomNav()}</div>`;
 }
 function renderStaffRoute() { return renderAdminRoute(); }
 function renderAdminDashboard() { const pro = state.users.filter(u=>u.plan==='pro').length; return `<div class="admin-grid"><div class="stat-card"><span>Total users</span><strong>${state.users.length}</strong></div><div class="stat-card"><span>PRO users</span><strong>${pro}</strong></div><div class="stat-card"><span>Pending submissions</span><strong>${state.submissions.filter(s=>s.status==='submitted').length}</strong></div><div class="stat-card"><span>Coupons</span><strong>${state.coupons.length}</strong></div><div class="stat-card"><span>Total games</span><strong>${state.games.length}</strong></div><div class="stat-card"><span>Batch imports</span><strong>${(state.importBatches||[]).length}</strong></div><div class="stat-card"><span>Avg rating</span><strong>${avg(state.games.map(g=>g.averageRating)).toFixed(1)}</strong></div></div>`; }
@@ -550,22 +564,23 @@ function renderAdminCoupons() { if (!isAdmin()) return `<div class="lock-card">O
 function renderAdminSubmissions() { return `<div class="game-list">${state.submissions.map(s=>`<div class="card" style="padding:18px"><div class="pro-badge">${s.status}</div><h2>${escapeHTML(s.payload.title||'Untitled')}</h2><p class="help">${escapeHTML(s.payload.shortDescription||'')}</p>${s.sourceFilename?`<p class="help"><strong>Source file:</strong> ${escapeHTML(s.sourceFilename)} · ${escapeHTML(s.source||'manual')}</p>`:''}<div class="two-col"><button class="btn btn-primary" data-approve-submission="${s.id}">Approve / Publish</button><button class="btn btn-secondary" data-reject-submission="${s.id}">Reject</button></div></div>`).join('') || '<div class="card" style="padding:22px"><h2>No submissions yet.</h2></div>'}</div>`; }
 function renderAdminGames() { return `<div class="game-list">${state.games.map(g=>`<div class="card" style="padding:16px"><h2>${g.title}</h2><div class="magic-row"><span class="magic-chip">${g.accessLevel}</span><span class="magic-chip">${g.safety}</span></div><div class="two-col"><button class="btn btn-secondary" data-toggle-game-access="${g.id}">Toggle Free/PRO</button><button class="btn btn-danger" data-delete-game="${g.id}">Delete</button></div></div>`).join('')}</div>`; }
 
-function renderProjector() { return ''; }
-
 function bindEvents() {
   document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); go(el.dataset.go); }));
-  document.querySelectorAll('[data-back]').forEach(el => el.addEventListener('click', goBack));
+  document.querySelectorAll('[data-back]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); goBack(); }));
   document.querySelectorAll('[data-filter-chip]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toggleFilter(el.dataset.filterChip); }));
   document.querySelectorAll('[data-clear-filters]').forEach(el => el.addEventListener('click', () => { state.filters = []; state.search = ''; saveState(); render(); }));
   document.querySelectorAll('[data-open-sort]').forEach(el => el.addEventListener('click', () => { window.__sortOpen = true; render(); }));
+  document.querySelectorAll('[data-open-add-to-plan]').forEach(el => el.addEventListener('click', () => { window.__addToPlanGameId = el.dataset.openAddToPlan; render(); }));
+  document.querySelectorAll('[data-close-add-to-plan]').forEach(el => el.addEventListener('click', () => { window.__addToPlanGameId = null; render(); }));
+  document.querySelectorAll('[data-add-game-to-existing-plan]').forEach(el => el.addEventListener('click', () => addGameToExistingPlan(el.dataset.addGameToExistingPlan, el.dataset.gameId)));
+  document.querySelectorAll('[data-create-plan-from-game]').forEach(el => el.addEventListener('click', () => createPlanFromGame(el.dataset.createPlanFromGame)));
+  document.querySelectorAll('[data-plan-material]').forEach(el => el.addEventListener('click', () => togglePlanMaterial(el.dataset.planMaterial)));
   document.querySelectorAll('[data-close-sort]').forEach(el => el.addEventListener('click', () => { window.__sortOpen = false; render(); }));
   document.querySelectorAll('[data-set-sort]').forEach(el => el.addEventListener('click', () => { state.sort = el.dataset.setSort; saveState(); render(); }));
   document.querySelectorAll('[data-game-card]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('button')) return; go(`/app/games/${el.dataset.gameCard}`); }));
   document.querySelectorAll('[data-toggle-favorite]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toggleFavorite(el.dataset.toggleFavorite); }));
   document.querySelectorAll('[data-add-session]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toast('Added to the current session draft.'); }));
-  document.querySelectorAll('[data-rename-plan]').forEach(el => el.addEventListener('click', () => renamePlan(el.dataset.renamePlan)));
-  document.querySelectorAll('[data-delete-plan]').forEach(el => el.addEventListener('click', () => deletePlan(el.dataset.deletePlan)));
-  const search = byId('search-input'); if (search) search.addEventListener('input', handleSearchInput);
+  const search = byId('search-input'); if (search) search.addEventListener('input', e => { state.search = e.target.value; saveState(); render(); });
   const login = byId('login-form'); if (login) login.addEventListener('submit', handleLogin);
   const signup = byId('signup-form'); if (signup) signup.addEventListener('submit', handleSignup);
   const finder = byId('finder-form'); if (finder) finder.addEventListener('submit', handleFinder);
@@ -587,24 +602,10 @@ function bindEvents() {
   document.querySelectorAll('[data-delete-game]').forEach(el => el.addEventListener('click', () => deleteGame(el.dataset.deleteGame)));
   document.querySelectorAll('[data-logout]').forEach(el => el.addEventListener('click', logout));
   document.querySelectorAll('[data-upgrade]').forEach(el => el.addEventListener('click', () => handleUpgrade(el.dataset.upgrade)));
-  document.querySelectorAll('[data-print-game],[data-print-session]').forEach(el => el.addEventListener('click', () => window.print()));
   document.querySelectorAll('[data-share-game]').forEach(el => el.addEventListener('click', () => shareGame(el.dataset.shareGame)));
   document.querySelectorAll('[data-random-icebreaker]').forEach(el => el.addEventListener('click', randomIcebreaker));
-}
-
-function handleSearchInput(e) {
-  state.search = e.target.value;
-  saveState();
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    render();
-    const next = byId('search-input');
-    if (next) {
-      next.focus();
-      const len = next.value.length;
-      try { next.setSelectionRange(len, len); } catch (_) {}
-    }
-  }, 180);
+  document.querySelectorAll('[data-rename-plan]').forEach(el => el.addEventListener('click', () => renamePlan(el.dataset.renamePlan)));
+  document.querySelectorAll('[data-delete-plan]').forEach(el => el.addEventListener('click', () => deletePlan(el.dataset.deletePlan)));
 }
 
 function toggleFilter(f) { state.filters = state.filters.includes(f) ? state.filters.filter(x=>x!==f) : [...state.filters, f]; saveState(); render(); }
@@ -631,8 +632,6 @@ function handleSubmitGame(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const payload = Object.fromEntries(fd.entries());
-  payload.categories = fd.getAll('categories');
-  payload.tags = payload.categories;
   state.submissions.push({ id: crypto.randomUUID(), submittedBy: currentUser().id, status: 'submitted', source: 'manual', payload, createdAt: new Date().toISOString() });
   saveState();
   toast('Game submitted for review.');
@@ -700,7 +699,7 @@ function parseGameMarkdown(markdown, fileName = 'game.md') {
   const ages = parseNumberRange(value('ages','age range','best age range'), [10, 18]);
   const group = parseNumberRange(value('group size','players','group size fit','best group size'), [4, 30]);
   const materialsText = value('materials needed','materials','what to get','supplies');
-  const tagsText = value('categories','tags','filters');
+  const tagsText = value('categories','tags','filters','purpose');
   const safety = normalizeSafety(value('safety rating','overall safety rating','safety','game safety profile'));
 
   return {
@@ -719,6 +718,7 @@ function parseGameMarkdown(markdown, fileName = 'game.md') {
     materials: splitList(materialsText).map(x => x.toLowerCase()).filter(x => !['none','no materials','no supplies','n/a'].includes(x)),
     tags: splitList(tagsText),
     categories: normalizeCategories(tagsText),
+    purpose: normalizePurpose(tagsText),
     bestAgeMin: ages[0], bestAgeMax: ages[1], minRecommendedAge: ages[0],
     groupSizeMin: group[0], groupSizeMax: group[1],
     timeMin: duration[0], timeMax: duration[1],
@@ -771,6 +771,7 @@ function parseNumberRange(value='', fallback=[0,0]) {
 }
 function normalizeSafety(value='') {
   const v = String(value).toLowerCase();
+  if (v.includes('not') && v.includes('recommended')) return 'Needs Review';
   if (v.includes('caution') || v.includes('high')) return 'Use With Caution';
   if (v.includes('moderate') || v.includes('medium')) return 'Moderate Risk';
   return 'Low Risk';
@@ -788,26 +789,15 @@ function normalizeSpace(value='') {
   return 'both';
 }
 function normalizeCategories(value='') {
-  const text = String(value || '').toLowerCase();
+  const text = String(value).toLowerCase();
   const picked = STANDARD_CATEGORIES.filter(k => text.includes(k.toLowerCase()));
-  if (picked.length) return picked;
-  if (/team|trust|communicat|leadership/.test(text)) return ['Team-building'];
-  if (/ice/.test(text)) return ['Icebreakers'];
-  if (/sport|competition|relay|fitness/.test(text)) return ['Sport-n-fitness'];
-  if (/tag/.test(text)) return ['Tag'];
-  if (/circle/.test(text)) return ['Circle'];
-  if (/water|wet/.test(text)) return ['Wet-n-Wild'];
-  if (/camp|adventure/.test(text)) return ['Adventure'];
-  if (/drama|theatr/.test(text)) return ['Theatrical'];
-  return ['Quick and simple'];
+  return picked.length ? picked : ['Quick and simple'];
 }
-
-function getGameCategories(game = {}) {
-  const raw = [...(Array.isArray(game.categories) ? game.categories : []), ...(Array.isArray(game.tags) ? game.tags : [])];
-  const normalized = raw.flatMap(x => normalizeCategories(x));
-  return [...new Set(normalized.length ? normalized : ['Quick and simple'])];
+function normalizePurpose(value='') {
+  const text = String(value).toLowerCase();
+  const picked = ['Fun','Icebreaker','Teamwork','Trust','Communication','Leadership','Bible Bridge','Calm Down','Competition','Camp','Classroom','Lesson Bridge'].filter(k => text.includes(k.toLowerCase()));
+  return picked.length ? picked : ['Fun'];
 }
-
 function validateGamePayload(p) {
   const errors = [];
   if (!p.title || p.title.length < 2) errors.push('Missing game title');
@@ -827,32 +817,70 @@ function gameFromPayload(p, opts = {}) {
   const howToPlay = Array.isArray(p.howToPlay) ? p.howToPlay : listFromMarkdown(p.howToPlay);
   const debriefQuestions = Array.isArray(p.debriefQuestions) ? p.debriefQuestions : listFromMarkdown(p.debriefQuestions);
   const materials = Array.isArray(p.materials) ? p.materials : splitList(p.materials).map(x=>x.toLowerCase());
-  const tags = [...new Set([...(Array.isArray(p.tags)?p.tags:splitList(p.tags)), ...(Array.isArray(p.categories)?p.categories:splitList(p.categories)), ...(materials.length ? materials : ['No Materials']), p.indoorOutdoor === 'outdoor' ? 'Outdoor' : p.indoorOutdoor === 'indoor' ? 'Indoor' : 'Flexible'].filter(Boolean))];
-  return { ...DEFAULT_GAMES[0], id, slug: id, title: p.title, shortDescription: p.shortDescription, description: p.description || p.shortDescription, accessLevel: 'free', featured: false, tested: false, status: 'published', tags, categories: Array.isArray(p.categories) && p.categories.length ? p.categories : normalizeCategories(tags.join(',')), materials, bestAgeMin: Number(p.bestAgeMin || p.ageMin) || 10, bestAgeMax: Number(p.bestAgeMax || p.ageMax) || 18, minRecommendedAge: Number(p.minRecommendedAge) || Number(p.bestAgeMin || p.ageMin) || 8, groupSizeMin: Number(p.groupSizeMin || p.groupMin) || 4, groupSizeMax: Number(p.groupSizeMax || p.groupMax) || 30, timeMin: Number(p.timeMin) || 10, timeMax: Number(p.timeMax) || 20, indoorOutdoor: p.indoorOutdoor || 'both', space: p.space || 'Flexible', energy: p.energy || 'Medium', prep: Number(p.prep) || 0, leaderDifficulty: p.leaderDifficulty || 'Easy', safety: p.safety || 'Low Risk', contact: p.contact || 'None', embarrassment: p.embarrassment || 'Low', noise: p.noise || 'Medium', ministry: p.ministry || 'Low', thumb: 'camp', setup: p.setup || 'No special setup listed.', howToPlay: howToPlay.length ? howToPlay : ['Explain the game clearly.', 'Play one practice round.', 'Lead the group through the activity.'], leaderScript: p.leaderScript || 'Listen carefully, play safely, and encourage your group.', winCondition: p.winCondition || 'End when the leader decides the round is complete.', safetyNotes: p.safetyNotes || 'Review safety before leading.', avoidWith: p.avoidWith || 'Groups where this game does not fit the age, room, or maturity level.', requires: p.requires || 'Normal leader supervision.', variations: p.variations || '', easier: p.easier || 'Simplify the rules or reduce the time pressure.', harder: p.harder || 'Add a time limit or extra challenge.', debriefQuestions: debriefQuestions.length ? debriefQuestions : ['What worked well?', 'What would you change next time?'], bibleBridge: p.bibleBridge || '', scripture: Array.isArray(p.scripture) ? p.scripture : splitList(p.scripture), creator: opts.creator || currentUser()?.fullName || 'HooraPlaybook User', averageRating: 0, ratingCount: 0, reviewCount: 0, views: 0, sourceFilename: opts.sourceFilename || p.sourceFilename || '' };
+  const tags = [...new Set([...(Array.isArray(p.tags)?p.tags:splitList(p.tags)), ...(p.categories || []), ...(p.purpose || []), ...(materials.length ? materials : ['No Materials']), p.indoorOutdoor === 'outdoor' ? 'Outdoor' : p.indoorOutdoor === 'indoor' ? 'Indoor' : 'Flexible'].filter(Boolean))];
+  return { ...DEFAULT_GAMES[0], id, slug: id, title: p.title, shortDescription: p.shortDescription, description: p.description || p.shortDescription, accessLevel: 'free', featured: false, tested: false, status: 'published', tags, categories: p.categories || normalizeCategories(tags.join(',')), purpose: p.purpose || normalizePurpose(tags.join(',')), materials, bestAgeMin: Number(p.bestAgeMin || p.ageMin) || 10, bestAgeMax: Number(p.bestAgeMax || p.ageMax) || 18, minRecommendedAge: Number(p.minRecommendedAge) || Number(p.bestAgeMin || p.ageMin) || 8, groupSizeMin: Number(p.groupSizeMin || p.groupMin) || 4, groupSizeMax: Number(p.groupSizeMax || p.groupMax) || 30, timeMin: Number(p.timeMin) || 10, timeMax: Number(p.timeMax) || 20, indoorOutdoor: p.indoorOutdoor || 'both', space: p.space || 'Flexible', energy: p.energy || 'Medium', prep: Number(p.prep) || 0, leaderDifficulty: p.leaderDifficulty || 'Easy', safety: p.safety || 'Low Risk', contact: p.contact || 'None', embarrassment: p.embarrassment || 'Low', noise: p.noise || 'Medium', ministry: p.ministry || 'Low', thumb: 'camp', setup: p.setup || 'No special setup listed.', howToPlay: howToPlay.length ? howToPlay : ['Explain the game clearly.', 'Play one practice round.', 'Lead the group through the activity.'], leaderScript: p.leaderScript || 'Listen carefully, play safely, and encourage your group.', winCondition: p.winCondition || 'End when the leader decides the round is complete.', safetyNotes: p.safetyNotes || 'Review safety before leading.', avoidWith: p.avoidWith || 'Groups where this game does not fit the age, room, or maturity level.', requires: p.requires || 'Normal leader supervision.', variations: p.variations || '', easier: p.easier || 'Simplify the rules or reduce the time pressure.', harder: p.harder || 'Add a time limit or extra challenge.', debriefQuestions: debriefQuestions.length ? debriefQuestions : ['What worked well?', 'What would you change next time?'], bibleBridge: p.bibleBridge || '', scripture: Array.isArray(p.scripture) ? p.scripture : splitList(p.scripture), creator: opts.creator || currentUser()?.fullName || 'HooraPlaybook User', averageRating: 0, ratingCount: 0, reviewCount: 0, views: 0, sourceFilename: opts.sourceFilename || p.sourceFilename || '' };
 }
 
-function handleSession(e) { e.preventDefault(); const fd = new FormData(e.target); const category = fd.get('category'); const pool = scoreGames(state.games.filter(g=>getGameCategories(g).includes(category))).map(x=>x.game); const picks = [pool[0] || state.games[0], pool[1] || state.games[1], pool[2] || state.games[2]]; const plan = { id: crypto.randomUUID(), userId: currentUser().id, title: fd.get('title') || `${fd.get('minutes')}-Minute ${fd.get('type')} Plan`, materials: [...new Set(picks.flatMap(g=>g.materials))], category, items: [{type:'Warm-Up', gameId:picks[0].id, title:picks[0].title, start:'0:00', duration:10, notes:picks[0].shortDescription},{type:'Main Game', gameId:picks[1].id, title:picks[1].title, start:'0:10', duration:25, notes:picks[1].safetyNotes},{type:'Discussion Bridge', title:'Debrief Questions', start:'0:35', duration:10, notes:picks[1].debriefQuestions.join(' ')},{type:'Backup Game', gameId:picks[2].id, title:picks[2].title, start:'0:45', duration:10, notes:'Use this if your first activity finishes early.'},{type:'Wrap-Up', title:'Close and transition', start:'0:55', duration:5, notes:'Summarize the point and thank the group.'}] }; state.sessions.push(plan); saveState(); toast('Plan saved.'); render(); }
-function renamePlan(id) {
-  const plan = state.sessions.find(p => p.id === id && p.userId === currentUser().id);
-  if (!plan) return;
-  const next = prompt('Rename plan:', plan.title);
-  if (!next || !next.trim()) return;
-  plan.title = next.trim();
+function handleSession(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const selectedMaterials = Array.isArray(state.planMaterials) && state.planMaterials.length ? state.planMaterials : ['No Materials'];
+  const normalizedMaterials = selectedMaterials.includes('No Materials') ? [] : selectedMaterials.map(x=>x.toLowerCase());
+  const category = fd.get('category');
+  const categoryMatches = state.games.filter(g=>(g.categories||g.tags||[]).includes(category) || category==='Quick and simple');
+  const materialMatches = categoryMatches.filter(g => {
+    const required = (g.materials || []).map(m=>m.toLowerCase());
+    if (selectedMaterials.includes('No Materials')) return required.length === 0;
+    return required.length === 0 || required.every(m => normalizedMaterials.includes(m));
+  });
+  const pool = scoreGames(materialMatches.length ? materialMatches : categoryMatches).map(x=>x.game);
+  const picks = [pool[0] || state.games[0], pool[1] || state.games[1], pool[2] || state.games[2]];
+  const plan = { id: crypto.randomUUID(), userId: currentUser().id, title: fd.get('planName') || `${fd.get('minutes')}-Minute ${fd.get('type')} Plan`, category, availableMaterials: selectedMaterials, materials: [...new Set(picks.flatMap(g=>g.materials))], items: [{type:'Warm-Up', gameId:picks[0].id, title:picks[0].title, start:'0:00', duration:10, notes:picks[0].shortDescription},{type:'Main Game', gameId:picks[1].id, title:picks[1].title, start:'0:10', duration:25, notes:picks[1].safetyNotes},{type:'Discussion Bridge', title:'Debrief Questions', start:'0:35', duration:10, notes:picks[1].debriefQuestions.join(' ')},{type:'Backup Game', gameId:picks[2].id, title:picks[2].title, start:'0:45', duration:10, notes:'Use this if your first activity finishes early.'},{type:'Wrap-Up', title:'Close and transition', start:'0:55', duration:5, notes:'Summarize the point and thank the group.'}] };
+  state.sessions.push(plan);
   saveState();
-  toast('Plan renamed.');
+  toast('Plan saved.');
   render();
 }
-
-function deletePlan(id) {
-  const plan = state.sessions.find(p => p.id === id && p.userId === currentUser().id);
-  if (!plan) return;
-  if (!confirm(`Delete "${plan.title}"?`)) return;
-  state.sessions = state.sessions.filter(p => p.id !== id);
+function togglePlanMaterial(material) {
+  state.planMaterials = Array.isArray(state.planMaterials) ? state.planMaterials : ['No Materials'];
+  if (material === 'No Materials') {
+    state.planMaterials = ['No Materials'];
+  } else {
+    state.planMaterials = state.planMaterials.filter(m => m !== 'No Materials');
+    if (state.planMaterials.includes(material)) state.planMaterials = state.planMaterials.filter(m => m !== material);
+    else state.planMaterials.push(material);
+    if (!state.planMaterials.length) state.planMaterials = ['No Materials'];
+  }
   saveState();
-  toast('Plan deleted.');
   render();
 }
-
+function addGameToExistingPlan(planId, gameId) {
+  const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id);
+  const game = state.games.find(g=>g.id===gameId);
+  if (!plan || !game) return;
+  if (!plan.items.some(item=>item.gameId===gameId)) {
+    plan.items.push({ type:'Added Game', gameId: game.id, title: game.title, start:'Extra', duration: game.timeMin || 10, notes: game.shortDescription });
+    plan.materials = [...new Set([...(plan.materials || []), ...(game.materials || [])])];
+  }
+  window.__addToPlanGameId = null;
+  saveState();
+  toast('Game added to plan.');
+  render();
+}
+function createPlanFromGame(gameId) {
+  const game = state.games.find(g=>g.id===gameId);
+  if (!game) return;
+  const name = prompt('Name this plan', `${game.title} Plan`);
+  if (!name) return;
+  const plan = { id: crypto.randomUUID(), userId: currentUser().id, title: name.trim(), category: (game.categories || [])[0] || 'Quick and simple', availableMaterials: (game.materials && game.materials.length) ? game.materials : ['No Materials'], materials: [...(game.materials || [])], items: [{ type:'Main Game', gameId: game.id, title: game.title, start:'0:00', duration: game.timeMin || 10, notes: game.shortDescription }] };
+  state.sessions.push(plan);
+  window.__addToPlanGameId = null;
+  saveState();
+  toast('New plan created.');
+  render();
+}
+function renamePlan(id) { const plan = state.sessions.find(p=>p.id===id && p.userId===currentUser().id); if (!plan) return; const name = prompt('Rename plan', plan.title); if (!name) return; plan.title = name.trim(); saveState(); render(); }
+function deletePlan(id) { if (!confirm('Delete this saved plan?')) return; state.sessions = state.sessions.filter(p=>!(p.id===id && p.userId===currentUser().id)); saveState(); render(); }
 function handleRedeem(e) { e.preventDefault(); const code = new FormData(e.target).get('code').toUpperCase().trim(); const c = state.coupons.find(x=>x.displayCode===code); if (!c) return toast('Coupon not found.'); if (c.disabled) return toast('Coupon is disabled.'); if (c.redeemedBy) return toast('Coupon was already redeemed.'); if (c.expiresAt && isExpired(c.expiresAt)) return toast('Coupon expired.'); c.redeemedBy = currentUser().id; c.redeemedAt = new Date().toISOString(); grantPro(currentUser().id, c.durationDays || 30, false); saveState(); toast('PRO unlocked for one month.'); render(); }
 function handleCouponGeneration(e) { e.preventDefault(); const fd = new FormData(e.target); const qty = Math.min(100, Math.max(1, Number(fd.get('quantity')))); for (let i=0;i<qty;i++) state.coupons.push({ id: crypto.randomUUID(), displayCode: generateCouponCode(), benefitType: 'one_free_month_pro', durationDays: 30, campaign: fd.get('campaign'), expiresAt: fd.get('expires') ? new Date(fd.get('expires')).toISOString() : null, redeemedBy: null, disabled: false, createdBy: currentUser().id, createdAt: new Date().toISOString() }); saveState(); toast(`${qty} coupon(s) created.`); render(); }
 function generateCouponCode() { let code = ''; const bytes = new Uint8Array(16); crypto.getRandomValues(bytes); for (const b of bytes) code += COUPON_ALPHABET[b % COUPON_ALPHABET.length]; return code; }

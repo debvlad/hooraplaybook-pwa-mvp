@@ -107,7 +107,6 @@ Each game detail page must contain:
 - “View Reviews” link
 - favorite button
 - played / unplayed marker
-- media carousel with images, video, or presentation slides preview
 - quick summary
 - “Works best for…” section
 - materials needed
@@ -125,9 +124,7 @@ Each game detail page must contain:
 - optional Bible / lesson bridge
 - tags / filters
 - creator credit
-- download PDF button for PRO users
-- presentation view button for PRO users when applicable
-- sticky bottom actions: Rate This Game, Add Notes, Add to Session
+- sticky bottom actions: Rate This Game, Add Notes, Add to Plan
 
 ### 2.3 Session Builder
 
@@ -151,8 +148,6 @@ A generated session plan should include:
 - materials list combined across all games
 - safety notes summary
 - leader script summary
-- printable plan
-- presentation-friendly plan
 
 ### 2.4 Favorites and My Plans
 
@@ -438,8 +433,6 @@ Free user:
 - can rate games
 - cannot use advanced filters
 - cannot use session builder
-- cannot download PDFs
-- cannot use presentation view unless a game is marked as free-presentation
 
 PRO user:
 
@@ -448,8 +441,6 @@ PRO user:
 - unlimited favorites
 - My Plans
 - session builder
-- downloadable PDFs
-- presentation view
 - access to all future games while subscription is active
 
 ### 3.3 Access Expiration
@@ -956,7 +947,7 @@ Sections:
 4. Space
 5. Materials
 6. Energy level
-7. Purpose
+7. Category
 8. Safety comfort
 9. “Anything to avoid?”
 
@@ -986,7 +977,7 @@ Model after the screenshot titled `FILTER BY`.
 
 Use:
 
-- dark header with back arrow and title
+- light header with back arrow and title
 - light background
 - chip groups
 - search within tags/materials
@@ -1002,7 +993,7 @@ Filter sections:
 - Plan Access
   - Free
   - PRO
-- Purpose
+- Categories
   - Fun
   - Icebreaker
   - Teamwork
@@ -1146,7 +1137,7 @@ Model after screenshot titled `REVIEWS`.
 
 Layout:
 
-- dark header with back arrow and title
+- light header with back arrow and title
 - rating summary card
 - large score number
 - stars
@@ -1281,7 +1272,6 @@ Each session item should show:
 PRO actions:
 
 - Download PDF
-- Presentation View
 - Save Plan
 - Duplicate Plan
 - Share Plan
@@ -1958,11 +1948,9 @@ Use this in:
 
 - route guards
 - API queries
-- PDF generation
 - session builder
 - advanced filters
 - favorite count enforcement
-- presentation view
 - admin controls
 
 ---
@@ -2013,7 +2001,6 @@ Recommended upload limits:
 ```txt
 Images: 10 MB max
 Videos: 100 MB max for MVP, or disable video upload until storage costs are controlled
-PDF/slides: staff/admin only for MVP
 ```
 
 ---
@@ -2166,54 +2153,10 @@ Use soft balls only. Mark clear boundaries. Stop the game immediately if pushing
 
 ---
 
-## 17. PDF and Presentation View
 
-### 17.1 Printable PDFs
+### 17.1 Removed Game Export and Display Controls
 
-PRO-only.
-
-Users can download:
-
-- single game PDF
-- session plan PDF
-- materials checklist
-- volunteer-friendly printout
-
-PDF content:
-
-- title
-- quick facts
-- materials
-- setup
-- how to play
-- leader script
-- safety notes
-- variations
-- debrief questions
-- Bible bridge if included
-
-### 17.2 Presentation View
-
-PRO-only.
-
-Presentation view should be a clean full-screen route:
-
-```txt
-
-
-```
-
-Use:
-
-- large readable text
-- minimal chrome
-- next/previous controls
-- timer if helpful
-- optional QR code for leaders only later
-
-Do not build advanced slide editing in MVP.
-
----
+Game detail pages must not include Download / Print PDF controls or full-screen display controls. Keep the game page focused on leader actions: Rate This Game, Add Notes, and Add to Plan.
 
 ## 18. PWA Requirements
 
@@ -2539,8 +2482,6 @@ Track:
 - game submitted
 - session builder started
 - session plan generated
-- PDF downloaded
-- presentation view opened
 - upgrade clicked
 - checkout started
 - checkout completed
@@ -2725,8 +2666,6 @@ Avoid tracking sensitive review text or private notes.
 2. Add recommendation scoring.
 3. Add session plan output.
 4. Add save plan.
-5. Add PDF export.
-6. Add presentation view.
 
 ### Phase 9 — PWA Polish
 
@@ -2970,7 +2909,6 @@ The app should display translated fields when available and fall back to English
 - Detail routes for individual games must not be wrapped inside the default app shell. They render their own header with the back arrow, HooraPlaybook logo, and Apple-style share icon.
 - The game share handler must share/copy only the canonical URL: `/app/games/:gameId`. Do not include title, description, or extra text in the copied share payload.
 - Display typography should use lighter Fredoka weights. Treat former `900/950` display weights as `600` and former heavy UI weights as `700`.
-- Game detail cards should not show a Presentation View button. Keep the leader-facing detail actions focused on rating, notes, and print/PDF.
 
 ## Latest Visual Direction Update
 
@@ -2987,7 +2925,7 @@ The app should follow the landing-page visual system: white/cream backgrounds, n
 
 Game detail pages must show only one header: back arrow, HooraPlaybook wordmark, and the standard Apple-style share icon. Share/copy should copy only the game URL, not the description.
 
-Visible display/presentation entry points are removed from game cards and game detail cards for now.
+Full-screen display entry points are removed from game cards and game detail cards for now.
 
 ## Latest Product/UI Requirements Added
 
@@ -3054,7 +2992,6 @@ These rules are active in the current implementation and must be preserved in ev
 - Add Game must use Categories, not Purpose.
 - Smart Finder and My Plans must use Categories, not Purpose.
 - Standard categories are: Quick and simple, Wet-n-Wild, Team-building, Teams, Circle, Icebreakers, Adventure, Tag, Sport-n-fitness, Theatrical, Relays.
-- No visible Projector Mode entry points.
 - My Plans must support save, name, view, rename, delete, and clickable games.
 - Admin > Users must show Grant 30 Days and Disable/Enable without horizontal scrolling.
 - Do not show Untested or Not Recommended tags.
@@ -3063,9 +3000,8 @@ These rules are active in the current implementation and must be preserved in ev
 
 - Do not hard-code game detail back buttons to `#/app/find`.
 - Use `backButton()` in every app header.
-- `backButton()` must render `assets/back-arrow-previous-page-button.jpg`.
+- `backButton()` must render `assets/back_button.png`.
 - Header back must call `goBack()` so it returns to the previous in-app route, including My Plans → Game Detail → back to My Plans.
-- Do not reintroduce visible Projector Mode actions.
 - Use Categories everywhere in the user-facing app instead of Purpose.
 
 
@@ -3076,3 +3012,35 @@ These rules are active in the current implementation and must be preserved in ev
 - Header back buttons must return to the previous in-app route, not hard-code `#/app/find`.
 - Since the header already has the filter icon, do not place another filter icon beside the search field.
 - Preserve `LOCKED_FIXES.md` before every code change and run the regression check before packaging.
+
+## Locked Game Page Shell Rule
+
+Game detail routes are standalone app-frame routes. This includes:
+
+- `/app/games/:id`
+- `/app/games/:id/reviews`
+- `/app/games/:id/rate`
+- `/app/games/:id/notes`
+
+These routes must never be wrapped in the global `renderAppShell()` because each page renders its own header/frame. Wrapping them creates double headers and double footers.
+
+Required implementation:
+
+```js
+if (isStandaloneGameRoute()) return renderAppRoute();
+return renderAppShell(renderAppRoute());
+```
+
+Every future change must preserve this route order and must pass the locked fixes regression check before packaging.
+- Raw text chevrons such as `‹` are forbidden in app headers. Header back buttons must render `assets/back_button.png`.
+
+
+## Locked Game Detail and Plan Rules
+
+- Game detail pages must not show a Download / Print PDF button or section.
+- Game detail sticky actions must include Rate This Game, Add Notes, and Add to Plan.
+- Add to Plan must let the user choose an existing saved plan or create a new plan.
+- The Plan page Available materials control must be a navigation button with a right arrow, not a text input.
+- The Plan materials selector must use a cloud of tappable material chips.
+- “No Materials” must be the first material option.
+- Full-screen display-mode functionality must not be described or added back to the product specification.
