@@ -225,7 +225,6 @@ The entire game card is explicitly clickable from the Games section and Smart Fi
 - Game detail pages render with one header only: back arrow, HooraPlaybook logo, and Apple-style share icon.
 - Share actions copy/share only the canonical game URL, not the description text.
 - Display typography has been reduced by roughly 30% in visual weight for a lighter Fredoka look.
-- Game detail cards no longer show full-screen display actions.
 
 ## Latest visual refresh
 
@@ -267,7 +266,6 @@ This build preserves `LOCKED_FIXES.md` and applies new fixes as surgical patches
 - Game detail header includes circular back chevron, logo mark, wordmark, and iOS share icon.
 - Add Game, Smart Finder, filtering, search, and My Plans use **Categories**, not a user-facing Purpose selector.
 - Standard categories are: Quick and simple, Wet-n-Wild, Team-building, Teams, Circle, Icebreakers, Adventure, Tag, Sport-n-fitness, Theatrical, Relays.
-- Full-screen display-mode entry points are removed.
 - My Plans supports naming, saving, viewing, renaming, deleting, and clickable games.
 - Admin > Users uses responsive cards with Grant 30 Days and Disable/Enable visible without horizontal scrolling.
 
@@ -277,7 +275,6 @@ This build preserves `LOCKED_FIXES.md` and applies new fixes as surgical patches
 - Header back behavior uses the internal route stack so opening a game from My Plans returns to the current Plan page.
 - Game/detail headers remain light and single-header only.
 - Add Game, Smart Finder, and My Plans use Categories, not Purpose.
-- Full-screen display-mode entry points remain removed.
 
 
 ## Locked UI Rules
@@ -294,3 +291,13 @@ This build preserves `LOCKED_FIXES.md` and applies new fixes as surgical patches
 - The Plan page now focuses on saved plans; the old plan creation form section is removed.
 - Saved plan cards now include Modify, Rename, and Delete.
 - Modify Plan supports drag reordering and iOS-style swipe-left Remove on plan games.
+
+## Latest locked UX update
+
+- Game cards use a clear `+ Plan` action instead of the old square session-draft icon.
+- `+ Plan` opens the Add to Plan menu with existing plans and Create New Plan.
+- The footer navigation no longer includes a Plan tab.
+- Account includes a My Plans section that opens the My Plans page.
+- My Plans has a `+ Create a New Plan` button near the top.
+- Saved plan cards include Modify, Rename, and Delete.
+- Modify Plan supports drag reorder and iOS-style swipe-left Remove.

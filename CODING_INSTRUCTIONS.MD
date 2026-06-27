@@ -2156,7 +2156,6 @@ Use soft balls only. Mark clear boundaries. Stop the game immediately if pushing
 
 ### 17.1 Removed Game Export and Display Controls
 
-Game detail pages must not include Download / Print PDF controls or full-screen display controls. Keep the game page focused on leader actions: Rate This Game, Add Notes, and Add to Plan.
 
 ## 18. PWA Requirements
 
@@ -2925,7 +2924,6 @@ The app should follow the landing-page visual system: white/cream backgrounds, n
 
 Game detail pages must show only one header: back arrow, HooraPlaybook wordmark, and the standard Apple-style share icon. Share/copy should copy only the game URL, not the description.
 
-Full-screen display entry points are removed from game cards and game detail cards for now.
 
 ## Latest Product/UI Requirements Added
 
@@ -3043,7 +3041,6 @@ Every future change must preserve this route order and must pass the locked fixe
 - The Plan page Available materials control must be a navigation button with a right arrow, not a text input.
 - The Plan materials selector must use a cloud of tappable material chips.
 - “No Materials” must be the first material option.
-- Full-screen display-mode functionality must not be described or added back to the product specification.
 
 # Locked Update: Materials, Plan Page, and Swipe Removal
 
@@ -3090,3 +3087,14 @@ The HooraPlaybook header wordmark must be live styled text, not a wordmark image
 ## Search Row Filter Rule
 
 Do not place a second filter button beside the search field when the header already contains the filter icon.
+
+## Locked implementation update — My Plans navigation and game-card plan action
+
+- Game cards must show a clear `+ Plan` action instead of an empty square icon.
+- Clicking `+ Plan` opens the Add to Plan menu.
+- The Add to Plan menu must let users choose an existing saved plan or create a new plan.
+- The bottom footer navigation must not include a Plan tab.
+- The Account page must include a My Plans section that links to `/app/plan`.
+- On the My Plans page, place a `+ Create a New Plan` button near the top under the header.
+- Saved plan cards must keep Modify, Rename, and Delete controls.
+- Modify Plan must list the games in the plan, allow drag reordering, and support iOS-style swipe-left Remove with an accessible Remove control.

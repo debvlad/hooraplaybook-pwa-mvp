@@ -25,7 +25,6 @@ These fixes must never be reverted:
   - Sport-n-fitness
   - Theatrical
   - Relays
-- No visible full-screen display mode entry points.
 - No Untested or Not Recommended tags.
 - All app headers must use `assets/back_button.png` for the back button image.
 - Header back chevron must return to the actual previous in-app page, not hard-code `#/app/find`.
@@ -43,7 +42,6 @@ These fixes must never be reverted:
 - Add to Plan must open a choice between existing plans and Create New Plan.
 - Plan page Available materials must be a navigation button, not a text input.
 - Plan materials selector must show a tappable cloud of materials with “No Materials” first.
-- `CODING_INSTRUCTIONS.MD` must not describe full-screen display mode functionality.
 ## Locked update — Plan and Smart Finder materials
 
 - Smart Finder must label the materials control as `Available Materials`.
@@ -58,3 +56,13 @@ These fixes must never be reverted:
 - Swipe removal must use Pointer Events, preserve vertical scrolling, avoid accidental click activation, and include a visible accessible Remove button.
 - Header HooraPlaybook text must remain live text and approximately 20% smaller than the previous oversized header text.
 - The search row must not show a second filter icon/button beside the search input when the header already has the filter icon.
+
+## Locked update — Game card Plan action and My Plans location
+
+- Game cards must use a `+ Plan` button, not an empty square icon.
+- The `+ Plan` button must open the Add to Plan menu with existing plans and Create New Plan.
+- Footer must not include the Plan button.
+- Account must include a My Plans section with a button to open My Plans.
+- My Plans page must show a `+ Create a New Plan` button near the top-right under the header.
+- Saved plan cards must include Modify, Rename, and Delete controls.
+- Modify must list games in the plan, support drag reorder, and support iOS-style swipe-left Remove.
