@@ -1,16 +1,17 @@
 {
   "name": "HooraPlaybook",
   "short_name": "HooraPlaybook",
-  "description": "A smart game-planning PWA for youth leaders, teachers, and camp leaders.",
-  "start_url": "/app/find",
+  "description": "HooraPlaybook helps youth leaders, teachers, and camp leaders find safe, age-appropriate group games fast.",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F2F3F3",
-  "theme_color": "#181D20",
-  "orientation": "portrait",
+  "background_color": "#FFF8E7",
+  "theme_color": "#15162C",
   "icons": [
-    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
   ]
 }

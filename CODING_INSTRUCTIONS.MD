@@ -4,7 +4,7 @@
 
 **Product name:** HooraPlaybook  
 **Product type:** Mobile-first Progressive Web App (PWA)  
-**Core promise:** The fastest way to find or build a fun, safe, age-appropriate group game plan when a leader knows their group size, age, time, space, purpose, and materials.  
+**Core promise:** The fastest way to find or build a fun, safe, age-appropriate group game plan when a leader knows their group size, age, time, space, category, and materials.  
 **Primary audience:** Youth leaders, children’s workers, camp leaders, teachers, homeschool co-op leaders, PE teachers, ministry leaders, and team-building facilitators.  
 **Business model:** Freemium + PRO subscription + future team plan.  
 **Primary stack:** React + Vite + TypeScript + Tailwind CSS + Supabase + Stripe + PWA service worker.
@@ -72,7 +72,7 @@ Users must be able to search and filter by:
 - no-prep / low-prep
 - free / PRO availability
 
-Purpose options should include at least:
+Category options should include exactly:
 
 - Fun
 - Icebreaker
@@ -107,7 +107,7 @@ Each game detail page must contain:
 - “View Reviews” link
 - favorite button
 - played / unplayed marker
-- media carousel with images, video, or projector slides preview
+- media carousel with images, video, or presentation slides preview
 - quick summary
 - “Works best for…” section
 - materials needed
@@ -126,7 +126,7 @@ Each game detail page must contain:
 - tags / filters
 - creator credit
 - download PDF button for PRO users
-- projector mode button for PRO users when applicable
+- presentation view button for PRO users when applicable
 - sticky bottom actions: Rate This Game, Add Notes, Add to Session
 
 ### 2.3 Session Builder
@@ -152,13 +152,13 @@ A generated session plan should include:
 - safety notes summary
 - leader script summary
 - printable plan
-- projector-friendly plan
+- presentation-friendly plan
 
-### 2.4 Favorites and Collections
+### 2.4 Favorites and My Plans
 
 Free users may save only **3 favorites**.
 
-PRO users may save unlimited favorites and create unlimited collections.
+PRO users may save unlimited favorites and create unlimited My Plans.
 
 Collection examples:
 
@@ -439,17 +439,17 @@ Free user:
 - cannot use advanced filters
 - cannot use session builder
 - cannot download PDFs
-- cannot use projector mode unless a game is marked as free-projector
+- cannot use presentation view unless a game is marked as free-presentation
 
 PRO user:
 
 - full game library
 - advanced filters
 - unlimited favorites
-- collections
+- My Plans
 - session builder
 - downloadable PDFs
-- projector mode
+- presentation view
 - access to all future games while subscription is active
 
 ### 3.3 Access Expiration
@@ -768,7 +768,7 @@ Recommended MVP tabs:
 
 1. **Find** — smart finder and game library
 2. **Plan** — session builder
-3. **Favorites** — favorites and collections
+3. **Favorites** — favorites and My Plans
 4. **Add** — submit game
 5. **Account** — profile, billing, settings
 
@@ -805,8 +805,8 @@ Authenticated user routes:
 /app/games/:gameId/rate
 /app/games/:gameId/notes
 /app/favorites
-/app/collections
-/app/collections/:collectionId
+/app/My Plans
+/app/My Plans/:collectionId
 /app/plan
 /app/plan/new
 /app/plan/:sessionId
@@ -875,7 +875,7 @@ Bottom nav
 
 Required UI elements:
 
-- Search input placeholder: `Search games, materials, purpose…`
+- Search input placeholder: `Search games, materials, category…`
 - Quick chips:
   - All Play
   - Teamwork
@@ -891,10 +891,9 @@ Required UI elements:
   - Highest Rated
   - Most Reviewed
   - Newest First
-  - Most Viewed
+  - Most Liked
   - Alphabetical
-  - Shortest First
-- Filter button opens full filter screen.
+  - Filter button opens full filter screen.
 
 ### 8.2 Game Card Component
 
@@ -1062,13 +1061,11 @@ Open as bottom sheet / centered modal over dimmed background.
 Options:
 
 - Best Match
-- Most Viewed
+- Most Liked
 - Most Reviewed
 - Highest Rated
 - Newest First
 - Alphabetical
-- Shortest First
-- Lowest Prep
 
 Buttons:
 
@@ -1284,7 +1281,7 @@ Each session item should show:
 PRO actions:
 
 - Download PDF
-- Projector Mode
+- Presentation View
 - Save Plan
 - Duplicate Plan
 - Share Plan
@@ -1740,10 +1737,10 @@ create table public.favorites (
 );
 ```
 
-#### `collections`
+#### `My Plans`
 
 ```sql
-create table public.collections (
+create table public.My Plans (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade,
   organization_id uuid,
@@ -1759,7 +1756,7 @@ create table public.collections (
 
 ```sql
 create table public.collection_games (
-  collection_id uuid references public.collections(id) on delete cascade,
+  collection_id uuid references public.My Plans(id) on delete cascade,
   game_id uuid references public.games(id) on delete cascade,
   sort_order integer not null default 0,
   added_at timestamptz not null default now(),
@@ -1965,7 +1962,7 @@ Use this in:
 - session builder
 - advanced filters
 - favorite count enforcement
-- projector mode
+- presentation view
 - admin controls
 
 ---
@@ -2035,7 +2032,7 @@ Ranking priority:
 4. time match
 5. materials match
 6. space match
-7. purpose match
+7. category match
 8. energy match
 9. leader difficulty / prep match
 10. rating and review quality
@@ -2056,7 +2053,7 @@ Group size fit: 15
 Time fit: 15
 Materials fit: 15
 Space fit: 10
-Purpose fit: 10
+Category fit: 10
 Energy fit: 5
 Safety fit: 10
 Rating quality: 5
@@ -2121,7 +2118,6 @@ Overall safety options:
 - Low Risk
 - Moderate Risk
 - Use With Caution
-- Not Recommended
 
 Practical tags:
 
@@ -2170,7 +2166,7 @@ Use soft balls only. Mark clear boundaries. Stop the game immediately if pushing
 
 ---
 
-## 17. PDF and Projector Mode
+## 17. PDF and Presentation View
 
 ### 17.1 Printable PDFs
 
@@ -2196,15 +2192,15 @@ PDF content:
 - debrief questions
 - Bible bridge if included
 
-### 17.2 Projector Mode
+### 17.2 Presentation View
 
 PRO-only.
 
-Projector mode should be a clean full-screen route:
+Presentation view should be a clean full-screen route:
 
 ```txt
-/app/games/:gameId/projector
-/app/plan/:sessionId/projector
+
+
 ```
 
 Use:
@@ -2291,7 +2287,7 @@ src/
     finder/
       SmartFinderForm.tsx
       MaterialsPicker.tsx
-      PurposePicker.tsx
+      CategoryPicker.tsx
       FitScoreBadge.tsx
       FinderResults.tsx
     sessions/
@@ -2462,7 +2458,7 @@ Show:
 
 ```txt
 You’ve saved 3 favorites.
-Upgrade to PRO to save unlimited games and build collections.
+Upgrade to PRO to save unlimited games and build My Plans.
 ```
 
 Buttons:
@@ -2544,7 +2540,7 @@ Track:
 - session builder started
 - session plan generated
 - PDF downloaded
-- projector mode opened
+- presentation view opened
 - upgrade clicked
 - checkout started
 - checkout completed
@@ -2581,7 +2577,7 @@ Avoid tracking sensitive review text or private notes.
 
 - [ ] Search by title works.
 - [ ] Search by material works.
-- [ ] Search by purpose works.
+- [ ] Search by category works.
 - [ ] Age filter works.
 - [ ] Group size filter works.
 - [ ] Time filter works.
@@ -2730,7 +2726,7 @@ Avoid tracking sensitive review text or private notes.
 3. Add session plan output.
 4. Add save plan.
 5. Add PDF export.
-6. Add projector mode.
+6. Add presentation view.
 
 ### Phase 9 — PWA Polish
 
@@ -2772,3 +2768,311 @@ When making product decisions, always ask:
 If yes, build it.
 
 If no, postpone it.
+
+
+---
+
+# Implementation Amendment — June 26, 2026 UI Fixes
+
+## Pricing Page Copy
+
+The pricing page must not display implementation/developer copy such as:
+
+
+Pricing pages should show user-facing value, plan benefits, price, access terms, and refund/support information only.
+
+## Game Detail Header Rule
+
+Game detail-style pages must not be wrapped inside the default `AppShell` when they already render their own page header.
+
+Affected routes:
+
+- `/app/games/:gameId`
+- `/app/games/:gameId/reviews`
+- `/app/games/:gameId/rate`
+- `/app/games/:gameId/notes`
+
+These pages should render exactly one dark top header. The app must never show a stacked/double header on a game detail page.
+
+## Filter Icon Asset
+
+Use a true funnel/filter icon for filter actions, not abstract glyphs or unclear symbols.
+
+Current asset path:
+
+```txt
+assets/filter.png
+```
+
+Display rules:
+
+- In the dark top bar, invert the icon to white.
+- In white filter buttons, show the icon in its normal black form.
+- Add `aria-label="Filter games"` to icon-only filter buttons.
+
+---
+
+## Latest Product Rules — Categories and Admin-Only Labels
+
+### Standard Game Categories
+
+Every game in HooraPlaybook must use at least one standard category from this list:
+
+- Quick and simple
+- Wet-n-Wild
+- Team-building
+- Teams
+- Circle
+- Icebreakers
+- Adventure
+- Tag
+- Sport-n-fitness
+- Theatrical
+- Relays
+
+The Add Games screen must require a submitter to choose one category when manually submitting a game. Batch Markdown import must parse `## Categories` or `Category:` and normalize common aliases into the standard list. Examples: `Teamwork` becomes `Team-building`, `Relay Race` becomes `Relays`, `No Prep` becomes `Quick and simple`, and `Sports` becomes `Sport-n-fitness`.
+
+Categories are part of the public filtering/search system. Users must be able to search and filter by these standard categories, and categories should appear on game cards and game detail pages as normal user-facing tags.
+
+### Removed Labels
+
+The app must not use `Untested` or `Not Recommended` as user-facing or admin-facing game tags.
+
+Rules:
+
+- Do not show `Untested` as a tag, filter, quick fact, badge, or card label anywhere in the app.
+- Do not show `Not Recommended` as a tag, filter, quick fact, badge, or card label anywhere in the app.
+- Do not hide games merely because an imported file or legacy record used the words `Not Recommended`.
+- If imported Markdown says `Not Recommended`, normalize the safety value to `Use With Caution` and keep the game visible unless its publish status is archived or rejected by an admin.
+- The internal `tested` field may still exist for future QA workflows, but it must not create an `Untested` badge or tag.
+
+### Game Card Navigation
+
+In the Games section, the entire game card should be clickable and should open the game detail page. Favorite and session-add buttons inside a card must stop event propagation so they perform their own actions without opening the game.
+
+
+---
+
+# Latest Implementation Corrections
+
+## Admin user management
+The Admin > Users screen must never require horizontal scrolling for core actions. Each user should render as a responsive card or stacked row. The following controls must be visible on the initial screen for every user:
+
+- role selector
+- plan selector
+- access expiration date
+- **Grant 30 days** button
+- **Disable / Enable** button
+
+## Standard categories
+Every game must use one or more of these standard categories:
+
+- Quick and simple
+- Wet-n-Wild
+- Team-building
+- Teams
+- Circle
+- Icebreakers
+- Adventure
+- Tag
+- Sport-n-fitness
+- Theatrical
+- Relays
+
+The Add Games form must require at least one category. Markdown batch import should normalize category aliases into this standard list. The Filter page must include these categories, and search must search category names.
+
+## Clickable filters
+On game detail pages, every filter/tag chip in the Filters section must be clickable. Clicking a chip should navigate to the Games screen and show only games matching that chip. This includes category chips and tags such as No Prep.
+
+## Search behavior
+The search bar must not re-render the whole page on each keystroke. It should update the game list and count without stealing input focus.
+
+## My Plans
+Use **My Plans** language instead of Collections. Users should be able to:
+
+- build a new plan
+- give the plan a custom name
+- save the plan
+- view saved plans
+- open a saved plan
+- rename a saved plan
+- delete a saved plan
+- click any game inside a saved plan to open the game detail page
+
+## Sorting
+The only Sort By options should be:
+
+- Best Match
+- Most Liked
+- Most Reviewed
+- Highest Rated
+- Newest First
+- Alphabetical
+
+## Icon tooltips
+Interactive icons must have tooltips or at least clear `title` and `aria-label` attributes. Minimum examples:
+
+- heart icon: Like / favorite
+- checkbox/use icon: Use in plan
+- filter icon: Filter
+- share icon: Share
+
+## Share icon
+Use an Apple-style share icon: a square/tray with an upward arrow.
+
+## Language and translations
+The Account page must allow every user to choose:
+
+- App Language: English / Russian
+- Game Content Language: English / Russian
+
+Do not create duplicate games for each language. Store one game record and attach translations to it:
+
+```ts
+type GameTranslations = {
+  ru?: {
+    title?: string;
+    shortDescription?: string;
+    description?: string;
+    setup?: string;
+    howToPlay?: string[];
+    tags?: string[];
+    safetyNotes?: string;
+    debriefQuestions?: string[];
+    bibleBridge?: string;
+  }
+}
+```
+
+When creating Markdown game files with ChatGPT, include optional Russian translation sections such as:
+
+```md
+## RU Title
+Название игры
+
+## RU Short Description
+Короткое описание игры.
+
+## RU How to Play
+- Первый шаг.
+- Второй шаг.
+
+## RU Tags
+Без подготовки, Командная игра, В помещении
+```
+
+The app should display translated fields when available and fall back to English when a translation is missing.
+
+---
+
+## Latest Implementation Corrections — June 27, 2026
+
+- Detail routes for individual games must not be wrapped inside the default app shell. They render their own header with the back arrow, HooraPlaybook logo, and Apple-style share icon.
+- The game share handler must share/copy only the canonical URL: `/app/games/:gameId`. Do not include title, description, or extra text in the copied share payload.
+- Display typography should use lighter Fredoka weights. Treat former `900/950` display weights as `600` and former heavy UI weights as `700`.
+- Game detail cards should not show a Presentation View button. Keep the leader-facing detail actions focused on rating, notes, and print/PDF.
+
+## Latest Visual Direction Update
+
+The app UI should use the official HooraPlaybook logo and wordmark assets:
+
+- `assets/hooraplaybook-logo.png`
+- `assets/hooraplaybook-wordmark.png`
+- `assets/icon-192.png`
+- `assets/icon-512.png`
+
+Typography should use `font-family: 'Poppins', sans-serif` with Medium 500 or SemiBold 600 weights. Avoid heavy 800/900 display typography for app headers, game titles, and navigation.
+
+The app should follow the landing-page visual system: white/cream backgrounds, navy/black text, purple primary CTAs, blue/mint/coral/yellow accents, rounded white cards, subtle borders, and soft shadows.
+
+Game detail pages must show only one header: back arrow, HooraPlaybook wordmark, and the standard Apple-style share icon. Share/copy should copy only the game URL, not the description.
+
+Visible display/presentation entry points are removed from game cards and game detail cards for now.
+
+## Latest Product/UI Requirements Added
+
+### Header and Branding
+Use the official HooraPlaybook logo mark plus wordmark in app headers. Back navigation must be represented as a clear “return to previous page” left-chevron inside a circular tap/hover area.
+
+### Categories Replace Purpose in User Workflows
+For user-facing Add Games, Smart Finder, filtering, searching, and plan building, use standard game categories instead of a generic Purpose selector:
+
+- Quick and simple
+- Wet-n-Wild
+- Team-building
+- Teams
+- Circle
+- Icebreakers
+- Adventure
+- Tag
+- Sport-n-fitness
+- Theatrical
+- Relays
+
+Games should keep a single game record and contain `categories: string[]`; tags may still exist for secondary metadata, but categories are the primary user-facing taxonomy.
+
+### My Plans
+My Plans must let a PRO user build a plan, name it, save it, view saved plans, rename saved plans, delete saved plans, and click any game inside a saved plan to open that game detail page.
+
+### Admin Users
+The Admin > Users screen must not require horizontal scrolling to see access controls. Use responsive user cards with role, plan, expiration, Grant 30 days, and Disable / Enable visible on initial screen.
+
+
+## Latest UI Icon Update
+
+- Share actions use `assets/ios-share.svg`, the uploaded iOS-style share icon.
+- Filter actions use `assets/filter.png`.
+- Sort actions use `assets/sort.png`.
+- Game category chips wrap instead of forcing a horizontal scrollbar.
+
+## Latest Correction Notes
+
+- The Games list must not render a horizontal quick-category chip strip below the search bar. Use the Filter screen for category selection.
+- Game detail routes must render as full app frames and must never be wrapped in the default app shell again. This prevents the recurring double-header bug.
+- Navigation into a game detail page must scroll the window, app frame, and main content containers to the top after render.
+- Use these assets for icon buttons:
+  - Share: `assets/ios-share.svg`
+  - Filter: `assets/filter.png`
+  - Sort: `assets/sort.png`
+- Filter screen categories must use the standard category list and include `No Prep` as a filter option.
+
+---
+
+# Current Locked Fixes / Non-Regression Rules
+
+These rules are active in the current implementation and must be preserved in every future patch:
+
+- Patch the latest working code only. Do not regenerate from an older build.
+- App headers must be light, not dark.
+- Game detail pages must use one header only.
+- Game detail header must show a circular back chevron, logo mark, wordmark, and iOS share icon.
+- Share must copy/share only the URL.
+- Filter icon must use `assets/filter.png`.
+- Sort icon must use `assets/sort.png`.
+- Games screen must not show the redundant category chip section.
+- Category filtering belongs on the Filter page.
+- Add Game must use Categories, not Purpose.
+- Smart Finder and My Plans must use Categories, not Purpose.
+- Standard categories are: Quick and simple, Wet-n-Wild, Team-building, Teams, Circle, Icebreakers, Adventure, Tag, Sport-n-fitness, Theatrical, Relays.
+- No visible Projector Mode entry points.
+- My Plans must support save, name, view, rename, delete, and clickable games.
+- Admin > Users must show Grant 30 Days and Disable/Enable without horizontal scrolling.
+- Do not show Untested or Not Recommended tags.
+
+## Locked implementation notes — back navigation and headers
+
+- Do not hard-code game detail back buttons to `#/app/find`.
+- Use `backButton()` in every app header.
+- `backButton()` must render `assets/back-arrow-previous-page-button.jpg`.
+- Header back must call `goBack()` so it returns to the previous in-app route, including My Plans → Game Detail → back to My Plans.
+- Do not reintroduce visible Projector Mode actions.
+- Use Categories everywhere in the user-facing app instead of Purpose.
+
+
+## Locked Header and Navigation Rules
+
+- Every app header back button must display `assets/back_button.png`.
+- The HooraPlaybook wordmark in headers must be live text, not a wordmark image. Use the selected app font, purple for “Hoora”, and navy for “Playbook”.
+- Header back buttons must return to the previous in-app route, not hard-code `#/app/find`.
+- Since the header already has the filter icon, do not place another filter icon beside the search field.
+- Preserve `LOCKED_FIXES.md` before every code change and run the regression check before packaging.
