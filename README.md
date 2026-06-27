@@ -301,3 +301,9 @@ This build preserves `LOCKED_FIXES.md` and applies new fixes as surgical patches
 - My Plans has a `+ Create a New Plan` button near the top.
 - Saved plan cards include Modify, Rename, and Delete.
 - Modify Plan supports drag reorder and iOS-style swipe-left Remove.
+
+## Version tracking
+
+Current app version: `0.3.0`.
+
+The project now includes `VERSION_HISTORY.md`. Every future packaged update should increment or update `APP_VERSION` in `app.js`, show the version on the Account page, and add an entry to `VERSION_HISTORY.md` before creating the ZIP.

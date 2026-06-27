@@ -3098,3 +3098,25 @@ Do not place a second filter button beside the search field when the header alre
 - On the My Plans page, place a `+ Create a New Plan` button near the top under the header.
 - Saved plan cards must keep Modify, Rename, and Delete controls.
 - Modify Plan must list the games in the plan, allow drag reordering, and support iOS-style swipe-left Remove with an accessible Remove control.
+
+## Version History and Regression Tracking Policy
+
+Every delivered app update must include version tracking without requiring the user to ask for it.
+
+Required behavior:
+
+- Keep an `APP_VERSION` constant in `app.js`.
+- Display the current version in small grey text at the bottom of the Account page.
+- Maintain `VERSION_HISTORY.md` in the project root.
+- Each version entry must summarize new features, UI changes, bug fixes, feature removals, and locked regression rules.
+- Any bug fixed for the second time must be added to `LOCKED_FIXES.md`, `CODING_INSTRUCTIONS.MD`, and `scripts/check-locked-fixes.mjs`.
+- The ZIP must not be packaged until `node --check app.js` and `node scripts/check-locked-fixes.mjs` pass.
+
+## Locked Plan UI Rules
+
+- Plan game rows must use `assets/Remove.png`, a small red X in a circle, as the remove control.
+- Do not show a visible text `Remove` button on plan game cards.
+- Use the red X remove icon on both the general My Plans page and the Modify Plan page.
+- Do not show schedule timings on plan game rows/cards.
+- The `+ Plan` control on game cards must be grey by default and green when the game already exists in at least one saved plan.
+- The Available Materials page should show only the page header, material chips/cloud, and one Done button. Do not add redundant nested filter/sort/back actions or duplicate bottom material buttons.

@@ -1,8 +1,8 @@
 const APP_NAME = 'HooraPlaybook';
+const APP_VERSION = '0.3.0';
 const APP_LOGO = '<span class="brand-hoora">Hoora</span><span class="brand-playbook">Playbook</span>';
-const APP_HEADER = `<img class="brand-mark-img" src="/assets/hooraplaybook-logo.png" alt=""><div class="logo">${APP_LOGO}</div>`;
-const STANDARD_CATEGORIES = ['Quick and simple', 'Wet-n-Wild', 'Team-building', 'Teams', 'Circle', 'Icebreakers', 'Adventure', 'Tag', 'Sport-n-fitness', 'Theatrical', 'Relays'];
-const MATERIAL_OPTIONS = ['No Materials', 'Cups', 'Paper', 'Balls', 'Chairs', 'Rope', 'Balloons', 'Cones', 'Tape'];
+const STANDARD_CATEGORIES = ['Quick and simple','Wet-n-Wild','Team-building','Teams','Circle','Icebreakers','Adventure','Tag','Sport-n-fitness','Theatrical','Relays'];
+const AVAILABLE_MATERIALS = ['No Materials','Cups','Paper','Balls','Chairs','Rope','Balloons','Cones','Tape'];
 const APP_KEY = 'hooraplaybook_pwa_state_v2';
 const COUPON_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -128,7 +128,7 @@ const FILTER_SECTIONS = [
   { title: 'Categories', key: 'categories', options: STANDARD_CATEGORIES },
   { title: 'Group', key: 'group', options: ['Children', 'Preteens', 'Teens', 'Youth', 'Adults', 'Mixed Ages'] },
   { title: 'Space', key: 'space', options: ['Small Room', 'Large Room', 'Gym', 'Outdoor Field', 'Stage', 'Flexible', 'Indoor', 'Outdoor'] },
-  { title: 'Materials', key: 'materials', options: MATERIAL_OPTIONS },
+  { title: 'Materials', key: 'materials', options: AVAILABLE_MATERIALS },
   { title: 'Safety', key: 'safety', options: ['Low Risk', 'Moderate Risk', 'No Contact', 'Low Embarrassment', 'Shy-Friendly', 'Good for Newcomers'] },
   { title: 'Energy', key: 'energy', options: ['Low', 'Medium', 'High'] },
   { title: 'Time', key: 'time', options: ['Under 5 min', '5–10 min', '10–20 min', '20–40 min', '40+ min'] }
@@ -137,8 +137,11 @@ const FILTER_SECTIONS = [
 const SORT_OPTIONS = ['Best Match', 'Most Viewed', 'Most Reviewed', 'Highest Rated', 'Newest First', 'Alphabetical', 'Shortest First', 'Lowest Prep'];
 
 let state = loadState();
+ensureStateShape();
 let route = parseRoute();
 let toastTimer;
+let navStack = [];
+let searchTimer;
 
 window.addEventListener('hashchange', () => { route = parseRoute(); render(); });
 window.addEventListener('online', render);
@@ -176,7 +179,8 @@ function loadState() {
     filters: [],
     sort: 'Best Match',
     search: '',
-    finder: { groupSize: 14, ageMin: 12, ageMax: 18, time: 20, space: 'indoor', materials: 'No Materials', category: 'Quick and simple', safety: 'Low Risk', avoid: 'not embarrassing' }
+    finder: { groupSize: 14, ageMin: 12, ageMax: 18, time: 20, space: 'indoor', materials: 'cups, paper', category: 'Team-building', safety: 'Low Risk', avoid: 'not embarrassing' },
+    planMaterials: ['No Materials']
   };
   saveState(initial);
   return initial;
@@ -189,6 +193,24 @@ function seedRatings() {
     { id: 'r3', userId: 'u-pro', gameId: 'paper-tower-test', rating: 5, reviewText: 'Strong debrief. Great for leadership night.', createdAt: addDaysISO(-3), reviewStatus: 'published', mediaStatus: 'approved' },
     { id: 'r4', userId: 'u-free', gameId: 'balloon-boundary-blitz', rating: 3, reviewText: 'Fun, but you really need enough space.', createdAt: addDaysISO(-14), reviewStatus: 'published', mediaStatus: 'approved' }
   ];
+}
+
+
+function ensureStateShape() {
+  state.sessions = Array.isArray(state.sessions) ? state.sessions : [];
+  state.planMaterials = Array.isArray(state.planMaterials) ? state.planMaterials : ['No Materials'];
+  state.finder = state.finder || { groupSize: 14, ageMin: 12, ageMax: 18, time: 20, space: 'indoor', materials: 'No Materials', category: 'Team-building', safety: 'Low Risk', avoid: 'not embarrassing' };
+  if (!state.finder.category) state.finder.category = normalizeCategory(state.finder.purpose || 'Team-building');
+  if (!state.finder.materials) state.finder.materials = 'No Materials';
+  state.sessions.forEach(plan => {
+    plan.userId = plan.userId || currentUser()?.id || 'u-pro';
+    plan.items = (plan.items || []).map(item => normalizePlanItem(item));
+    plan.materials = [...new Set((plan.items || []).flatMap(item => {
+      const g = gameByPlanItem(item);
+      return g ? g.materials : [];
+    }))];
+  });
+  saveState(state);
 }
 
 function saveState(next = state) { localStorage.setItem(APP_KEY, JSON.stringify(next)); }
@@ -208,24 +230,18 @@ function slugify(value) { return value.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 function byId(id) { return document.getElementById(id); }
 function appRoot() { return byId('app'); }
 function go(path) {
-  window.__routeStack = window.__routeStack || [];
-  if (route?.raw && route.raw !== path) window.__routeStack.push(route.raw);
-  window.__pendingScrollTop = true;
+  if (!path || path === route.raw) { render(); return; }
+  navStack.push(route.raw);
   window.location.hash = path;
 }
-
 function goBack() {
-  const stack = window.__routeStack || [];
-  const previous = stack.pop();
-  if (previous && previous !== route.raw) {
-    window.__pendingScrollTop = true;
-    window.location.hash = previous;
-  } else if (history.length > 1) {
-    history.back();
-  } else {
-    window.location.hash = '/app/find';
-  }
+  const target = navStack.pop();
+  if (target && target !== route.raw) { window.location.hash = target; return; }
+  if (history.length > 1) history.back(); else go('/app/find');
 }
+function headerBackButton() { return `<button class="icon-btn back-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>`; }
+function headerBrand() { return `<div class="logo header-brand"><img class="brand-mark" src="/assets/hooraplaybook-logo.png" alt=""><span class="brand-text">${APP_LOGO}</span></div>`; }
+function headerActions() { return `<div class="header-actions"><button class="icon-btn icon-image-btn" data-open-sort title="Sort" aria-label="Sort"><img src="/assets/sort.png" alt=""></button><button class="icon-btn icon-image-btn" data-go="/filter" title="Filter" aria-label="Filter"><img src="/assets/filter.png" alt=""></button></div>`; }
 
 function parseRoute() {
   const raw = window.location.hash.replace(/^#/, '') || '/';
@@ -234,7 +250,6 @@ function parseRoute() {
 }
 
 function render() {
-  migrateState();
   const user = currentUser();
   const publicRoutes = ['/', '/login', '/signup', '/pricing', '/subscribe', '/thank-you', '/billing/success', '/billing/cancelled'];
   if (!navigator.onLine) {}
@@ -244,58 +259,8 @@ function render() {
   }
   const root = appRoot();
   if (publicRoutes.includes(route.raw)) root.innerHTML = renderPublicRoute();
-  else root.innerHTML = renderPrivateRoute() + renderAddToPlanModal();
+  else root.innerHTML = renderPrivateRoute();
   bindEvents();
-  if (window.__pendingScrollTop) {
-    window.__pendingScrollTop = false;
-    requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      document.querySelectorAll('.content, .app-frame, .filter-body').forEach(el => { try { el.scrollTop = 0; } catch (_) {} });
-    });
-  }
-}
-
-
-function migrateState() {
-  state.sessions = Array.isArray(state.sessions) ? state.sessions : [];
-  state.favorites = state.favorites || {};
-  state.notes = state.notes || {};
-  state.played = state.played || {};
-  state.filters = Array.isArray(state.filters) ? state.filters : [];
-  state.sort = state.sort || 'Best Match';
-  state.search = state.search || '';
-  state.finder = state.finder || {};
-  if (state.finder.purpose && !state.finder.category) state.finder.category = categoryFromPurpose(state.finder.purpose);
-  if (!state.finder.category) state.finder.category = 'Quick and simple';
-  if (!state.finder.materials) state.finder.materials = 'No Materials';
-  state.games.forEach(g => {
-    if (!Array.isArray(g.categories)) g.categories = normalizeCategories([...(g.categories || []), ...(g.purpose || []), ...(g.tags || [])].join(','));
-    g.tags = [...new Set([...(Array.isArray(g.tags) ? g.tags : []), ...g.categories, ...(g.materials.length ? g.materials.map(titleCaseMaterial) : ['No Materials'])])];
-  });
-}
-function categoryFromPurpose(value = '') {
-  const text = String(value).toLowerCase();
-  if (text.includes('water') || text.includes('wet')) return 'Wet-n-Wild';
-  if (text.includes('team')) return 'Team-building';
-  if (text.includes('ice')) return 'Icebreakers';
-  if (text.includes('tag')) return 'Tag';
-  if (text.includes('relay')) return 'Relays';
-  if (text.includes('sport') || text.includes('fitness')) return 'Sport-n-fitness';
-  if (text.includes('circle')) return 'Circle';
-  return 'Quick and simple';
-}
-function normalizeCategories(value = '') {
-  const text = String(Array.isArray(value) ? value.join(',') : value).toLowerCase();
-  const picked = STANDARD_CATEGORIES.filter(c => text.includes(c.toLowerCase()));
-  if (text.includes('teamwork') || text.includes('communication') || text.includes('trust')) picked.push('Team-building');
-  if (text.includes('icebreaker')) picked.push('Icebreakers');
-  if (text.includes('no prep') || text.includes('quick') || text.includes('fun')) picked.push('Quick and simple');
-  return [...new Set(picked)].slice(0, 4).length ? [...new Set(picked)].slice(0, 4) : ['Quick and simple'];
-}
-function titleCaseMaterial(value = '') {
-  if (!value) return '';
-  if (String(value).toLowerCase() === 'no materials') return 'No Materials';
-  return String(value).trim().replace(/\b\w/g, m => m.toUpperCase());
 }
 
 function renderPublicRoute() {
@@ -333,7 +298,7 @@ function renderLanding() {
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:34px">
-      ${['Group Leaders','Team Builders','Ministry Leaders'].map((t,i)=>`<div class="card" style="padding:20px;color:var(--gp-text)"><h3 style="margin:0 0 8px">${t}</h3><p style="margin:0;color:var(--gp-muted)">${['Games that fit your people, place, time, and supplies.','Purposeful activities for trust, communication, and leadership.','Games with optional Scripture bridges and discussion prompts.'][i]}</p></div>`).join('')}
+      ${['Group Leaders','Team Builders','Ministry Leaders'].map((t,i)=>`<div class="card" style="padding:20px;color:var(--gp-text)"><h3 style="margin:0 0 8px">${t}</h3><p style="margin:0;color:var(--gp-muted)">${['Games that fit your people, place, time, and supplies.','Intentional activities for trust, communication, and leadership.','Games with optional Scripture bridges and discussion prompts.'][i]}</p></div>`).join('')}
     </div>`;
 }
 function miniResult(g) { return `<div style="padding:12px 0;border-top:1px solid var(--gp-border)"><strong>${g.title}</strong><div style="color:var(--gp-muted);font-size:14px">${g.timeMin}–${g.timeMax} min · ${g.groupSizeMin}–${g.groupSizeMax} players · ${g.safety}</div></div>`; }
@@ -345,7 +310,7 @@ function renderSignup() {
   return `<div style="max-width:460px;margin:28px auto"><div class="logo" style="margin-bottom:24px">${APP_LOGO}</div><div class="card" style="padding:26px;color:var(--gp-text)"><h1>Create account</h1><form id="signup-form" class="form-grid"><label><span class="label">Full name</span><input class="input" name="fullName" required></label><label><span class="label">Email</span><input class="input" name="email" type="email" required></label><label><span class="label">Password</span><input class="input" name="password" type="password" minlength="6" required></label><button class="btn btn-primary full">Start free</button><button type="button" class="btn btn-secondary full" data-go="/login">I already have an account</button></form></div></div>`;
 }
 function renderPricing() {
-  return `<div style="margin:24px auto;max-width:900px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><div class="logo">${APP_LOGO}</div><button class="btn btn-secondary" data-go="/app/find">Open app</button></div><h1 style="font-size:48px;line-height:1;margin:0 0 12px">Choose your plan</h1><p style="font-size:19px;color:#d8dde2">Launch-ready PWA flow: Stripe Payment Link now, authenticated Checkout + webhook in production.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:26px">${pricingCard('Free','$0','50 free games, basic search, 3 favorites',['Basic search','Rate games','Submit games'],false)}${pricingCard('PRO','$50/year','Full library, advanced filters, unlimited favorites, My Plans',['Advanced filters','Session builder','planning tools','All future games'],true)}${pricingCard('Team','$149/year','Up to 5 seats, shared collections, private library',['Shared collections','Private tags','Admin controls'],false)}</div></div>`;
+  return `<div style="margin:24px auto;max-width:900px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px"><div class="logo">${APP_LOGO}</div><button class="btn btn-secondary" data-go="/app/find">Open app</button></div><h1 style="font-size:48px;line-height:1;margin:0 0 12px">Choose your plan</h1><p style="font-size:19px;color:#d8dde2">Launch-ready PWA flow: Stripe Payment Link now, authenticated Checkout + webhook in production.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:26px">${pricingCard('Free','$0','50 free games, basic search, 3 favorites',['Basic search','Rate games','Submit games'],false)}${pricingCard('PRO','$50/year','Full library, advanced filters, unlimited favorites, session builder',['Advanced filters','Session builder','planning tools','All future games'],true)}${pricingCard('Team','$149/year','Up to 5 seats, shared collections, private library',['Shared collections','Private tags','Admin controls'],false)}</div></div>`;
 }
 function pricingCard(name, price, sub, items, featured) { return `<div class="card" style="padding:22px;color:var(--gp-text);border:${featured?'2px solid var(--gp-lime)':'0'}"><div class="pro-badge">${name}</div><h2 style="font-size:36px;margin:14px 0 4px">${price}</h2><p style="color:var(--gp-muted)">${sub}</p><ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul><button class="btn ${featured?'btn-primary':'btn-secondary'} full" data-upgrade="${name}">${featured?'Upgrade to PRO':'Get started'}</button></div>`; }
 function renderBillingSuccess() { return `<div class="card" style="padding:28px;color:var(--gp-text);max-width:560px;margin:auto"><h1>Thank you!</h1><p>Your payment was received. In production, HooraPlaybook polls Supabase subscription status and unlocks after the Stripe webhook updates access.</p><button class="btn btn-primary" data-go="/app/find">Open HooraPlaybook</button></div>`; }
@@ -355,20 +320,17 @@ function renderPrivateRoute() {
   if (main === 'admin') return renderAdminRoute();
   if (main === 'staff') return renderStaffRoute();
   if (main === 'filter') return renderFilterScreen();
-  if (isStandaloneGameRoute()) return renderAppRoute();
-  return renderAppShell(renderAppRoute());
+  if (isStandaloneGameRoute() || route.raw === '/app/materials') return renderAppRoute() + renderAddToPlanModalIfNeeded();
+  return renderAppShell(renderAppRoute()) + renderAddToPlanModalIfNeeded();
 }
 
 function isStandaloneGameRoute() {
   return route.parts[0] === 'app' && route.parts[1] === 'games' && !!route.parts[2];
 }
 
-function renderTopbar(title = '') {
-  return `<header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back"><img src="/assets/back_button.png" alt=""></button><div class="header-brand">${title ? `<div class="topbar-title">${title}</div>` : APP_HEADER}</div><div class="header-actions"><button class="icon-btn asset-icon" data-open-sort title="Sort" aria-label="Sort"><img src="/assets/sort.png" alt=""></button><button class="icon-btn asset-icon" data-go="/filter" title="Filter" aria-label="Filter"><img src="/assets/filter.png" alt=""></button></div></header>`;
-}
-
 function renderAppShell(inner, opts = {}) {
-  return `<div class="app-frame">${!navigator.onLine ? '<div class="offline-banner">Offline mode: payments, uploads, and submissions are disabled.</div>' : ''}${renderTopbar(opts.title || '')}${inner}${renderBottomNav()}</div>`;
+  const title = opts.title || '';
+  return `<div class="app-frame">${!navigator.onLine ? '<div class="offline-banner">Offline mode: payments, uploads, and submissions are disabled.</div>' : ''}<header class="topbar light-header">${headerBackButton()}${title ? `<div class="topbar-title">${title}</div>` : headerBrand()}${headerActions()}</header>${inner}${renderBottomNav()}</div>`;
 }
 
 function renderBottomNav() {
@@ -376,20 +338,19 @@ function renderBottomNav() {
   const items = [
     ['/app/find','🎮','Find'], ['/app/favorites','♡','Favorites'], ['/app/submit','＋','Add'], ['/app/account','♙','Account']
   ];
-  return `<nav class="bottom-nav">${items.map(([path,icon,label])=>`<button class="nav-item ${active.startsWith(path)?'active':''}" data-go="${path}"><span class="nav-icon">${icon}</span><span>${label}</span></button>`).join('')}</nav>`;
+  return `<nav class="bottom-nav bottom-nav-4">${items.map(([path,icon,label])=>`<button class="nav-item ${active.startsWith(path)?'active':''}" data-go="${path}"><span class="nav-icon">${icon}</span><span>${label}</span></button>`).join('')}</nav>`;
 }
 
 function renderAppRoute() {
   const p = route.parts;
   if (p[0] !== 'app') return `<main class="content"><button class="btn btn-primary" data-go="/app/find">Open HooraPlaybook</button></main>`;
+  if (p[1] === 'materials') return renderMaterialsSelector();
   if (p[1] === 'games' && p[2] && p[3] === 'rate') return renderRateScreen(p[2]);
   if (p[1] === 'games' && p[2] && p[3] === 'reviews') return renderReviewsScreen(p[2]);
   if (p[1] === 'games' && p[2] && p[3] === 'notes') return renderNotesScreen(p[2]);
   if (p[1] === 'games' && p[2]) return renderGameDetail(p[2]);
   if (p[1] === 'favorites') return renderFavorites();
   if (p[1] === 'submit') return renderSubmit();
-  if (p[1] === 'plan' && p[2] && p[3] === 'modify') return renderModifyPlan(p[2]);
-  if (p[1] === 'plan' && p[2] === 'materials') return renderMaterialSelector('/app/plan');
   if (p[1] === 'plan') return renderPlan();
   if (p[1] === 'tools') return renderTools();
   if (p[1] === 'account') return renderAccount();
@@ -399,19 +360,22 @@ function renderAppRoute() {
 function renderFind() {
   const games = getFilteredGames();
   const user = currentUser();
-  return `<main class="content"><div class="search-row"><div class="search-box"><span class="search-icon">⌕</span><input id="search-input" value="${escapeHTML(state.search)}" placeholder="Search games, categories, materials…"></div></div>${renderMagicFinder()}<div class="section-title"><h2>Explore… ${games.length} games</h2><span>${hasProAccess(user)?'PRO access':'Free plan'}</span></div><div class="sort-row"><strong style="font-size:20px;color:var(--gp-muted);font-style:italic">SORT GAMES BY:</strong><button class="sort-trigger" data-open-sort>${state.sort}<span>⌄</span></button></div><div class="game-list">${games.map(renderGameCard).join('') || renderNoResults()}</div></main>${renderSortModalIfNeeded()}`;
+  return `<main class="content"><div class="search-row single-search"><div class="search-box"><span class="search-icon">⌕</span><input id="search-input" value="${escapeHTML(state.search)}" placeholder="Search games, categories, materials…"></div></div>${renderMagicFinder()}<div class="section-title"><h2>Explore… ${games.length} games</h2><span>${hasProAccess(user)?'PRO access':'Free plan'}</span></div><div class="sort-row"><strong style="font-size:20px;color:var(--gp-muted);font-style:italic">SORT GAMES BY:</strong><button class="sort-trigger" data-open-sort>${state.sort}<span>⌄</span></button></div><div class="game-list">${games.map(renderGameCard).join('') || renderNoResults()}</div></main>${renderSortModalIfNeeded()}`;
 }
 
 function renderMagicFinder() {
   const f = state.finder;
-  return `<section class="hero-card"><h1>Tell us what you have.</h1><p>Smart Finder recommends games by age, group size, time, space, categories, materials, and safety.</p><form id="finder-form" class="form-grid"><div class="two-col"><label><span class="label">Group size</span><input class="input" name="groupSize" type="number" value="${f.groupSize}"></label><label><span class="label">Minutes</span><input class="input" name="time" type="number" value="${f.time}"></label></div><div class="two-col"><label><span class="label">Ages from</span><input class="input" name="ageMin" type="number" value="${f.ageMin}"></label><label><span class="label">Ages to</span><input class="input" name="ageMax" type="number" value="${f.ageMax}"></label></div><label><span class="label">Available Materials</span><button type="button" class="select-link" data-go="/app/plan/materials"><span>${escapeHTML(f.materials || 'No Materials')}</span><strong>›</strong></button></label><div class="two-col"><label><span class="label">Space</span><select class="input" name="space"><option ${f.space==='indoor'?'selected':''}>indoor</option><option ${f.space==='outdoor'?'selected':''}>outdoor</option><option ${f.space==='both'?'selected':''}>both</option></select></label><label><span class="label">Category</span><select class="input" name="category">${STANDARD_CATEGORIES.map(x=>`<option ${f.category===x?'selected':''}>${x}</option>`).join('')}</select></label></div><button class="btn btn-primary full">Find 3 Great Games</button></form></section>`;
+  const materialsText = selectedMaterialsText();
+  const category = normalizeCategory(f.category || f.purpose || 'Team-building');
+  return `<section class="hero-card"><h1>Tell us what you have.</h1><p>Smart Finder recommends games by age, group size, time, space, categories, materials, and safety.</p><form id="finder-form" class="form-grid"><div class="two-col"><label><span class="label">Group size</span><input class="input" name="groupSize" type="number" value="${f.groupSize}"></label><label><span class="label">Minutes</span><input class="input" name="time" type="number" value="${f.time}"></label></div><div class="two-col"><label><span class="label">Ages from</span><input class="input" name="ageMin" type="number" value="${f.ageMin}"></label><label><span class="label">Ages to</span><input class="input" name="ageMax" type="number" value="${f.ageMax}"></label></div><label><span class="label">Available Materials</span><button type="button" class="selector-row" data-go="/app/materials"><span>${escapeHTML(materialsText)}</span><strong>›</strong></button><input type="hidden" name="materials" value="${escapeHTML(materialsText)}"></label><div class="two-col"><label><span class="label">Space</span><select class="input" name="space"><option ${f.space==='indoor'?'selected':''}>indoor</option><option ${f.space==='outdoor'?'selected':''}>outdoor</option><option ${f.space==='both'?'selected':''}>both</option></select></label><label><span class="label">Category</span><select class="input" name="category">${STANDARD_CATEGORIES.map(x=>`<option ${category===x?'selected':''}>${x}</option>`).join('')}</select></label></div><button class="btn btn-primary full">Find 3 Great Games</button></form></section>`;
 }
 
 function renderGameCard(game) {
   const user = currentUser();
   const locked = game.accessLevel === 'pro' && !hasProAccess(user);
   const fav = isFavorite(game.id);
-  return `<article class="game-card" data-game-card="${game.id}"><div class="game-card-top"><div class="thumb ${game.thumb}"><span>${game.title}</span></div><div><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><h3 class="game-title">${game.title}</h3>${game.accessLevel==='pro'?'<span class="pro-badge">PRO</span>':''}</div><div class="game-desc">${game.shortDescription}</div></div></div><div class="tag-list">${fitTags(game).map(t=>`<span class="tag">${t}</span>`).join('')}</div><div class="card-divider"></div><div class="rating-row"><div>${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span></div><div class="inline-actions"><button class="icon-btn heart ${fav?'active':''}" data-toggle-favorite="${game.id}" aria-label="Favorite">♥</button><button class="plan-mini-btn" data-add-to-plan="${game.id}" aria-label="Add ${escapeHTML(game.title)} to plan"><span class="plan-plus">+</span><span>Plan</span></button></div></div>${locked?`<div class="lock-card" style="margin-top:12px"><strong>PRO preview</strong><div class="help">Upgrade to unlock full instructions and planning tools.</div></div>`:''}</article>`;
+  const inPlan = isGameInAnyPlan(game.id);
+  return `<article class="game-card" data-game-card="${game.id}"><div class="game-card-top"><div class="thumb ${game.thumb}"><span>${game.title}</span></div><div><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><h3 class="game-title">${game.title}</h3>${game.accessLevel==='pro'?'<span class="pro-badge">PRO</span>':''}</div><div class="game-desc">${game.shortDescription}</div></div></div><div class="tag-list">${fitTags(game).map(t=>`<span class="tag">${t}</span>`).join('')}</div><div class="card-divider"></div><div class="rating-row"><div>${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span></div><div class="inline-actions"><button class="icon-btn heart ${fav?'active':''}" data-toggle-favorite="${game.id}" aria-label="Favorite">♥</button><button class="plan-pill ${inPlan?'added':''}" data-add-to-plan="${game.id}" aria-label="Add ${escapeHTML(game.title)} to plan"><span>+</span> Plan</button></div></div>${locked?`<div class="lock-card" style="margin-top:12px"><strong>PRO preview</strong><div class="help">Upgrade to unlock full instructions and planning tools.</div></div>`:''}</article>`;
 }
 function fitTags(g) { return [`Ages ${g.bestAgeMin}–${g.bestAgeMax}`, `${g.groupSizeMin}–${g.groupSizeMax} players`, `${g.timeMin}–${g.timeMax} min`, g.materials.length ? g.materials.join(', ') : 'No materials', g.safety].slice(0,5); }
 function stars(rating, small=false) { const full = Math.round(rating); return `<span class="stars ${small?'small':''}">${[1,2,3,4,5].map(i=>`<span class="${i<=full?'':'star-empty'}">★</span>`).join('')}</span>`; }
@@ -420,7 +384,7 @@ function renderNoResults() { return `<div class="card" style="padding:24px"><h2>
 function getFilteredGames() {
   const q = state.search.trim().toLowerCase();
   let games = state.games.filter(g => g.status !== 'archived');
-  if (q) games = games.filter(g => [g.title,g.shortDescription,g.description,g.materials.join(' '),g.tags.join(' '),(g.categories||[]).join(' ')].join(' ').toLowerCase().includes(q));
+  if (q) games = games.filter(g => [g.title,g.shortDescription,g.description,g.materials.join(' '),g.tags.join(' '),g.purpose.join(' ')].join(' ').toLowerCase().includes(q));
   const filters = state.filters;
   filters.forEach(f => {
     const n = f.toLowerCase();
@@ -434,7 +398,7 @@ function getFilteredGames() {
     else if (['Indoor','Outdoor'].includes(f)) games = games.filter(g => g.indoorOutdoor === f.toLowerCase() || g.indoorOutdoor === 'both');
     else if (f === 'Low Risk') games = games.filter(g => g.safety === 'Low Risk');
     else if (f === 'Moderate Risk') games = games.filter(g => g.safety === 'Moderate Risk');
-    else games = games.filter(g => g.tags.map(x=>x.toLowerCase()).includes(n) || (g.categories||[]).map(x=>x.toLowerCase()).includes(n) || g.materials.map(x=>x.toLowerCase()).includes(n));
+    else games = games.filter(g => g.tags.map(x=>x.toLowerCase()).includes(n) || g.purpose.map(x=>x.toLowerCase()).includes(n) || g.materials.map(x=>x.toLowerCase()).includes(n));
   });
   return sortGames(games);
 }
@@ -455,7 +419,7 @@ function sortGames(games) {
 
 function scoreGames(games = state.games) {
   const f = state.finder;
-  const materials = selectedMaterialsArray(f.materials).map(x=>x.toLowerCase());
+  const materials = String(f.materials || selectedMaterialsText()).toLowerCase().split(/[, ]+/).filter(Boolean);
   return games.map(game => {
     let score = 0; const reasons = [];
     if (f.ageMin >= game.bestAgeMin - 2 && f.ageMax <= game.bestAgeMax + 2) { score += 15; reasons.push('age fit'); } else score -= 10;
@@ -463,40 +427,35 @@ function scoreGames(games = state.games) {
     if (f.time >= game.timeMin || game.timeMax <= f.time + 5) { score += 15; reasons.push('fits your time'); } else score -= 8;
     const required = game.materials.map(m=>m.toLowerCase());
     if (required.length === 0) { score += 10; reasons.push('no materials'); }
-    else if (materials.includes('no materials')) score -= 20;
     else if (required.every(m => materials.includes(m))) { score += 15; reasons.push('materials match'); }
     else score -= 20;
     if (f.space === 'both' || game.indoorOutdoor === 'both' || game.indoorOutdoor === f.space) { score += 10; reasons.push('space match'); } else score -= 15;
-    if ((game.categories||[]).includes(f.category)) { score += 10; reasons.push('category match'); }
+    if (normalizeCategory(game.tags.join(' ')) === normalizeCategory(f.category || '')) { score += 10; reasons.push('category match'); }
     if (game.safety === 'Low Risk' || f.safety !== 'Low Risk') score += 10;
     score += Math.min(5, Math.round(game.averageRating));
-    if (String(f.avoid||'').toLowerCase().includes('not embarrassing') && game.embarrassment === 'Low') score += 5;
+    if (f.avoid.toLowerCase().includes('not embarrassing') && game.embarrassment === 'Low') score += 5;
     return { game, score: Math.max(0, Math.min(100, score)), reason: reasons.slice(0,4).join(', ') || 'closest available match' };
   }).sort((a,b)=>b.score-a.score);
 }
 
-function selectedMaterialsArray(value) {
-  const parts = String(value || '').split(',').map(x=>x.trim()).filter(Boolean);
-  return parts.length ? parts : ['No Materials'];
+function renderFilterScreen() {
+  return `<div class="app-frame fullscreen-page"><header class="topbar light-header">${headerBackButton()}<div class="topbar-title">FILTER BY</div><div></div></header><main class="filter-body">${FILTER_SECTIONS.map(sec=>`<section class="filter-group"><h2>${sec.title}</h2><div class="filter-chip-grid">${sec.options.map(o=>`<button class="filter-chip ${state.filters.includes(o)?'active':''}" data-filter-chip="${o}">${o}</button>`).join('')}</div></section>`).join('')}</main><div class="filter-bottom"><button class="btn btn-primary" data-clear-filters>Clear</button><button class="btn btn-secondary" data-back>Apply</button></div></div>`;
 }
 
-function renderFilterScreen() {
-  return `<div class="app-frame fullscreen-page">${renderTopbar('FILTER BY')}<main class="filter-body">${FILTER_SECTIONS.map(sec=>`<section class="filter-group"><h2>${sec.title}</h2><div class="filter-chip-grid">${sec.options.map(o=>`<button class="filter-chip ${state.filters.includes(o)?'active':''}" data-filter-chip="${o}">${o}</button>`).join('')}</div></section>`).join('')}</main><div class="filter-bottom"><button class="btn btn-primary" data-clear-filters>Clear</button><button class="btn btn-secondary" data-back>Apply</button></div></div>`;
+function renderMaterialsSelector() {
+  const selected = selectedMaterials();
+  return `<div class="app-frame fullscreen-page"><header class="topbar light-header">${headerBackButton()}<div class="topbar-title">AVAILABLE MATERIALS</div><div></div></header><main class="filter-body"><section class="filter-group"><h2>CHOOSE WHAT YOU HAVE</h2><div class="filter-chip-grid material-cloud">${AVAILABLE_MATERIALS.map(m=>`<button class="filter-chip ${selected.includes(m)?'active':''}" data-material-chip="${m}">${m}</button>`).join('')}</div></section></main><div class="filter-bottom one-button"><button class="btn btn-secondary full" data-back>Done</button></div></div>`;
 }
 
 function renderSortModalIfNeeded() { return window.__sortOpen ? `<div class="modal-backdrop" data-close-sort><div class="bottom-sheet" onclick="event.stopPropagation()"><h2>Sort by</h2>${SORT_OPTIONS.map(o=>`<label class="radio-row ${state.sort===o?'active':''}" data-set-sort="${o}"><span class="radio-circle"></span><span>${o}</span></label>`).join('')}<button class="btn btn-primary full" data-close-sort>Apply</button><button class="btn btn-secondary full" style="margin-top:12px" data-close-sort>Cancel</button></div></div>` : ''; }
 
 function renderGameDetail(id) {
   const game = state.games.find(g => g.id === id);
-  if (!game) return `<div class="app-frame">${renderTopbar()}<main class="content"><h1>Game not found</h1></main></div>`;
+  if (!game) return renderAppShell(`<main class="content"><h1>Game not found</h1></main>`);
   game.views += 1; saveState();
   const locked = !canViewGame(game);
-  return `<div class="app-frame game-page-frame">${renderGameTopbar(game.id)}<div class="detail-title-block"><h1>${game.title}</h1><div class="rating-row" style="justify-content:flex-start;gap:12px">${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span><button class="icon-btn heart ${isFavorite(game.id)?'active':''}" data-toggle-favorite="${game.id}">♥</button></div><p><a class="link" data-go="/app/games/${game.id}/reviews">View Reviews</a></p></div><main class="content" style="padding-top:0;padding-bottom:132px"><div class="media-hero thumb ${game.thumb}"><span>${game.title}</span></div><div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div><section class="content-section"><h2>Description:</h2><p>${game.description}</p></section><section class="content-section"><h2>Quick Facts:</h2><div class="quick-facts">${quickFacts(game).map(([k,v])=>`<div class="fact"><strong>${k}</strong><span>${v}</span></div>`).join('')}</div></section>${locked ? renderLockedGame(game) : renderFullGameDetails(game)}<section class="content-section"><h2>Filters:</h2><div class="tag-list">${game.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></section><section class="content-section"><h2>Creators:</h2><p>${game.creator}</p></section></main><div class="sticky-actions three-actions"><button class="btn btn-primary" data-go="/app/games/${game.id}/rate">Rate This Game</button><button class="btn btn-secondary" data-go="/app/games/${game.id}/notes">Add Notes</button><button class="btn btn-secondary" data-add-to-plan="${game.id}">Add to Plan</button></div></div>`;
+  return `<div class="app-frame game-page-frame"><header class="topbar light-header">${headerBackButton()}${headerBrand()}<div class="header-actions"><button class="icon-btn icon-image-btn" data-share-game="${game.id}" aria-label="Share"><img src="/assets/ios-share.svg" alt=""></button></div></header><div class="detail-title-block"><h1>${game.title}</h1><div class="rating-row" style="justify-content:flex-start;gap:12px">${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span><button class="icon-btn heart ${isFavorite(game.id)?'active':''}" data-toggle-favorite="${game.id}">♥</button></div><p><a class="link" data-go="/app/games/${game.id}/reviews">View Reviews</a></p></div><main class="content" style="padding-top:0;padding-bottom:116px"><div class="media-hero thumb ${game.thumb}"><span>${game.title}</span></div><div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div><section class="content-section"><h2>Description:</h2><p>${game.description}</p></section><section class="content-section"><h2>Quick Facts:</h2><div class="quick-facts">${quickFacts(game).map(([k,v])=>`<div class="fact"><strong>${k}</strong><span>${v}</span></div>`).join('')}</div></section>${locked ? renderLockedGame(game) : renderFullGameDetails(game)}<section class="content-section"><h2>Filters:</h2><div class="tag-list">${game.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></section><section class="content-section"><h2>Creators:</h2><p>${game.creator}</p></section></main><div class="sticky-actions sticky-actions-3"><button class="btn btn-primary" data-go="/app/games/${game.id}/rate">Rate This Game</button><button class="btn btn-secondary" data-go="/app/games/${game.id}/notes">Add Notes</button><button class="btn btn-secondary" data-add-to-plan="${game.id}">Add to Plan</button></div></div>`;
 }
-function renderGameTopbar(gameId) {
-  return `<header class="topbar"><button class="icon-btn back-btn" data-back aria-label="Back"><img src="/assets/back_button.png" alt=""></button><div class="header-brand">${APP_HEADER}</div><div class="header-actions"><button class="icon-btn asset-icon" data-share-game="${gameId}" title="Share" aria-label="Share"><img src="/assets/ios-share.svg" alt=""></button></div></header>`;
-}
-
 function quickFacts(g) { return [['Ages', `${g.bestAgeMin}–${g.bestAgeMax}`], ['Players', `${g.groupSizeMin}–${g.groupSizeMax}`], ['Time', `${g.timeMin}–${g.timeMax} min`], ['Space', g.space], ['Energy', g.energy], ['Materials', g.materials.length?g.materials.join(', '):'None'], ['Safety', g.safety], ['Prep', `${g.prep} min`]]; }
 function renderLockedGame(game) { return `<section class="content-section lock-card"><h2>Unlock this PRO game</h2><p>Free users can preview the title, summary, quick facts, rating, and tags. Upgrade to PRO for full instructions and planning tools.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></section>`; }
 function renderFullGameDetails(game) { return `${section('What to Get:', game.materials.length ? [`Gather: ${game.materials.join(', ')}`] : ['No materials needed.'])}${section('What to Prep:', [game.setup])}${section('How to Play:', game.howToPlay)}${section('Leader Script:', [game.leaderScript])}${section('Safety Notes:', [game.safetyNotes, `Avoid with: ${game.avoidWith}`, `Requires: ${game.requires}`])}${section('Variations:', [game.variations])}${section('Make It Easier:', [game.easier])}${section('Make It Harder:', [game.harder])}${section('Debrief Questions:', game.debriefQuestions)}${section('Bible Bridge:', [game.bibleBridge, `References: ${game.scripture.join(', ')}`])}`; }
@@ -505,7 +464,7 @@ function section(title, items) { return `<section class="content-section"><h2>${
 function renderReviewsScreen(id) {
   const g = state.games.find(x=>x.id===id); if (!g) return '';
   const reviews = state.ratings.filter(r=>r.gameId===id && r.reviewStatus==='published');
-  return `<div class="app-frame game-page-frame">${renderGameTopbar(id)}<main class="content no-bottom-nav"><div class="card review-summary"><div class="review-score">${g.averageRating.toFixed(1)}</div><div>${stars(g.averageRating)}<div class="review-meta">${g.ratingCount} ratings and ${reviews.filter(r=>r.reviewText).length} reviews</div></div></div><button class="btn btn-primary full" style="margin:18px 0" data-go="/app/games/${id}/rate">Rate This Game</button><section><h2 style="text-transform:uppercase">Reviews:</h2>${reviews.map(renderReviewRow).join('') || '<p class="help">No written reviews yet.</p>'}</section></main></div>`;
+  return `<div class="app-frame game-page-frame"><header class="topbar light-header">${headerBackButton()}<div class="topbar-title">REVIEWS</div><div></div></header><main class="content"><div class="card review-summary"><div class="review-score">${g.averageRating.toFixed(1)}</div><div>${stars(g.averageRating)}<div class="review-meta">${g.ratingCount} ratings and ${reviews.filter(r=>r.reviewText).length} reviews</div></div></div><button class="btn btn-primary full" style="margin:18px 0" data-go="/app/games/${id}/rate">Rate This Game</button><section><h2 style="text-transform:uppercase">Reviews:</h2>${reviews.map(renderReviewRow).join('') || '<p class="help">No written reviews yet.</p>'}</section></main></div>`;
 }
 function renderReviewRow(r) { const u = state.users.find(x=>x.id===r.userId) || {fullName:'HooraPlaybook User'}; return `<div class="review-row"><div class="avatar">${initials(u.fullName)}</div><div><div class="review-name">${u.fullName}</div><div>${stars(r.rating,true)} <span class="review-meta">${new Date(r.createdAt).toLocaleString()}</span></div>${r.reviewText?`<p class="help" style="font-size:15px">${escapeHTML(r.reviewText)}</p>`:''}</div></div>`; }
 function initials(name='User') { return name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(); }
@@ -513,12 +472,12 @@ function initials(name='User') { return name.split(' ').map(x=>x[0]).join('').sl
 function renderRateScreen(id) {
   const game = state.games.find(g=>g.id===id); if (!game) return '';
   const existing = state.ratings.find(r=>r.gameId===id && r.userId===currentUser().id) || {};
-  return `<div class="app-frame fullscreen-page game-page-frame">${renderGameTopbar(id)}<main class="content no-bottom-nav"><form id="rate-form" data-game-id="${id}"><input type="hidden" name="rating" value="${existing.rating||0}"><div class="rate-card star-picker">${[1,2,3,4,5].map(i=>`<button type="button" class="${(existing.rating||0)>=i?'active':''}" data-star="${i}">☆</button>`).join('')}</div><label><span class="label">Review</span><textarea name="reviewText" placeholder="Write review">${escapeHTML(existing.reviewText||'')}</textarea></label><h2>IMAGES</h2><label class="upload-tile">+<input name="images" type="file" accept="image/*" multiple hidden></label><h2>VIDEOS</h2><label class="upload-tile">+<input name="videos" type="file" accept="video/*" multiple hidden></label></form></main><div class="sticky-actions" style="grid-template-columns:1fr"><button class="btn btn-primary full" form="rate-form">Submit</button></div></div>`;
+  return `<div class="app-frame fullscreen-page game-page-frame"><header class="topbar light-header">${headerBackButton()}<div class="topbar-title">RATE THIS GAME</div><div></div></header><main class="content no-bottom-nav"><form id="rate-form" data-game-id="${id}"><input type="hidden" name="rating" value="${existing.rating||0}"><div class="rate-card star-picker">${[1,2,3,4,5].map(i=>`<button type="button" class="${(existing.rating||0)>=i?'active':''}" data-star="${i}">☆</button>`).join('')}</div><label><span class="label">Review</span><textarea name="reviewText" placeholder="Write review">${escapeHTML(existing.reviewText||'')}</textarea></label><h2>IMAGES</h2><label class="upload-tile">+<input name="images" type="file" accept="image/*" multiple hidden></label><h2>VIDEOS</h2><label class="upload-tile">+<input name="videos" type="file" accept="video/*" multiple hidden></label></form></main><div class="sticky-actions" style="grid-template-columns:1fr"><button class="btn btn-primary full" form="rate-form">Submit</button></div></div>`;
 }
 
 function renderNotesScreen(id) {
   const game = state.games.find(g=>g.id===id); const key = `${currentUser().id}:${id}`; const note = state.notes[key] || '';
-  return `<div class="app-frame game-page-frame">${renderGameTopbar(id)}<main class="content no-bottom-nav"><div class="card" style="padding:18px"><h2>${game.title}</h2><form id="notes-form" data-game-id="${id}" class="form-grid"><textarea name="note" placeholder="Private leader notes...">${escapeHTML(note)}</textarea><button class="btn btn-primary full">Save Notes</button></form></div></main></div>`;
+  return `<div class="app-frame game-page-frame"><header class="topbar light-header">${headerBackButton()}<div class="topbar-title">ADD NOTES</div><div></div></header><main class="content no-bottom-nav"><div class="card" style="padding:18px"><h2>${game.title}</h2><form id="notes-form" data-game-id="${id}" class="form-grid"><textarea name="note" placeholder="Private leader notes...">${escapeHTML(note)}</textarea><button class="btn btn-primary full">Save Notes</button></form></div></main></div>`;
 }
 
 function renderFavorites() {
@@ -528,55 +487,37 @@ function renderFavorites() {
 }
 
 function renderPlan() {
-  if (!hasProAccess()) return `<main class="content"><div class="lock-card"><h1>My Plans is PRO</h1><p>Build, save, reopen, and manage full session plans.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></div></main>`;
+  if (!hasProAccess()) return `<main class="content"><div class="lock-card"><h1>My Plans is PRO</h1><p>Save, organize, and modify reusable game plans.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></div></main>`;
+  const parts = route.parts;
+  if (parts[2] === 'new') return renderCreatePlanPage();
+  if (parts[2] && parts[3] === 'modify') return renderModifyPlan(parts[2]);
   const plans = userPlans();
-  return `<main class="content"><div class="plans-page-head"><div><h1>My Plans</h1><p class="help">View saved plans, modify games, rename, or remove old plans.</p></div><button class="create-plan-btn" data-create-plan><span>+</span><strong>Create a New Plan</strong></button></div><section class="game-list">${plans.map(renderSessionPlan).join('') || '<div class="card" style="padding:22px"><h2>No saved plans yet.</h2><p class="help">Use Create a New Plan or add games from the Find screen.</p></div>'}</section></main>`;
-}
-function renderSessionPlan(plan) {
-  const items = planItemsWithGames(plan);
-  return `<section class="card plan-output" style="padding:18px"><h2>${escapeHTML(plan.title)}</h2><p class="help">Combined materials: ${planMaterials(plan).join(', ') || 'none'}</p>${items.map(item=>`<button class="timeline-item clickable-timeline" data-go="/app/games/${item.gameId}"><div class="timeline-time">${escapeHTML(item.start || '0:00')} · ${item.duration || 10} min</div><div class="timeline-title">${escapeHTML(item.type || 'Game')}: ${escapeHTML(item.title)}</div><p class="help">${escapeHTML(item.notes || '')}</p></button>`).join('')}<div class="plan-actions"><button class="btn btn-secondary" data-modify-plan="${plan.id}"><img class="btn-icon" src="/assets/edit-246.svg" alt="">Modify</button><button class="btn btn-secondary" data-rename-plan="${plan.id}">Rename</button><button class="btn btn-danger" data-delete-plan="${plan.id}">Delete</button></div></section>`;
+  return `<main class="content"><div class="page-heading-row"><div><h1>My Plans</h1><p class="help">Saved plans are reusable. Games inside saved plans are clickable.</p></div><button class="btn btn-secondary create-plan-btn" data-go="/app/plan/new"><span>+</span> Create a New Plan</button></div><section class="game-list saved-plan-list">${plans.map(renderPlanCard).join('') || '<div class="card" style="padding:22px"><h2>No saved plans yet.</h2><p class="help">Create your first plan or add games from game cards.</p><button class="btn btn-primary full" data-go="/app/plan/new">+ Create a New Plan</button></div>'}</section></main>`;
 }
 
+function renderCreatePlanPage() {
+  return `<main class="content"><section class="hero-card"><h1>Create a New Plan</h1><p>Name the plan, then add games from the Find screen or game pages.</p><form id="create-plan-form" class="form-grid"><label><span class="label">Plan name</span><input class="input" name="title" value="Youth Night Plan" required></label><label><span class="label">Available Materials</span><button type="button" class="selector-row" data-go="/app/materials"><span>${escapeHTML(selectedMaterialsText())}</span><strong>›</strong></button></label><label><span class="label">Category</span><select class="input" name="category">${STANDARD_CATEGORIES.map(c=>`<option>${c}</option>`).join('')}</select></label><button class="btn btn-primary full">Save Plan</button></form></section></main>`;
+}
 
-function userPlans() { return state.sessions.filter(s => s.userId === currentUser().id); }
-function planItemsWithGames(plan) {
-  return (plan.items || []).map((item, index) => {
-    const game = item.gameId ? state.games.find(g => g.id === item.gameId) : state.games.find(g => g.title === item.title);
-    return { ...item, gameId: game?.id || item.gameId || '', title: item.title || game?.title || `Game ${index+1}`, notes: item.notes || game?.shortDescription || '' };
-  }).filter(item => item.gameId);
+function renderPlanCard(plan) {
+  return `<section class="card plan-card" style="padding:18px"><h2>${escapeHTML(plan.title)}</h2><p class="help">Combined materials: ${(plan.materials || []).join(', ') || 'none'}</p><div class="plan-game-list">${(plan.items || []).map((item, index)=>renderPlanGameRow(plan, item, index, false)).join('') || '<p class="help">No games in this plan yet.</p>'}</div><div class="plan-actions"><button class="btn btn-secondary" data-go="/app/plan/${plan.id}/modify"><img class="btn-icon" src="/assets/edit-246.svg" alt=""> Modify</button><button class="btn btn-secondary" data-rename-plan="${plan.id}">Rename</button><button class="btn btn-danger" data-delete-plan="${plan.id}">Delete</button></div></section>`;
 }
-function planMaterials(plan) {
-  const ids = planItemsWithGames(plan).map(item => item.gameId);
-  return [...new Set(ids.flatMap(id => (state.games.find(g=>g.id===id)?.materials || [])))];
-}
-function createBlankPlan(title = 'New Plan', gameId = null) {
-  const plan = { id: crypto.randomUUID(), userId: currentUser().id, title, materials: [], items: [] };
-  if (gameId) addGameToPlanObject(plan, gameId);
-  state.sessions.push(plan);
-  saveState();
-  return plan;
-}
-function addGameToPlanObject(plan, gameId) {
-  const game = state.games.find(g => g.id === gameId);
-  if (!game) return;
-  plan.items = plan.items || [];
-  if (plan.items.some(item => item.gameId === gameId)) return;
-  plan.items.push({ type: plan.items.length ? 'Game' : 'Main Game', title: game.title, gameId: game.id, start: `${plan.items.length * 10}:00`, duration: Math.max(5, game.timeMin || 10), notes: game.shortDescription });
-  plan.materials = planMaterials(plan);
-}
+
 function renderModifyPlan(planId) {
-  const plan = state.sessions.find(p => p.id === planId && p.userId === currentUser().id);
-  if (!plan) return `<main class="content"><div class="card" style="padding:22px"><h1>Plan not found</h1></div></main>`;
-  const items = planItemsWithGames(plan);
-  return `<main class="content"><section class="hero-card"><h1>Modify Plan</h1><p>${escapeHTML(plan.title)} — drag games up or down, or swipe left to remove.</p></section><div class="modify-list" data-plan-id="${plan.id}">${items.map((item, index)=>renderSwipePlanItem(plan.id, item, index)).join('') || '<div class="card" style="padding:22px"><h2>No games in this plan yet.</h2></div>'}</div></main>`;
+  const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id);
+  if (!plan) return `<main class="content"><div class="card" style="padding:22px"><h2>Plan not found.</h2></div></main>`;
+  return `<main class="content"><div class="page-heading-row"><div><h1>Modify Plan</h1><p class="help">Drag games up or down to change the order. Use the red X to remove a game.</p></div></div><section class="card" style="padding:14px"><h2>${escapeHTML(plan.title)}</h2><div class="plan-game-list sortable-plan" data-plan-id="${plan.id}">${(plan.items || []).map((item, index)=>renderPlanGameRow(plan, item, index, true)).join('') || '<p class="help">No games in this plan.</p>'}</div></section></main>`;
 }
-function renderSwipePlanItem(planId, item, index) {
-  return `<div class="swipe-item" data-plan-id="${planId}" data-game-id="${item.gameId}" draggable="true"><div class="swipe-action" aria-hidden="true"><span>Remove</span></div><div class="swipe-card card plan-game-card" data-go="/app/games/${item.gameId}"><div class="drag-handle" aria-hidden="true">☰</div><div><div class="timeline-time">${index + 1}</div><div class="timeline-title">${escapeHTML(item.title)}</div><p class="help">${escapeHTML(item.notes || '')}</p></div><button class="sr-remove-btn" data-remove-plan-game="${planId}:${item.gameId}" aria-label="Remove ${escapeHTML(item.title)}">Remove</button></div></div>`;
+
+function renderPlanGameRow(plan, item, index, sortable=false) {
+  const game = gameByPlanItem(item);
+  const title = game?.title || item.title || 'Game';
+  const desc = game?.shortDescription || item.notes || '';
+  const gameId = game?.id || item.gameId || '';
+  return `<div class="plan-game-row ${sortable?'draggable-row':''}" ${sortable?'draggable="true"':''} data-plan-id="${plan.id}" data-item-index="${index}"><button class="drag-handle" aria-label="Drag ${escapeHTML(title)}">☰</button><button class="plan-game-main" ${gameId?`data-go="/app/games/${gameId}"`:''}><span class="plan-game-number">${index+1}</span><span><strong>${escapeHTML(title)}</strong><small>${escapeHTML(desc)}</small></span></button><button class="remove-x-btn" data-remove-plan-game="${plan.id}:${index}" aria-label="Remove ${escapeHTML(title)}"><img src="/assets/Remove.png" alt=""></button></div>`;
 }
-function renderMaterialSelector(backPath = '/app/plan') {
-  const selected = selectedMaterialsArray(state.finder.materials);
-  return `<div class="app-frame fullscreen-page">${renderTopbar('AVAILABLE MATERIALS')}<main class="filter-body"><section class="filter-group"><h2>Choose what you have</h2><div class="filter-chip-grid material-cloud">${MATERIAL_OPTIONS.map(o=>`<button class="filter-chip ${selected.includes(o)?'active':''}" data-material-choice="${o}">${o}</button>`).join('')}</div></section></main><div class="filter-bottom"><button class="btn btn-primary" data-material-clear>No Materials</button><button class="btn btn-secondary" data-go="${backPath}">Done</button></div></div>`;
-}
+
+function renderSessionPlan(plan) { return renderPlanCard(plan); }
 
 function renderSubmit() {
   const staffPublishControl = isStaff()
@@ -620,16 +561,17 @@ function renderTools() { return `<main class="content"><section class="hero-card
 
 function renderAccount() {
   const u = currentUser();
-  const batchCard = isStaff(u) ? `<div class="card" style="padding:18px"><h2>Staff Batch Import</h2><p class="help">Upload multiple Markdown game files from the Add Games screen.</p><button class="btn btn-secondary full" data-go="/app/submit">Open Add Games</button></div>` : '';
-  return `<main class="content"><section class="hero-card"><h1>Account</h1><p>${u.fullName} · ${u.email}</p><div class="magic-row"><span class="magic-chip">Role: ${u.role}</span><span class="magic-chip">Plan: ${u.plan}</span><span class="magic-chip">Access: ${hasProAccess(u)?'PRO active':'Free'}</span></div></section><div class="game-list"><div class="card" style="padding:18px"><h2>My Plans</h2><p class="help">Build, save, view, rename, modify, and reopen your saved plans.</p><button class="btn btn-primary full" data-go="/app/plan">Open My Plans</button></div><div class="card" style="padding:18px"><h2>Redeem Coupon</h2><form id="redeem-form" class="form-grid"><input class="input" name="code" maxlength="16" placeholder="16-character code"><button class="btn btn-primary full">Redeem one free month</button></form></div>${batchCard}<button class="btn btn-secondary full" data-go="/pricing">Upgrade / Manage Billing</button>${isStaff(u)?'<button class="btn btn-dark full" data-go="/admin">Admin Panel</button>':''}<button class="btn btn-danger full" data-logout>Log out</button></div></main>`;
+  const myBatches = (state.importBatches || []).filter(b => b.uploadedBy === u.id).slice(-3).reverse();
+  const batchCard = myBatches.length ? `<div class="card" style="padding:18px"><h2>Recent Batch Uploads</h2>${myBatches.map(b=>`<p class="help"><strong>${b.importedCount}/${b.fileCount}</strong> imported · ${b.publishMode === 'publish_now' ? 'published' : 'queued for moderation'}${b.failedCount ? ` · ${b.failedCount} failed` : ''}</p>`).join('')}</div>` : '';
+  return `<main class="content"><section class="hero-card"><h1>Account</h1><p>${u.fullName} · ${u.email}</p><div class="magic-row"><span class="magic-chip">Role: ${u.role}</span><span class="magic-chip">Plan: ${u.plan}</span><span class="magic-chip">Access: ${hasProAccess(u)?'PRO active':'Free'}</span></div></section><div class="game-list"><div class="card" style="padding:18px"><h2>My Plans</h2><p class="help">View, create, modify, rename, and delete your saved plans.</p><button class="btn btn-secondary full" data-go="/app/plan">Open My Plans</button></div><div class="card" style="padding:18px"><h2>Redeem Coupon</h2><form id="redeem-form" class="form-grid"><input class="input" name="code" maxlength="16" placeholder="16-character code"><button class="btn btn-primary full">Redeem one free month</button></form></div>${batchCard}<button class="btn btn-secondary full" data-go="/pricing">Upgrade / Manage Billing</button>${isStaff(u)?'<button class="btn btn-dark full" data-go="/admin">Admin Panel</button>':''}<button class="btn btn-danger full" data-logout>Log out</button><p class="app-version">Version ${APP_VERSION}</p></div></main>`;
 }
 
 function renderAdminRoute() {
-  if (!isStaff()) return `<div class="app-frame">${renderTopbar('ADMIN')}<main class="content"><div class="lock-card">Only staff can access admin tools.</div></main></div>`;
-  const sub = route.parts[1] || 'dashboard';
-  const title = sub === 'dashboard' ? 'Admin' : `Admin > ${sub[0].toUpperCase()+sub.slice(1)}`;
-  const inner = sub === 'users' ? renderAdminUsers() : sub === 'coupons' ? renderAdminCoupons() : sub === 'submissions' ? renderAdminSubmissions() : sub === 'games' ? renderAdminGames() : renderAdminDashboard();
-  return `<div class="app-frame">${renderTopbar(title)}<main class="content"><div class="chip-scroll"><button class="chip quick-chip" data-go="/admin">Dashboard</button><button class="chip quick-chip" data-go="/admin/users">Users</button><button class="chip quick-chip" data-go="/admin/coupons">Coupons</button><button class="chip quick-chip" data-go="/admin/submissions">Submissions</button><button class="chip quick-chip" data-go="/admin/games">Games</button></div>${inner}</main>${renderBottomNav()}</div>`;
+  if (!isStaff()) return renderAppShell(`<main class="content"><h1>Not authorized</h1></main>`);
+  const tab = route.parts[1] || 'dashboard';
+  const title = tab === 'dashboard' ? 'ADMIN' : tab.toUpperCase();
+  const inner = tab === 'users' ? renderAdminUsers() : tab === 'coupons' ? renderAdminCoupons() : tab === 'submissions' ? renderAdminSubmissions() : tab === 'games' ? renderAdminGames() : renderAdminDashboard();
+  return `<div class="app-frame"><header class="topbar light-header">${headerBackButton()}<div class="topbar-title">${title}</div><div></div></header><main class="content"><div class="chip-scroll"><button class="chip quick-chip" data-go="/admin">Dashboard</button><button class="chip quick-chip" data-go="/admin/users">Users</button><button class="chip quick-chip" data-go="/admin/coupons">Coupons</button><button class="chip quick-chip" data-go="/admin/submissions">Submissions</button><button class="chip quick-chip" data-go="/admin/games">Games</button></div>${inner}</main>${renderBottomNav()}</div>`;
 }
 function renderStaffRoute() { return renderAdminRoute(); }
 function renderAdminDashboard() { const pro = state.users.filter(u=>u.plan==='pro').length; return `<div class="admin-grid"><div class="stat-card"><span>Total users</span><strong>${state.users.length}</strong></div><div class="stat-card"><span>PRO users</span><strong>${pro}</strong></div><div class="stat-card"><span>Pending submissions</span><strong>${state.submissions.filter(s=>s.status==='submitted').length}</strong></div><div class="stat-card"><span>Coupons</span><strong>${state.coupons.length}</strong></div><div class="stat-card"><span>Total games</span><strong>${state.games.length}</strong></div><div class="stat-card"><span>Batch imports</span><strong>${(state.importBatches||[]).length}</strong></div><div class="stat-card"><span>Avg rating</span><strong>${avg(state.games.map(g=>g.averageRating)).toFixed(1)}</strong></div></div>`; }
@@ -639,42 +581,38 @@ function renderAdminCoupons() { if (!isAdmin()) return `<div class="lock-card">O
 function renderAdminSubmissions() { return `<div class="game-list">${state.submissions.map(s=>`<div class="card" style="padding:18px"><div class="pro-badge">${s.status}</div><h2>${escapeHTML(s.payload.title||'Untitled')}</h2><p class="help">${escapeHTML(s.payload.shortDescription||'')}</p>${s.sourceFilename?`<p class="help"><strong>Source file:</strong> ${escapeHTML(s.sourceFilename)} · ${escapeHTML(s.source||'manual')}</p>`:''}<div class="two-col"><button class="btn btn-primary" data-approve-submission="${s.id}">Approve / Publish</button><button class="btn btn-secondary" data-reject-submission="${s.id}">Reject</button></div></div>`).join('') || '<div class="card" style="padding:22px"><h2>No submissions yet.</h2></div>'}</div>`; }
 function renderAdminGames() { return `<div class="game-list">${state.games.map(g=>`<div class="card" style="padding:16px"><h2>${g.title}</h2><div class="magic-row"><span class="magic-chip">${g.accessLevel}</span><span class="magic-chip">${g.safety}</span></div><div class="two-col"><button class="btn btn-secondary" data-toggle-game-access="${g.id}">Toggle Free/PRO</button><button class="btn btn-danger" data-delete-game="${g.id}">Delete</button></div></div>`).join('')}</div>`; }
 
-
-
 function bindEvents() {
-  document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); go(el.dataset.go); }));
-  document.querySelectorAll('[data-back]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); goBack(); }));
+  document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); go(el.dataset.go); }));
+  document.querySelectorAll('[data-back]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); goBack(); }));
   document.querySelectorAll('[data-filter-chip]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toggleFilter(el.dataset.filterChip); }));
-  document.querySelectorAll('[data-clear-filters]').forEach(el => el.addEventListener('click', () => { state.filters = []; state.search = ''; saveState(); render(); }));
-  document.querySelectorAll('[data-open-sort]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); window.__sortOpen = true; render(); }));
-  document.querySelectorAll('[data-close-sort]').forEach(el => el.addEventListener('click', () => { window.__sortOpen = false; render(); }));
-  document.querySelectorAll('[data-set-sort]').forEach(el => el.addEventListener('click', () => { state.sort = el.dataset.setSort; saveState(); render(); }));
-  document.querySelectorAll('[data-game-card]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('button')) return; go(`/app/games/${el.dataset.gameCard}`); }));
-  document.querySelectorAll('[data-toggle-favorite]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toggleFavorite(el.dataset.toggleFavorite); }));
-  document.querySelectorAll('[data-add-to-plan]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); window.__addToPlanGameId = el.dataset.addToPlan; render(); }));
-  document.querySelectorAll('[data-close-plan-modal]').forEach(el => el.addEventListener('click', () => { window.__addToPlanGameId = null; render(); }));
-  document.querySelectorAll('[data-add-to-existing-plan]').forEach(el => el.addEventListener('click', () => addGameToExistingPlan(el.dataset.addToExistingPlan, window.__addToPlanGameId)));
-  const createFromGame = byId('create-plan-from-game-form'); if (createFromGame) createFromGame.addEventListener('submit', handleCreatePlanFromGame);
-  document.querySelectorAll('[data-create-plan]').forEach(el => el.addEventListener('click', handleCreatePlan));
-  document.querySelectorAll('[data-modify-plan]').forEach(el => el.addEventListener('click', () => go(`/app/plan/${el.dataset.modifyPlan}/modify`)));
+  document.querySelectorAll('[data-material-chip]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toggleMaterial(el.dataset.materialChip); }));
+  byId('search-input')?.addEventListener('input', handleSearchInput);
+  byId('finder-form')?.addEventListener('submit', handleFinder);
+  byId('login-form')?.addEventListener('submit', handleLogin);
+  byId('signup-form')?.addEventListener('submit', handleSignup);
+  byId('rate-form')?.addEventListener('submit', handleRate);
+  byId('notes-form')?.addEventListener('submit', handleNotes);
+  byId('submit-game-form')?.addEventListener('submit', handleSubmitGame);
+  byId('batch-upload-form')?.addEventListener('submit', handleBatchUpload);
+  byId('redeem-form')?.addEventListener('submit', handleRedeem);
+  byId('coupon-form')?.addEventListener('submit', handleCouponGeneration);
+  byId('admin-create-user')?.addEventListener('submit', handleAdminCreateUser);
+  byId('create-plan-form')?.addEventListener('submit', handleCreatePlan);
+  document.querySelectorAll('[data-toggle-favorite]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleFavorite(el.dataset.toggleFavorite); }));
+  document.querySelectorAll('[data-add-to-plan]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openAddToPlan(el.dataset.addToPlan); }));
+  document.querySelectorAll('[data-game-card]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('button,a')) return; go(`/app/games/${el.dataset.gameCard}`); }));
+  document.querySelectorAll('[data-add-game-to-existing-plan]').forEach(el => el.addEventListener('click', () => addGameToPlan(window.__addToPlanGameId, el.dataset.addGameToExistingPlan)));
+  document.querySelectorAll('[data-create-plan-with-game]').forEach(el => el.addEventListener('click', () => createPlanWithGame(window.__addToPlanGameId)));
+  document.querySelectorAll('[data-close-add-plan]').forEach(el => el.addEventListener('click', closeAddToPlan));
   document.querySelectorAll('[data-rename-plan]').forEach(el => el.addEventListener('click', () => renamePlan(el.dataset.renamePlan)));
   document.querySelectorAll('[data-delete-plan]').forEach(el => el.addEventListener('click', () => deletePlan(el.dataset.deletePlan)));
-  document.querySelectorAll('[data-remove-plan-game]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); const [planId, gameId] = el.dataset.removePlanGame.split(':'); removeGameFromPlan(planId, gameId); }));
-  document.querySelectorAll('[data-material-choice]').forEach(el => el.addEventListener('click', () => toggleMaterialChoice(el.dataset.materialChoice)));
-  document.querySelectorAll('[data-material-clear]').forEach(el => el.addEventListener('click', () => { state.finder.materials = 'No Materials'; saveState(); render(); }));
-  const search = byId('search-input'); if (search) search.addEventListener('input', handleSearchInput);
-  const login = byId('login-form'); if (login) login.addEventListener('submit', handleLogin);
-  const signup = byId('signup-form'); if (signup) signup.addEventListener('submit', handleSignup);
-  const finder = byId('finder-form'); if (finder) finder.addEventListener('submit', handleFinder);
-  const rate = byId('rate-form'); if (rate) rate.addEventListener('submit', handleRate);
+  document.querySelectorAll('[data-remove-plan-game]').forEach(el => el.addEventListener('click', () => removePlanGame(el.dataset.removePlanGame)));
+  initPlanDragAndDrop();
+  document.querySelectorAll('[data-clear-filters]').forEach(el => el.addEventListener('click', () => { state.filters=[]; saveState(); render(); }));
+  document.querySelectorAll('[data-open-sort]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); window.__sortOpen = true; render(); }));
+  document.querySelectorAll('[data-close-sort]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); window.__sortOpen = false; render(); }));
+  document.querySelectorAll('[data-set-sort]').forEach(el => el.addEventListener('click', () => { state.sort = el.dataset.setSort; saveState(); window.__sortOpen=false; render(); }));
   document.querySelectorAll('[data-star]').forEach(el => el.addEventListener('click', () => setStars(Number(el.dataset.star))));
-  const notes = byId('notes-form'); if (notes) notes.addEventListener('submit', handleNotes);
-  const submitGame = byId('submit-game-form'); if (submitGame) submitGame.addEventListener('submit', handleSubmitGame);
-  const batchUpload = byId('batch-upload-form'); if (batchUpload) batchUpload.addEventListener('submit', handleBatchUpload);
-  const sessionForm = byId('session-form'); if (sessionForm) sessionForm.addEventListener('submit', handleSession);
-  const redeem = byId('redeem-form'); if (redeem) redeem.addEventListener('submit', handleRedeem);
-  const coupon = byId('coupon-form'); if (coupon) coupon.addEventListener('submit', handleCouponGeneration);
-  const createUser = byId('admin-create-user'); if (createUser) createUser.addEventListener('submit', handleAdminCreateUser);
   document.querySelectorAll('[data-user-field]').forEach(el => el.addEventListener('change', handleUserField));
   document.querySelectorAll('[data-grant-pro]').forEach(el => el.addEventListener('click', () => grantPro(el.dataset.grantPro, 30)));
   document.querySelectorAll('[data-copy]').forEach(el => el.addEventListener('click', () => navigator.clipboard?.writeText(el.dataset.copy).then(()=>toast('Copied.'))));
@@ -686,173 +624,6 @@ function bindEvents() {
   document.querySelectorAll('[data-upgrade]').forEach(el => el.addEventListener('click', () => handleUpgrade(el.dataset.upgrade)));
   document.querySelectorAll('[data-share-game]').forEach(el => el.addEventListener('click', () => shareGame(el.dataset.shareGame)));
   document.querySelectorAll('[data-random-icebreaker]').forEach(el => el.addEventListener('click', randomIcebreaker));
-  bindPlanReorder();
-  bindSwipeRemoval();
-}
-
-
-let searchTimer;
-function handleSearchInput(e) {
-  state.search = e.target.value;
-  saveState();
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    render();
-    const next = byId('search-input');
-    if (next) {
-      next.focus();
-      const len = next.value.length;
-      try { next.setSelectionRange(len, len); } catch (_) {}
-    }
-  }, 180);
-}
-function renderAddToPlanModal() {
-  const gameId = window.__addToPlanGameId;
-  if (!gameId) return '';
-  const game = state.games.find(g => g.id === gameId);
-  if (!game) return '';
-  const plans = userPlans();
-  return `<div class="modal-backdrop" data-close-plan-modal><div class="bottom-sheet" onclick="event.stopPropagation()"><h2>Add to Plan</h2><p class="help">${escapeHTML(game.title)}</p><div class="plan-choice-list">${plans.map(plan=>`<button class="plan-choice" data-add-to-existing-plan="${plan.id}"><strong>${escapeHTML(plan.title)}</strong><span>${planItemsWithGames(plan).length} game(s)</span></button>`).join('') || '<p class="help">No saved plans yet. Create one below.</p>'}</div><form id="create-plan-from-game-form" class="form-grid" style="margin-top:14px"><label><span class="label">Create New Plan</span><input class="input" name="title" value="New Plan"></label><button class="btn btn-primary full">Create and Add</button></form><button class="btn btn-secondary full" style="margin-top:12px" data-close-plan-modal>Cancel</button></div></div>`;
-}
-function addGameToExistingPlan(planId, gameId) {
-  const plan = state.sessions.find(p => p.id === planId && p.userId === currentUser().id);
-  if (!plan) return toast('Plan not found.');
-  addGameToPlanObject(plan, gameId);
-  saveState();
-  window.__addToPlanGameId = null;
-  toast('Added to plan.');
-  render();
-}
-function handleCreatePlanFromGame(e) {
-  e.preventDefault();
-  const title = new FormData(e.target).get('title') || 'New Plan';
-  const plan = createBlankPlan(title, window.__addToPlanGameId);
-  window.__addToPlanGameId = null;
-  toast('Plan created.');
-  go(`/app/plan/${plan.id}/modify`);
-}
-function handleCreatePlan() {
-  const title = window.prompt('Plan name', 'New Plan');
-  if (!title) return;
-  const plan = createBlankPlan(title);
-  toast('Plan created.');
-  go(`/app/plan/${plan.id}/modify`);
-}
-function renamePlan(planId) {
-  const plan = state.sessions.find(p => p.id === planId && p.userId === currentUser().id);
-  if (!plan) return;
-  const title = window.prompt('Rename plan', plan.title);
-  if (!title) return;
-  plan.title = title;
-  saveState();
-  render();
-}
-function deletePlan(planId) {
-  state.sessions = state.sessions.filter(p => !(p.id === planId && p.userId === currentUser().id));
-  saveState();
-  toast('Plan removed.');
-  render();
-}
-function removeGameFromPlan(planId, gameId) {
-  const plan = state.sessions.find(p => p.id === planId && p.userId === currentUser().id);
-  if (!plan) return;
-  plan.items = (plan.items || []).filter(item => (item.gameId || state.games.find(g=>g.title===item.title)?.id) !== gameId);
-  plan.materials = planMaterials(plan);
-  saveState();
-  render();
-}
-function toggleMaterialChoice(material) {
-  if (material === 'No Materials') {
-    state.finder.materials = 'No Materials';
-  } else {
-    const list = selectedMaterialsArray(state.finder.materials).filter(x => x !== 'No Materials');
-    const next = list.includes(material) ? list.filter(x => x !== material) : [...list, material];
-    state.finder.materials = next.length ? next.join(', ') : 'No Materials';
-  }
-  saveState();
-  render();
-}
-function bindPlanReorder() {
-  let dragGameId = null;
-  document.querySelectorAll('.swipe-item[draggable="true"]').forEach(item => {
-    item.addEventListener('dragstart', e => { dragGameId = item.dataset.gameId; item.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-    item.addEventListener('dragend', () => item.classList.remove('dragging'));
-    item.addEventListener('dragover', e => { e.preventDefault(); });
-    item.addEventListener('drop', e => {
-      e.preventDefault();
-      const targetGameId = item.dataset.gameId;
-      const planId = item.dataset.planId;
-      if (!dragGameId || dragGameId === targetGameId) return;
-      reorderPlanGame(planId, dragGameId, targetGameId);
-    });
-  });
-}
-function reorderPlanGame(planId, dragGameId, targetGameId) {
-  const plan = state.sessions.find(p => p.id === planId && p.userId === currentUser().id);
-  if (!plan) return;
-  const items = planItemsWithGames(plan);
-  const from = items.findIndex(item => item.gameId === dragGameId);
-  const to = items.findIndex(item => item.gameId === targetGameId);
-  if (from < 0 || to < 0) return;
-  const [moved] = items.splice(from, 1);
-  items.splice(to, 0, moved);
-  plan.items = items;
-  saveState();
-  render();
-}
-function bindSwipeRemoval() {
-  let openCard = null;
-  document.querySelectorAll('.swipe-item').forEach(item => {
-    const card = item.querySelector('.swipe-card');
-    if (!card) return;
-    let startX = 0, startY = 0, dx = 0, active = false, swiping = false, blockedClick = false;
-    card.addEventListener('pointerdown', e => {
-      if (e.target.closest('button')) return;
-      if (openCard && openCard !== card) resetSwipeCard(openCard);
-      openCard = card;
-      startX = e.clientX; startY = e.clientY; dx = 0; active = true; swiping = false; blockedClick = false;
-      card.classList.add('dragging-swipe');
-    });
-    card.addEventListener('pointermove', e => {
-      if (!active) return;
-      const moveX = e.clientX - startX;
-      const moveY = e.clientY - startY;
-      if (!swiping) {
-        if (Math.abs(moveY) > Math.abs(moveX) && Math.abs(moveY) > 8) { active = false; card.classList.remove('dragging-swipe'); return; }
-        if (moveX < -8 && Math.abs(moveX) > Math.abs(moveY)) swiping = true;
-      }
-      if (!swiping) return;
-      e.preventDefault();
-      blockedClick = true;
-      dx = Math.min(0, moveX);
-      card.style.transform = `translateX(${Math.max(dx, -card.offsetWidth)}px)`;
-    }, { passive: false });
-    const finish = () => {
-      if (!active) return;
-      active = false;
-      card.classList.remove('dragging-swipe');
-      if (!swiping) return;
-      const threshold = Math.max(120, card.offsetWidth * 0.4);
-      if (Math.abs(dx) >= threshold) {
-        card.classList.add('removing');
-        card.style.transform = `translateX(-${card.offsetWidth}px)`;
-        item.style.maxHeight = `${item.offsetHeight}px`;
-        setTimeout(() => { item.style.maxHeight = '0px'; item.style.opacity = '0'; item.style.margin = '0'; }, 120);
-        setTimeout(() => removeGameFromPlan(item.dataset.planId, item.dataset.gameId), 330);
-      } else {
-        resetSwipeCard(card);
-      }
-    };
-    card.addEventListener('pointerup', finish);
-    card.addEventListener('pointercancel', finish);
-    card.addEventListener('click', e => {
-      if (blockedClick) { e.preventDefault(); e.stopPropagation(); blockedClick = false; }
-    }, true);
-  });
-}
-function resetSwipeCard(card) {
-  card.classList.remove('dragging-swipe');
-  card.style.transform = 'translateX(0)';
 }
 
 function toggleFilter(f) { state.filters = state.filters.includes(f) ? state.filters.filter(x=>x!==f) : [...state.filters, f]; saveState(); render(); }
@@ -870,14 +641,8 @@ function toggleFavorite(gameId) {
 function handleLogin(e) { e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email').toLowerCase().trim(); const password = fd.get('password'); const u = state.users.find(x=>x.email.toLowerCase()===email && x.password===password); if (!u) return toast('Invalid email or password.'); if (u.disabled) return toast('This account is disabled.'); state.currentUserId = u.id; saveState(); go('/app/find'); }
 function handleSignup(e) { e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email').toLowerCase().trim(); if (state.users.some(u=>u.email.toLowerCase()===email)) return toast('An account with this email already exists.'); const user = { id: crypto.randomUUID(), email, password: fd.get('password'), fullName: fd.get('fullName') || email, role: 'user', plan: 'free', accessStatus: 'active', accessExpiresAt: null, disabled: false }; state.users.push(user); state.currentUserId = user.id; saveState(); go('/app/find'); }
 function logout() { state.currentUserId = null; saveState(); go('/login'); }
-function handleFinder(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  state.finder = { ...state.finder, groupSize: Number(fd.get('groupSize')), time: Number(fd.get('time')), ageMin: Number(fd.get('ageMin')), ageMax: Number(fd.get('ageMax')), space: fd.get('space'), category: fd.get('category'), safety: 'Low Risk', avoid: 'not embarrassing' };
-  saveState();
-  toast('Smart Finder updated your top matches.');
-  render();
-}
+function handleSearchInput(e) { state.search = e.target.value; saveState(); clearTimeout(searchTimer); searchTimer = setTimeout(() => { render(); const next = byId('search-input'); if (next) { next.focus(); const len = next.value.length; try { next.setSelectionRange(len, len); } catch (_) {} } }, 180); }
+function handleFinder(e) { e.preventDefault(); const fd = new FormData(e.target); state.finder = { groupSize: Number(fd.get('groupSize')), time: Number(fd.get('time')), ageMin: Number(fd.get('ageMin')), ageMax: Number(fd.get('ageMax')), materials: selectedMaterialsText(), space: fd.get('space'), category: fd.get('category'), safety: 'Low Risk', avoid: 'not embarrassing' }; saveState(); toast('Smart Finder updated your top matches.'); render(); }
 function setStars(n) { const form = byId('rate-form'); form.rating.value = n; document.querySelectorAll('[data-star]').forEach(el => el.classList.toggle('active', Number(el.dataset.star) <= n)); }
 function handleRate(e) { e.preventDefault(); const fd = new FormData(e.target); const rating = Number(fd.get('rating')); if (!rating) return toast('Choose a star rating first.'); const gameId = e.target.dataset.gameId; const userId = currentUser().id; const existing = state.ratings.find(r=>r.gameId===gameId && r.userId===userId); if (existing) { existing.rating = rating; existing.reviewText = fd.get('reviewText'); existing.updatedAt = new Date().toISOString(); } else state.ratings.push({ id: crypto.randomUUID(), userId, gameId, rating, reviewText: fd.get('reviewText'), reviewStatus: 'published', mediaStatus: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }); recalcRating(gameId); saveState(); toast('Rating submitted.'); go(`/app/games/${gameId}/reviews`); }
 function recalcRating(gameId) { const rs = state.ratings.filter(r=>r.gameId===gameId); const g = state.games.find(x=>x.id===gameId); g.ratingCount = rs.length; g.reviewCount = rs.filter(r=>r.reviewText).length; g.averageRating = rs.length ? Math.round((rs.reduce((a,r)=>a+r.rating,0)/rs.length)*10)/10 : 0; }
@@ -971,7 +736,7 @@ function parseGameMarkdown(markdown, fileName = 'game.md') {
     scripture: splitList(value('scripture','bible verse','possible bible verse','references')),
     materials: splitList(materialsText).map(x => x.toLowerCase()).filter(x => !['none','no materials','no supplies','n/a'].includes(x)),
     tags: splitList(tagsText),
-    categories: normalizeCategories(tagsText),
+    purpose: normalizePurpose(tagsText),
     bestAgeMin: ages[0], bestAgeMax: ages[1], minRecommendedAge: ages[0],
     groupSizeMin: group[0], groupSizeMax: group[1],
     timeMin: duration[0], timeMax: duration[1],
@@ -1066,23 +831,102 @@ function gameFromPayload(p, opts = {}) {
   const howToPlay = Array.isArray(p.howToPlay) ? p.howToPlay : listFromMarkdown(p.howToPlay);
   const debriefQuestions = Array.isArray(p.debriefQuestions) ? p.debriefQuestions : listFromMarkdown(p.debriefQuestions);
   const materials = Array.isArray(p.materials) ? p.materials : splitList(p.materials).map(x=>x.toLowerCase());
-  const tags = [...new Set([...(Array.isArray(p.tags)?p.tags:splitList(p.tags)), ...(p.categories || p.purpose || []), ...(materials.length ? materials : ['No Materials']), p.indoorOutdoor === 'outdoor' ? 'Outdoor' : p.indoorOutdoor === 'indoor' ? 'Indoor' : 'Flexible'].filter(Boolean))];
-  return { ...DEFAULT_GAMES[0], id, slug: id, title: p.title, shortDescription: p.shortDescription, description: p.description || p.shortDescription, accessLevel: 'free', featured: false, tested: false, status: 'published', tags, purpose: [], categories: p.categories || normalizeCategories(tags.join(',')), materials, bestAgeMin: Number(p.bestAgeMin || p.ageMin) || 10, bestAgeMax: Number(p.bestAgeMax || p.ageMax) || 18, minRecommendedAge: Number(p.minRecommendedAge) || Number(p.bestAgeMin || p.ageMin) || 8, groupSizeMin: Number(p.groupSizeMin || p.groupMin) || 4, groupSizeMax: Number(p.groupSizeMax || p.groupMax) || 30, timeMin: Number(p.timeMin) || 10, timeMax: Number(p.timeMax) || 20, indoorOutdoor: p.indoorOutdoor || 'both', space: p.space || 'Flexible', energy: p.energy || 'Medium', prep: Number(p.prep) || 0, leaderDifficulty: p.leaderDifficulty || 'Easy', safety: p.safety || 'Low Risk', contact: p.contact || 'None', embarrassment: p.embarrassment || 'Low', noise: p.noise || 'Medium', ministry: p.ministry || 'Low', thumb: 'camp', setup: p.setup || 'No special setup listed.', howToPlay: howToPlay.length ? howToPlay : ['Explain the game clearly.', 'Play one practice round.', 'Lead the group through the activity.'], leaderScript: p.leaderScript || 'Listen carefully, play safely, and encourage your group.', winCondition: p.winCondition || 'End when the leader decides the round is complete.', safetyNotes: p.safetyNotes || 'Review safety before leading.', avoidWith: p.avoidWith || 'Groups where this game does not fit the age, room, or maturity level.', requires: p.requires || 'Normal leader supervision.', variations: p.variations || '', easier: p.easier || 'Simplify the rules or reduce the time pressure.', harder: p.harder || 'Add a time limit or extra challenge.', debriefQuestions: debriefQuestions.length ? debriefQuestions : ['What worked well?', 'What would you change next time?'], bibleBridge: p.bibleBridge || '', scripture: Array.isArray(p.scripture) ? p.scripture : splitList(p.scripture), creator: opts.creator || currentUser()?.fullName || 'HooraPlaybook User', averageRating: 0, ratingCount: 0, reviewCount: 0, views: 0, sourceFilename: opts.sourceFilename || p.sourceFilename || '' };
+  const tags = [...new Set([...(Array.isArray(p.tags)?p.tags:splitList(p.tags)), ...(p.purpose || []), ...(materials.length ? materials : ['No Materials']), p.indoorOutdoor === 'outdoor' ? 'Outdoor' : p.indoorOutdoor === 'indoor' ? 'Indoor' : 'Flexible'].filter(Boolean))];
+  return { ...DEFAULT_GAMES[0], id, slug: id, title: p.title, shortDescription: p.shortDescription, description: p.description || p.shortDescription, accessLevel: 'free', featured: false, tested: false, status: 'published', tags, purpose: p.purpose || normalizePurpose(tags.join(',')), materials, bestAgeMin: Number(p.bestAgeMin || p.ageMin) || 10, bestAgeMax: Number(p.bestAgeMax || p.ageMax) || 18, minRecommendedAge: Number(p.minRecommendedAge) || Number(p.bestAgeMin || p.ageMin) || 8, groupSizeMin: Number(p.groupSizeMin || p.groupMin) || 4, groupSizeMax: Number(p.groupSizeMax || p.groupMax) || 30, timeMin: Number(p.timeMin) || 10, timeMax: Number(p.timeMax) || 20, indoorOutdoor: p.indoorOutdoor || 'both', space: p.space || 'Flexible', energy: p.energy || 'Medium', prep: Number(p.prep) || 0, leaderDifficulty: p.leaderDifficulty || 'Easy', safety: p.safety || 'Low Risk', contact: p.contact || 'None', embarrassment: p.embarrassment || 'Low', noise: p.noise || 'Medium', ministry: p.ministry || 'Low', thumb: 'camp', setup: p.setup || 'No special setup listed.', howToPlay: howToPlay.length ? howToPlay : ['Explain the game clearly.', 'Play one practice round.', 'Lead the group through the activity.'], leaderScript: p.leaderScript || 'Listen carefully, play safely, and encourage your group.', winCondition: p.winCondition || 'End when the leader decides the round is complete.', safetyNotes: p.safetyNotes || 'Review safety before leading.', avoidWith: p.avoidWith || 'Groups where this game does not fit the age, room, or maturity level.', requires: p.requires || 'Normal leader supervision.', variations: p.variations || '', easier: p.easier || 'Simplify the rules or reduce the time pressure.', harder: p.harder || 'Add a time limit or extra challenge.', debriefQuestions: debriefQuestions.length ? debriefQuestions : ['What worked well?', 'What would you change next time?'], bibleBridge: p.bibleBridge || '', scripture: Array.isArray(p.scripture) ? p.scripture : splitList(p.scripture), creator: opts.creator || currentUser()?.fullName || 'HooraPlaybook User', averageRating: 0, ratingCount: 0, reviewCount: 0, views: 0, sourceFilename: opts.sourceFilename || p.sourceFilename || '' };
 }
 
-function handleSession(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const category = fd.get('category') || state.finder.category || 'Quick and simple';
-  const pool = scoreGames(state.games.filter(g=>(g.categories||[]).includes(category))).map(x=>x.game);
-  const picks = [pool[0] || state.games[0], pool[1] || state.games[1], pool[2] || state.games[2]].filter(Boolean);
-  const plan = { id: crypto.randomUUID(), userId: currentUser().id, title: `${fd.get('minutes') || 60}-Minute ${fd.get('type') || 'Session'} Plan`, materials: [], items: [] };
-  picks.forEach((g, index) => addGameToPlanObject(plan, g.id));
-  state.sessions.push(plan);
-  saveState();
-  toast('Plan generated.');
-  go('/app/plan');
+
+function userPlans() { return state.sessions.filter(s => s.userId === currentUser()?.id); }
+function findGameIdByTitle(title='') { return state.games.find(g => g.title === title)?.id || ''; }
+function gameByPlanItem(item={}) { return state.games.find(g => g.id === item.gameId) || state.games.find(g => g.title === item.title) || null; }
+function normalizePlanItem(item={}) {
+  const gameId = item.gameId || findGameIdByTitle(item.title);
+  const game = state.games.find(g=>g.id===gameId);
+  return { gameId, title: game?.title || item.title || 'Game', notes: game?.shortDescription || item.notes || '' };
 }
+function normalizeCategory(value='') {
+  const text = String(value).toLowerCase();
+  const aliases = { teamwork:'Team-building', team:'Team-building', fun:'Quick and simple', icebreaker:'Icebreakers', wet:'Wet-n-Wild', sport:'Sport-n-fitness', fitness:'Sport-n-fitness', theatre:'Theatrical', theatrical:'Theatrical', tag:'Tag', relay:'Relays', circle:'Circle', adventure:'Adventure' };
+  const exact = STANDARD_CATEGORIES.find(c => c.toLowerCase() === text);
+  if (exact) return exact;
+  for (const [key, val] of Object.entries(aliases)) if (text.includes(key)) return val;
+  return 'Quick and simple';
+}
+function selectedMaterials() {
+  const raw = state.planMaterials && state.planMaterials.length ? state.planMaterials : String(state.finder?.materials || 'No Materials').split(/[,]+/).map(x=>x.trim()).filter(Boolean);
+  return raw.length ? raw : ['No Materials'];
+}
+function selectedMaterialsText() { return selectedMaterials().join(', '); }
+function toggleMaterial(material) {
+  let selected = selectedMaterials().filter(Boolean);
+  if (material === 'No Materials') selected = ['No Materials'];
+  else {
+    selected = selected.filter(x => x !== 'No Materials');
+    selected = selected.includes(material) ? selected.filter(x=>x!==material) : [...selected, material];
+    if (!selected.length) selected = ['No Materials'];
+  }
+  state.planMaterials = selected;
+  state.finder.materials = selected.join(', ');
+  saveState(); render();
+}
+function isGameInAnyPlan(gameId) { return userPlans().some(plan => (plan.items || []).some(item => normalizePlanItem(item).gameId === gameId)); }
+function openAddToPlan(gameId) { window.__addToPlanGameId = gameId; render(); }
+function closeAddToPlan() { window.__addToPlanGameId = null; render(); }
+function renderAddToPlanModalIfNeeded() {
+  const gameId = window.__addToPlanGameId;
+  if (!gameId) return '';
+  const game = state.games.find(g=>g.id===gameId);
+  const plans = userPlans();
+  return `<div class="modal-backdrop" data-close-add-plan><div class="bottom-sheet" onclick="event.stopPropagation()"><h2>Add to Plan</h2><p class="help">${escapeHTML(game?.title || 'This game')}</p><div class="game-list">${plans.map(plan=>`<button class="btn btn-secondary full" data-add-game-to-existing-plan="${plan.id}">${escapeHTML(plan.title)}</button>`).join('') || '<p class="help">No saved plans yet.</p>'}<button class="btn btn-primary full" data-create-plan-with-game="1">+ Create New Plan</button><button class="btn btn-secondary full" data-close-add-plan>Cancel</button></div></div></div>`;
+}
+function addGameToPlan(gameId, planId) {
+  const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id);
+  const game = state.games.find(g=>g.id===gameId);
+  if (!plan || !game) return;
+  plan.items = (plan.items || []).map(normalizePlanItem);
+  if (!plan.items.some(item=>item.gameId===gameId)) plan.items.push({ gameId, title: game.title, notes: game.shortDescription });
+  plan.materials = [...new Set(plan.items.flatMap(item => gameByPlanItem(item)?.materials || []))];
+  saveState(); window.__addToPlanGameId = null; toast('Added to plan.'); render();
+}
+function createPlanWithGame(gameId) {
+  const game = state.games.find(g=>g.id===gameId);
+  const title = prompt('New plan name:', game ? `${game.title} Plan` : 'New Plan');
+  if (!title) return;
+  const plan = { id: crypto.randomUUID(), userId: currentUser().id, title, materials: game ? [...game.materials] : [], items: game ? [{ gameId, title: game.title, notes: game.shortDescription }] : [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  state.sessions.push(plan); saveState(); window.__addToPlanGameId = null; toast('Plan created.'); go('/app/plan');
+}
+function handleCreatePlan(e) {
+  e.preventDefault(); const fd = new FormData(e.target);
+  const title = String(fd.get('title') || 'New Plan').trim();
+  const plan = { id: crypto.randomUUID(), userId: currentUser().id, title, category: fd.get('category'), materials: [], items: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  state.sessions.push(plan); saveState(); toast('Plan saved.'); go('/app/plan');
+}
+function renamePlan(planId) { const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id); if (!plan) return; const title = prompt('Rename plan:', plan.title); if (!title) return; plan.title = title; plan.updatedAt = new Date().toISOString(); saveState(); render(); }
+function deletePlan(planId) { state.sessions = state.sessions.filter(p => !(p.id===planId && p.userId===currentUser().id)); saveState(); toast('Plan deleted.'); render(); }
+function removePlanGame(payload) {
+  const [planId, indexText] = String(payload).split(':'); const index = Number(indexText);
+  const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id); if (!plan) return;
+  plan.items = (plan.items || []).map(normalizePlanItem).filter((_, i)=>i !== index);
+  plan.materials = [...new Set(plan.items.flatMap(item => gameByPlanItem(item)?.materials || []))];
+  plan.updatedAt = new Date().toISOString(); saveState(); toast('Game removed.'); render();
+}
+function initPlanDragAndDrop() {
+  let from = null;
+  document.querySelectorAll('.draggable-row').forEach(row => {
+    row.addEventListener('dragstart', e => { from = Number(row.dataset.itemIndex); row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    row.addEventListener('dragend', () => row.classList.remove('dragging'));
+    row.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    row.addEventListener('drop', e => {
+      e.preventDefault(); const to = Number(row.dataset.itemIndex); const plan = state.sessions.find(p=>p.id===row.dataset.planId && p.userId===currentUser().id);
+      if (!plan || from === null || from === to) return;
+      plan.items = (plan.items || []).map(normalizePlanItem);
+      const [moved] = plan.items.splice(from, 1); plan.items.splice(to, 0, moved);
+      plan.updatedAt = new Date().toISOString(); saveState(); render();
+    });
+  });
+}
+function handleSession(e) { e.preventDefault(); }
+
 function handleRedeem(e) { e.preventDefault(); const code = new FormData(e.target).get('code').toUpperCase().trim(); const c = state.coupons.find(x=>x.displayCode===code); if (!c) return toast('Coupon not found.'); if (c.disabled) return toast('Coupon is disabled.'); if (c.redeemedBy) return toast('Coupon was already redeemed.'); if (c.expiresAt && isExpired(c.expiresAt)) return toast('Coupon expired.'); c.redeemedBy = currentUser().id; c.redeemedAt = new Date().toISOString(); grantPro(currentUser().id, c.durationDays || 30, false); saveState(); toast('PRO unlocked for one month.'); render(); }
 function handleCouponGeneration(e) { e.preventDefault(); const fd = new FormData(e.target); const qty = Math.min(100, Math.max(1, Number(fd.get('quantity')))); for (let i=0;i<qty;i++) state.coupons.push({ id: crypto.randomUUID(), displayCode: generateCouponCode(), benefitType: 'one_free_month_pro', durationDays: 30, campaign: fd.get('campaign'), expiresAt: fd.get('expires') ? new Date(fd.get('expires')).toISOString() : null, redeemedBy: null, disabled: false, createdBy: currentUser().id, createdAt: new Date().toISOString() }); saveState(); toast(`${qty} coupon(s) created.`); render(); }
 function generateCouponCode() { let code = ''; const bytes = new Uint8Array(16); crypto.getRandomValues(bytes); for (const b of bytes) code += COUPON_ALPHABET[b % COUPON_ALPHABET.length]; return code; }
@@ -1094,10 +938,6 @@ function rejectSubmission(id) { const s = state.submissions.find(x=>x.id===id); 
 function toggleGameAccess(id) { const g = state.games.find(x=>x.id===id); g.accessLevel = g.accessLevel==='free'?'pro':'free'; saveState(); render(); }
 function deleteGame(id) { if (!confirm('Delete this game from the local demo?')) return; state.games = state.games.filter(g=>g.id!==id); saveState(); render(); }
 function handleUpgrade(plan) { const user = currentUser(); if (user && plan !== 'Team') { grantPro(user.id, 365); toast('Demo upgrade: PRO access granted. In production this redirects to Stripe Checkout.'); } else go('/signup'); }
-function shareGame(id) {
-  const url = `${location.origin}${location.pathname}#/app/games/${id}`;
-  if (navigator.share) navigator.share({ url }).catch(()=>{});
-  else navigator.clipboard?.writeText(url).then(()=>toast('Link copied.'));
-}
+function shareGame(id) { const url = `${location.origin}${location.pathname}#/app/games/${id}`; if (navigator.share) navigator.share({ url }).catch(()=>{}); else navigator.clipboard?.writeText(url).then(()=>toast('Link copied.')); }
 function randomIcebreaker() { const prompts = ['Would you rather lead a game with no materials or too many materials?', 'What is one game you loved as a kid?', 'Trivia: Which animal gives birth to the biggest babies? The blue whale.', 'Dad joke: Did you hear about the watermelon wedding? They cantaloupe.', 'Quick challenge: In 20 seconds, name five things you can use as game supplies.']; byId('icebreaker-prompt').textContent = prompts[Math.floor(Math.random()*prompts.length)]; }
 function toast(message) { clearTimeout(toastTimer); let el = document.querySelector('.toast'); if (!el) { el = document.createElement('div'); el.className='toast'; document.body.appendChild(el); } el.textContent = message; toastTimer = setTimeout(()=>el.remove(), 3000); }

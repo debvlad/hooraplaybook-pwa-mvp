@@ -66,3 +66,14 @@ These fixes must never be reverted:
 - My Plans page must show a `+ Create a New Plan` button near the top-right under the header.
 - Saved plan cards must include Modify, Rename, and Delete controls.
 - Modify must list games in the plan, support drag reorder, and support iOS-style swipe-left Remove.
+
+## Locked update — Version 0.3.0 plan-card, materials, and version history rules
+
+- Plan game rows must use the small red X circle image `assets/Remove.png`; do not show a text `Remove` button on plan game cards.
+- The red X remove icon must appear anywhere plan games can be removed, including the general My Plans page and the Modify Plan page.
+- Plan game rows must not show schedule timings such as `0:00 · 20 MIN`; plan timing labels are confusing and must stay removed from plan game cards.
+- Game card `+ Plan` buttons must be grey when the game is not in any saved plan and green when the game has already been added to at least one saved plan.
+- The header back image must never be clipped or truncated; `assets/back_button.png` must render fully inside the circular header button.
+- Available Materials must not show redundant nested header buttons or duplicate bottom actions. It should show the materials cloud and a single Done button.
+- The app must keep an `APP_VERSION` constant and show the version in small grey text at the bottom of the Account page.
+- `VERSION_HISTORY.md` must be updated automatically with every delivered app update, including feature changes, bug fixes, UI reversions, and locked regression rules.
