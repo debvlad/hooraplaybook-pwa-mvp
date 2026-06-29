@@ -42,3 +42,18 @@ The live Cloudflare deployment is online and the main intended updates mostly wo
 - Lock the working behavior from this deployment.
 - Next revision should focus only on the small red X remove button.
 - Mobile reorder/swipe behavior should remain a separate follow-up ticket.
+
+
+## 2026-06-29 — Latest Update Test Note
+
+### Verified
+- Desktop small red X remove button on plan game cards works correctly.
+
+### Known issue
+- On mobile, `+ Plan` opens the create-plan dialog, but `Create a new plan` does not save anything.
+- This blocks mobile plan creation when the user has no existing plans.
+- Because of this, mobile red X remove behavior cannot be fully verified when starting from zero plans.
+
+### Decision
+- Fix mobile plan creation immediately.
+- Preserve the working desktop red X remove button behavior.

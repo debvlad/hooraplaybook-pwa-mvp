@@ -87,3 +87,39 @@
 - Acceptance Criteria:
   - `My Plans` still appears under Account.
   - Verified on live Cloudflare deployment revision `3fd5a76`.
+
+
+## Ready
+
+### P0 — Fix Mobile Create New Plan from `+ Plan` Dialog
+
+- Type: Bug
+- Area: Mobile / Plans / `+ Plan` Dialog
+- Status: Ready
+- Steps to Reproduce:
+  1. Open the app on mobile.
+  2. Make sure there are no plans already created.
+  3. Tap `+ Plan` on a game card.
+  4. In the dialog, choose/create a new plan.
+  5. Tap `Create a new plan`.
+- Expected Result:
+  - A new plan is created and saved.
+  - The selected game is added to that new plan, or the new plan becomes available immediately so the game can be added.
+  - User can open the new plan on mobile and see the game card.
+- Actual Result:
+  - The dialog opens, but `Create a new plan` does nothing.
+  - No plan is saved.
+  - Mobile user cannot create a plan from `+ Plan`.
+- Acceptance Criteria:
+  - On mobile, tapping `+ Plan` opens the plan dialog.
+  - User can create a new plan from that dialog.
+  - New plan saves successfully.
+  - The selected game is added to the new plan, or the new plan is immediately available for selection.
+  - Works when the user has zero existing plans.
+  - Works when the user already has existing plans.
+  - Works on desktop and does not break the desktop flow.
+  - No red console errors.
+  - Does not break the small red X remove button on desktop.
+  - Does not bring back game timing labels.
+  - Does not break the grey/green `+ Plan` state.
+  - Does not remove `My Plans` from Account.

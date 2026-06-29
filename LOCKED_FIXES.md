@@ -21,3 +21,10 @@ When fixing the red X remove button:
 - Do not break the back arrow.
 - Do not remove or hide `My Plans` from Account.
 - Do not redesign unrelated screens.
+
+
+## Locked after latest red X update test — 2026-06-29
+
+- On desktop, the small red X remove button on plan game cards must continue working.
+- The red X remove button must remain small and positioned on the plan game card, not displayed as a large image beside the card.
+- Fixing mobile plan creation must not break the working desktop red X remove behavior.

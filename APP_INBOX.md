@@ -18,3 +18,26 @@
 - On mobile, user cannot swipe to remove games from Modify Plan.
 - On mobile, user cannot switch or reorder game cards from Modify Plan.
 - Keep this as a separate issue unless directly required by the red X remove-button fix.
+
+
+## 2026-06-29 — Mobile Plan Creation Bug
+
+### Bug — Mobile `Create a new plan` from `+ Plan` dialog does not save
+- Source: Latest update testing.
+- Device context: Mobile.
+- Steps observed:
+  1. Start with no plans already created.
+  2. Tap `+ Plan` on a game card.
+  3. Dialog opens to create a new plan.
+  4. Tap `Create a new plan`.
+- Expected result:
+  - A new plan should be created and saved.
+  - The selected game should be added to the newly created plan, or the new plan should become available immediately.
+  - The user should then be able to see plan game cards and test/remove games on mobile.
+- Actual result:
+  - `Create a new plan` does nothing.
+  - No plan is saved.
+  - User cannot proceed with mobile plan creation.
+  - User cannot test the mobile red X remove button if no plans already exist.
+- Severity:
+  - High. This blocks plan creation on mobile.
