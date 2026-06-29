@@ -305,3 +305,135 @@ th { text-transform: uppercase; color: var(--gp-muted); font-size: 12px; }
   .plan-actions { grid-template-columns: 1fr; }
   .sticky-actions-3 { grid-template-columns: 1fr; position: sticky; transform: none; left: auto; width: 100%; }
 }
+
+/* HOORAPLAYBOOK_RED_X_REMOVE_FIX_CSS_V1
+   Keeps the red X remove control visible and tappable on plan game cards only.
+*/
+.plan-game-card {
+  position: relative;
+}
+
+.plan-game-remove-x {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.plan-game-remove-x img {
+  width: 34px;
+  height: 34px;
+  display: block;
+  pointer-events: none;
+}
+
+.plan-game-remove-x:focus-visible {
+  outline: 3px solid rgba(255, 0, 0, 0.35);
+  outline-offset: 2px;
+}
+
+/* HOORAPLAYBOOK_RED_X_VISUAL_FIX_V1
+   Purpose: Make the plan-game remove control look like a clean small red X button.
+   Scope: Visual only. Removal functionality remains unchanged.
+*/
+button.plan-game-remove-x,
+.plan-game-remove-x {
+  position: absolute !important;
+  top: 50% !important;
+  right: 16px !important;
+  transform: translateY(-50%) !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 3px solid #ef1b25 !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  overflow: hidden !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  z-index: 20 !important;
+  line-height: 1 !important;
+  font-size: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Hide any broken, oversized, or thumbnail-looking image inside the button.
+   The clean red X is drawn with CSS below so it always displays correctly. */
+button.plan-game-remove-x img,
+.plan-game-remove-x img,
+button.plan-game-remove-x svg,
+.plan-game-remove-x svg {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+button.plan-game-remove-x::before,
+button.plan-game-remove-x::after,
+.plan-game-remove-x::before,
+.plan-game-remove-x::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 18px !important;
+  height: 4px !important;
+  border-radius: 999px !important;
+  background: #ef1b25 !important;
+  transform-origin: center !important;
+  pointer-events: none !important;
+}
+
+button.plan-game-remove-x::before,
+.plan-game-remove-x::before {
+  transform: translate(-50%, -50%) rotate(45deg) !important;
+}
+
+button.plan-game-remove-x::after,
+.plan-game-remove-x::after {
+  transform: translate(-50%, -50%) rotate(-45deg) !important;
+}
+
+button.plan-game-remove-x:hover,
+.plan-game-remove-x:hover {
+  transform: translateY(-50%) scale(1.04) !important;
+}
+
+button.plan-game-remove-x:active,
+.plan-game-remove-x:active {
+  transform: translateY(-50%) scale(0.96) !important;
+}
+
+button.plan-game-remove-x:focus-visible,
+.plan-game-remove-x:focus-visible {
+  outline: 3px solid rgba(239, 27, 37, 0.25) !important;
+  outline-offset: 3px !important;
+}
