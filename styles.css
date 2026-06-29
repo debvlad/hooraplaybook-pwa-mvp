@@ -437,3 +437,70 @@ button.plan-game-remove-x:focus-visible,
   outline: 3px solid rgba(239, 27, 37, 0.25) !important;
   outline-offset: 3px !important;
 }
+
+/* HOORAPLAYBOOK_MODIFY_PLAN_DRAG_SORT_V6 */
+.sortable-plan .plan-game-row.draggable-row {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.sortable-plan .plan-game-row.draggable-row.is-dragging {
+  cursor: grabbing;
+  opacity: .98;
+  transform: none !important;
+}
+
+.plan-drag-placeholder {
+  border: 2px dashed rgba(92, 130, 26, .45);
+  background: rgba(184, 215, 122, .16);
+  box-shadow: none;
+  min-height: 72px;
+}
+
+@media (max-width: 759px) {
+  .sortable-plan .plan-game-row.mobile-swipe-row {
+    overflow: visible;
+  }
+
+  .sortable-plan .plan-game-row.mobile-swipe-row > :not(.remove-x-btn) {
+    transform: translateX(var(--plan-row-swipe-x, 0px));
+    transition: transform 160ms ease;
+  }
+
+  .sortable-plan .plan-game-row.mobile-swipe-row.is-swiping > :not(.remove-x-btn),
+  .sortable-plan .plan-game-row.mobile-swipe-row.is-dragging > :not(.remove-x-btn) {
+    transition: none;
+  }
+
+  .sortable-plan .plan-game-row.mobile-swipe-row.swipe-remove-ready {
+    --plan-row-swipe-x: -72px;
+  }
+
+  .sortable-plan .plan-game-row.mobile-swipe-row .remove-x-btn {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 30;
+  }
+
+  .sortable-plan .plan-game-row.mobile-swipe-row.swipe-remove-ready .remove-x-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sortable-plan .plan-game-row.mobile-swipe-row .plan-game-main {
+    min-width: 0;
+  }
+
+  .sortable-plan .plan-game-row.mobile-swipe-row .plan-game-main small {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

@@ -523,7 +523,7 @@ function renderPlanCard(plan) {
 function renderModifyPlan(planId) {
   const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id);
   if (!plan) return `<main class="content"><div class="card" style="padding:22px"><h2>Plan not found.</h2></div></main>`;
-  return `<main class="content"><div class="page-heading-row"><div><h1>Modify Plan</h1><p class="help">Drag games up or down to change the order. Use the red X to remove a game.</p></div></div><section class="card" style="padding:14px"><h2>${escapeHTML(plan.title)}</h2><div class="plan-game-list sortable-plan" data-plan-id="${plan.id}">${(plan.items || []).map((item, index)=>renderPlanGameRow(plan, item, index, true)).join('') || '<p class="help">No games in this plan.</p>'}</div></section></main>`;
+  return `<main class="content"><div class="page-heading-row"><div><h1>Modify Plan</h1><p class="help">Drag game cards up or down to reorder. On mobile, swipe a game left to reveal the red X remove button.</p></div></div><section class="card" style="padding:14px"><h2>${escapeHTML(plan.title)}</h2><div class="plan-game-list sortable-plan" data-plan-id="${plan.id}">${(plan.items || []).map((item, index)=>renderPlanGameRow(plan, item, index, true)).join('') || '<p class="help">No games in this plan.</p>'}</div></section></main>`;
 }
 
 function renderPlanGameRow(plan, item, index, sortable=false) {
@@ -531,7 +531,8 @@ function renderPlanGameRow(plan, item, index, sortable=false) {
   const title = game?.title || item.title || 'Game';
   const desc = game?.shortDescription || item.notes || '';
   const gameId = game?.id || item.gameId || '';
-  return `<div class="plan-game-row ${sortable?'draggable-row':''}" ${sortable?'draggable="true"':''} data-plan-id="${plan.id}" data-item-index="${index}"><button class="drag-handle" aria-label="Drag ${escapeHTML(title)}">☰</button><button class="plan-game-main" ${gameId?`data-go="/app/games/${gameId}"`:''}><span class="plan-game-number">${index+1}</span><span><strong>${escapeHTML(title)}</strong><small>${escapeHTML(desc)}</small></span></button><button class="remove-x-btn" data-remove-plan-game="${plan.id}:${index}" aria-label="Remove ${escapeHTML(title)}"><img src="/assets/Remove.png" alt=""></button></div>`;
+  const rowClass = `plan-game-row ${sortable ? 'draggable-row mobile-swipe-row' : ''}`;
+  return `<div class="${rowClass}" data-plan-id="${plan.id}" data-item-index="${index}" data-game-id="${escapeHTML(gameId)}"><button class="drag-handle" aria-label="Drag ${escapeHTML(title)}">☰</button><button class="plan-game-main" ${gameId?`data-go="/app/games/${gameId}"`:''}><span class="plan-game-number">${index+1}</span><span><strong>${escapeHTML(title)}</strong><small>${escapeHTML(desc)}</small></span></button><button class="remove-x-btn" data-remove-plan-game="${plan.id}:${index}" aria-label="Remove ${escapeHTML(title)}"><img src="/assets/Remove.png" alt=""></button></div>`;
 }
 
 function renderSessionPlan(plan) { return renderPlanCard(plan); }
@@ -920,25 +921,288 @@ function handleCreatePlan(e) {
 }
 function renamePlan(planId) { const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id); if (!plan) return; const title = prompt('Rename plan:', plan.title); if (!title) return; plan.title = title; plan.updatedAt = new Date().toISOString(); saveState(); render(); }
 function deletePlan(planId) { state.sessions = state.sessions.filter(p => !(p.id===planId && p.userId===currentUser().id)); saveState(); toast('Plan deleted.'); render(); }
-function removePlanGame(payload) {
-  const [planId, indexText] = String(payload).split(':'); const index = Number(indexText);
-  const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id); if (!plan) return;
-  plan.items = (plan.items || []).map(normalizePlanItem).filter((_, i)=>i !== index);
+function refreshPlanMaterials(plan) {
+  if (!plan) return;
+  plan.items = (plan.items || []).map(normalizePlanItem);
   plan.materials = [...new Set(plan.items.flatMap(item => gameByPlanItem(item)?.materials || []))];
-  plan.updatedAt = new Date().toISOString(); saveState(); toast('Game removed.'); render();
+  plan.updatedAt = new Date().toISOString();
 }
+
+function removePlanGame(payload) {
+  const [planId, indexText] = String(payload).split(':');
+  const index = Number(indexText);
+  const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id);
+  if (!plan || !Number.isInteger(index)) return;
+
+  plan.items = (plan.items || []).map(normalizePlanItem).filter((_, i)=>i !== index);
+  refreshPlanMaterials(plan);
+  saveState();
+  toast('Game removed.');
+  render();
+}
+
 function initPlanDragAndDrop() {
-  let from = null;
-  document.querySelectorAll('.draggable-row').forEach(row => {
-    row.addEventListener('dragstart', e => { from = Number(row.dataset.itemIndex); row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-    row.addEventListener('dragend', () => row.classList.remove('dragging'));
-    row.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-    row.addEventListener('drop', e => {
-      e.preventDefault(); const to = Number(row.dataset.itemIndex); const plan = state.sessions.find(p=>p.id===row.dataset.planId && p.userId===currentUser().id);
-      if (!plan || from === null || from === to) return;
-      plan.items = (plan.items || []).map(normalizePlanItem);
-      const [moved] = plan.items.splice(from, 1); plan.items.splice(to, 0, moved);
-      plan.updatedAt = new Date().toISOString(); saveState(); render();
+  initModifyPlanCardSortV6();
+}
+
+function initModifyPlanCardSortV6() {
+  document.querySelectorAll('.sortable-plan').forEach(list => {
+    const rows = () => Array.from(list.querySelectorAll('.draggable-row'));
+
+    const saveOrderFromDom = () => {
+      const planId = list.dataset.planId;
+      const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id);
+      if (!plan) return;
+
+      const currentItems = (plan.items || []).map(normalizePlanItem);
+      const orderedIndexes = rows()
+        .map(row => Number(row.dataset.itemIndex))
+        .filter(index => Number.isInteger(index) && currentItems[index]);
+
+      if (orderedIndexes.length !== currentItems.length) return;
+
+      const before = currentItems.map(item => item.gameId || item.title).join('|');
+      const after = orderedIndexes.map(index => currentItems[index]).map(item => item.gameId || item.title).join('|');
+
+      if (before === after) return;
+
+      plan.items = orderedIndexes.map(index => currentItems[index]);
+      refreshPlanMaterials(plan);
+      saveState();
+      toast('Plan order updated.');
+      render();
+    };
+
+    const getInsertBeforeRow = y => {
+      return rows().find(row => {
+        const rect = row.getBoundingClientRect();
+        return y < rect.top + rect.height / 2;
+      }) || null;
+    };
+
+    rows().forEach(row => {
+      let pointerId = null;
+      let startX = 0;
+      let startY = 0;
+      let mode = null;
+      let placeholder = null;
+      let dragRect = null;
+      let swipeX = 0;
+      let cleanupMove = null;
+      let cleanupUp = null;
+
+      const resetSwipe = () => {
+        row.classList.remove('is-swiping', 'swipe-remove-ready');
+        row.style.setProperty('--plan-row-swipe-x', '0px');
+      };
+
+      const suppressNextClick = () => {
+        row.dataset.suppressPlanClick = '1';
+        setTimeout(() => {
+          delete row.dataset.suppressPlanClick;
+        }, 300);
+      };
+
+      const clearFixedDragStyles = () => {
+        row.classList.remove('is-dragging');
+        row.style.removeProperty('position');
+        row.style.removeProperty('left');
+        row.style.removeProperty('top');
+        row.style.removeProperty('width');
+        row.style.removeProperty('height');
+        row.style.removeProperty('z-index');
+        row.style.removeProperty('pointer-events');
+        row.style.removeProperty('box-shadow');
+      };
+
+      const beginDrag = e => {
+        mode = 'drag';
+        resetSwipe();
+
+        dragRect = row.getBoundingClientRect();
+        placeholder = document.createElement('div');
+        placeholder.className = 'plan-drag-placeholder';
+        placeholder.style.height = `${dragRect.height}px`;
+        placeholder.style.borderRadius = getComputedStyle(row).borderRadius || '18px';
+        placeholder.dataset.planDragPlaceholder = 'true';
+
+        row.after(placeholder);
+
+        row.classList.add('is-dragging');
+        row.style.position = 'fixed';
+        row.style.left = `${dragRect.left}px`;
+        row.style.top = `${dragRect.top}px`;
+        row.style.width = `${dragRect.width}px`;
+        row.style.height = `${dragRect.height}px`;
+        row.style.zIndex = '9999';
+        row.style.pointerEvents = 'none';
+
+        document.body.appendChild(row);
+        moveDrag(e.clientY);
+      };
+
+      const movePlaceholder = y => {
+        if (!placeholder) return;
+
+        const beforeRow = getInsertBeforeRow(y);
+        if (beforeRow) {
+          list.insertBefore(placeholder, beforeRow);
+        } else {
+          list.appendChild(placeholder);
+        }
+      };
+
+      const moveDrag = y => {
+        if (!dragRect) return;
+        const nextTop = dragRect.top + (y - startY);
+        row.style.top = `${nextTop}px`;
+        movePlaceholder(y);
+      };
+
+      const finishDrag = () => {
+        if (placeholder) {
+          placeholder.replaceWith(row);
+        }
+
+        clearFixedDragStyles();
+        placeholder = null;
+        dragRect = null;
+        saveOrderFromDom();
+        suppressNextClick();
+      };
+
+      const finishSwipe = () => {
+        row.classList.remove('is-swiping');
+
+        if (swipeX < -42) {
+          row.classList.add('swipe-remove-ready');
+          row.style.setProperty('--plan-row-swipe-x', '-72px');
+        } else {
+          resetSwipe();
+        }
+
+        suppressNextClick();
+      };
+
+      const cleanup = () => {
+        if (cleanupMove) window.removeEventListener('pointermove', cleanupMove);
+        if (cleanupUp) {
+          window.removeEventListener('pointerup', cleanupUp);
+          window.removeEventListener('pointercancel', cleanupUp);
+        }
+
+        cleanupMove = null;
+        cleanupUp = null;
+        pointerId = null;
+        startX = 0;
+        startY = 0;
+        mode = null;
+        swipeX = 0;
+      };
+
+      const cancelInteraction = () => {
+        if (mode === 'drag' && placeholder) {
+          placeholder.replaceWith(row);
+          clearFixedDragStyles();
+        }
+
+        if (mode === 'swipe') resetSwipe();
+
+        placeholder = null;
+        dragRect = null;
+        cleanup();
+      };
+
+      const onPointerMove = e => {
+        if (pointerId !== e.pointerId) return;
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const isMobile = window.matchMedia('(max-width: 759px)').matches;
+
+        if (!mode) {
+          if (isMobile && dx < -14 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+            mode = 'swipe';
+            row.classList.add('is-swiping');
+          } else if (Math.abs(dy) > 9 && Math.abs(dy) > Math.abs(dx) * 0.7) {
+            beginDrag(e);
+          } else {
+            return;
+          }
+        }
+
+        if (mode === 'swipe') {
+          e.preventDefault();
+          swipeX = Math.max(dx, -82);
+          row.style.setProperty('--plan-row-swipe-x', `${swipeX}px`);
+          return;
+        }
+
+        if (mode === 'drag') {
+          e.preventDefault();
+          moveDrag(e.clientY);
+        }
+      };
+
+      const onPointerUp = e => {
+        if (pointerId !== e.pointerId) return;
+
+        if (mode === 'drag') {
+          e.preventDefault();
+          finishDrag();
+        } else if (mode === 'swipe') {
+          e.preventDefault();
+          finishSwipe();
+        }
+
+        cleanup();
+      };
+
+      row.addEventListener('dragstart', e => {
+        e.preventDefault();
+      });
+
+      row.addEventListener('pointerdown', e => {
+        if (e.button !== undefined && e.button !== 0) return;
+        if (e.target.closest('[data-remove-plan-game], .remove-x-btn, input, select, textarea, a')) return;
+
+        if (row.classList.contains('swipe-remove-ready')) {
+          resetSwipe();
+          e.preventDefault();
+          return;
+        }
+
+        pointerId = e.pointerId;
+        startX = e.clientX;
+        startY = e.clientY;
+        mode = null;
+        swipeX = 0;
+
+        try {
+          row.setPointerCapture(pointerId);
+        } catch (_) {}
+
+        cleanupMove = onPointerMove;
+        cleanupUp = onPointerUp;
+        window.addEventListener('pointermove', cleanupMove, { passive: false });
+        window.addEventListener('pointerup', cleanupUp, { passive: false });
+        window.addEventListener('pointercancel', cleanupUp, { passive: false });
+      });
+
+      row.addEventListener('click', e => {
+        if (row.dataset.suppressPlanClick === '1') {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        if (!row.classList.contains('swipe-remove-ready')) return;
+        if (e.target.closest('[data-remove-plan-game], .remove-x-btn')) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        resetSwipe();
+      }, true);
     });
   });
 }
