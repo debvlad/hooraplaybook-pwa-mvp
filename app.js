@@ -153,6 +153,23 @@ if ('serviceWorker' in navigator) {
 
 render();
 
+/* HOORAPLAYBOOK_SAFE_ID_FALLBACK_V1
+   Use this instead of direct crypto.randomUUID().
+   Reason: mobile local testing through http://<Mac-IP> is not always a secure context,
+   so crypto.randomUUID() may be unavailable even though Cloudflare HTTPS works.
+*/
+function makeId(prefix = 'id') {
+  try {
+    if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+      return globalThis.crypto.randomUUID();
+    }
+  } catch (_) {}
+
+  const time = Date.now().toString(36);
+  const random = Math.random().toString(36).slice(2, 10);
+  return `${prefix}-${time}-${random}`;
+}
+
 function addDaysISO(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
@@ -639,19 +656,19 @@ function toggleFavorite(gameId) {
   saveState(); render();
 }
 function handleLogin(e) { e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email').toLowerCase().trim(); const password = fd.get('password'); const u = state.users.find(x=>x.email.toLowerCase()===email && x.password===password); if (!u) return toast('Invalid email or password.'); if (u.disabled) return toast('This account is disabled.'); state.currentUserId = u.id; saveState(); go('/app/find'); }
-function handleSignup(e) { e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email').toLowerCase().trim(); if (state.users.some(u=>u.email.toLowerCase()===email)) return toast('An account with this email already exists.'); const user = { id: crypto.randomUUID(), email, password: fd.get('password'), fullName: fd.get('fullName') || email, role: 'user', plan: 'free', accessStatus: 'active', accessExpiresAt: null, disabled: false }; state.users.push(user); state.currentUserId = user.id; saveState(); go('/app/find'); }
+function handleSignup(e) { e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email').toLowerCase().trim(); if (state.users.some(u=>u.email.toLowerCase()===email)) return toast('An account with this email already exists.'); const user = { id: makeId('id'), email, password: fd.get('password'), fullName: fd.get('fullName') || email, role: 'user', plan: 'free', accessStatus: 'active', accessExpiresAt: null, disabled: false }; state.users.push(user); state.currentUserId = user.id; saveState(); go('/app/find'); }
 function logout() { state.currentUserId = null; saveState(); go('/login'); }
 function handleSearchInput(e) { state.search = e.target.value; saveState(); clearTimeout(searchTimer); searchTimer = setTimeout(() => { render(); const next = byId('search-input'); if (next) { next.focus(); const len = next.value.length; try { next.setSelectionRange(len, len); } catch (_) {} } }, 180); }
 function handleFinder(e) { e.preventDefault(); const fd = new FormData(e.target); state.finder = { groupSize: Number(fd.get('groupSize')), time: Number(fd.get('time')), ageMin: Number(fd.get('ageMin')), ageMax: Number(fd.get('ageMax')), materials: selectedMaterialsText(), space: fd.get('space'), category: fd.get('category'), safety: 'Low Risk', avoid: 'not embarrassing' }; saveState(); toast('Smart Finder updated your top matches.'); render(); }
 function setStars(n) { const form = byId('rate-form'); form.rating.value = n; document.querySelectorAll('[data-star]').forEach(el => el.classList.toggle('active', Number(el.dataset.star) <= n)); }
-function handleRate(e) { e.preventDefault(); const fd = new FormData(e.target); const rating = Number(fd.get('rating')); if (!rating) return toast('Choose a star rating first.'); const gameId = e.target.dataset.gameId; const userId = currentUser().id; const existing = state.ratings.find(r=>r.gameId===gameId && r.userId===userId); if (existing) { existing.rating = rating; existing.reviewText = fd.get('reviewText'); existing.updatedAt = new Date().toISOString(); } else state.ratings.push({ id: crypto.randomUUID(), userId, gameId, rating, reviewText: fd.get('reviewText'), reviewStatus: 'published', mediaStatus: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }); recalcRating(gameId); saveState(); toast('Rating submitted.'); go(`/app/games/${gameId}/reviews`); }
+function handleRate(e) { e.preventDefault(); const fd = new FormData(e.target); const rating = Number(fd.get('rating')); if (!rating) return toast('Choose a star rating first.'); const gameId = e.target.dataset.gameId; const userId = currentUser().id; const existing = state.ratings.find(r=>r.gameId===gameId && r.userId===userId); if (existing) { existing.rating = rating; existing.reviewText = fd.get('reviewText'); existing.updatedAt = new Date().toISOString(); } else state.ratings.push({ id: makeId('id'), userId, gameId, rating, reviewText: fd.get('reviewText'), reviewStatus: 'published', mediaStatus: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }); recalcRating(gameId); saveState(); toast('Rating submitted.'); go(`/app/games/${gameId}/reviews`); }
 function recalcRating(gameId) { const rs = state.ratings.filter(r=>r.gameId===gameId); const g = state.games.find(x=>x.id===gameId); g.ratingCount = rs.length; g.reviewCount = rs.filter(r=>r.reviewText).length; g.averageRating = rs.length ? Math.round((rs.reduce((a,r)=>a+r.rating,0)/rs.length)*10)/10 : 0; }
 function handleNotes(e) { e.preventDefault(); const gameId = e.target.dataset.gameId; state.notes[`${currentUser().id}:${gameId}`] = new FormData(e.target).get('note'); saveState(); toast('Notes saved.'); go(`/app/games/${gameId}`); }
 function handleSubmitGame(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const payload = Object.fromEntries(fd.entries());
-  state.submissions.push({ id: crypto.randomUUID(), submittedBy: currentUser().id, status: 'submitted', source: 'manual', payload, createdAt: new Date().toISOString() });
+  state.submissions.push({ id: makeId('id'), submittedBy: currentUser().id, status: 'submitted', source: 'manual', payload, createdAt: new Date().toISOString() });
   saveState();
   toast('Game submitted for review.');
   go('/app/account');
@@ -665,7 +682,7 @@ async function handleBatchUpload(e) {
   if (!files.length) return toast('Choose one or more .md files.');
 
   const publishNow = isStaff() && fd.get('publishNow') === 'on';
-  const batch = { id: crypto.randomUUID(), uploadedBy: currentUser().id, fileCount: files.length, importedCount: 0, failedCount: 0, publishMode: publishNow ? 'publish_now' : 'moderation', errors: [], createdAt: new Date().toISOString() };
+  const batch = { id: makeId('id'), uploadedBy: currentUser().id, fileCount: files.length, importedCount: 0, failedCount: 0, publishMode: publishNow ? 'publish_now' : 'moderation', errors: [], createdAt: new Date().toISOString() };
   state.importBatches = state.importBatches || [];
   state.importBatches.push(batch);
 
@@ -680,7 +697,7 @@ async function handleBatchUpload(e) {
         const game = gameFromPayload(payload, { creator: currentUser().fullName, sourceFilename: file.name });
         state.games.push(game);
       } else {
-        state.submissions.push({ id: crypto.randomUUID(), submittedBy: currentUser().id, status: 'submitted', source: 'batch_md', sourceFilename: file.name, importBatchId: batch.id, payload, createdAt: new Date().toISOString() });
+        state.submissions.push({ id: makeId('id'), submittedBy: currentUser().id, status: 'submitted', source: 'batch_md', sourceFilename: file.name, importBatchId: batch.id, payload, createdAt: new Date().toISOString() });
       }
       batch.importedCount += 1;
     } catch (err) {
@@ -892,13 +909,13 @@ function createPlanWithGame(gameId) {
   const game = state.games.find(g=>g.id===gameId);
   const title = prompt('New plan name:', game ? `${game.title} Plan` : 'New Plan');
   if (!title) return;
-  const plan = { id: crypto.randomUUID(), userId: currentUser().id, title, materials: game ? [...game.materials] : [], items: game ? [{ gameId, title: game.title, notes: game.shortDescription }] : [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  const plan = { id: makeId('id'), userId: currentUser().id, title, materials: game ? [...game.materials] : [], items: game ? [{ gameId, title: game.title, notes: game.shortDescription }] : [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   state.sessions.push(plan); saveState(); window.__addToPlanGameId = null; toast('Plan created.'); go('/app/plan');
 }
 function handleCreatePlan(e) {
   e.preventDefault(); const fd = new FormData(e.target);
   const title = String(fd.get('title') || 'New Plan').trim();
-  const plan = { id: crypto.randomUUID(), userId: currentUser().id, title, category: fd.get('category'), materials: [], items: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  const plan = { id: makeId('id'), userId: currentUser().id, title, category: fd.get('category'), materials: [], items: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   state.sessions.push(plan); saveState(); toast('Plan saved.'); go('/app/plan');
 }
 function renamePlan(planId) { const plan = state.sessions.find(p=>p.id===planId && p.userId===currentUser().id); if (!plan) return; const title = prompt('Rename plan:', plan.title); if (!title) return; plan.title = title; plan.updatedAt = new Date().toISOString(); saveState(); render(); }
@@ -928,10 +945,10 @@ function initPlanDragAndDrop() {
 function handleSession(e) { e.preventDefault(); }
 
 function handleRedeem(e) { e.preventDefault(); const code = new FormData(e.target).get('code').toUpperCase().trim(); const c = state.coupons.find(x=>x.displayCode===code); if (!c) return toast('Coupon not found.'); if (c.disabled) return toast('Coupon is disabled.'); if (c.redeemedBy) return toast('Coupon was already redeemed.'); if (c.expiresAt && isExpired(c.expiresAt)) return toast('Coupon expired.'); c.redeemedBy = currentUser().id; c.redeemedAt = new Date().toISOString(); grantPro(currentUser().id, c.durationDays || 30, false); saveState(); toast('PRO unlocked for one month.'); render(); }
-function handleCouponGeneration(e) { e.preventDefault(); const fd = new FormData(e.target); const qty = Math.min(100, Math.max(1, Number(fd.get('quantity')))); for (let i=0;i<qty;i++) state.coupons.push({ id: crypto.randomUUID(), displayCode: generateCouponCode(), benefitType: 'one_free_month_pro', durationDays: 30, campaign: fd.get('campaign'), expiresAt: fd.get('expires') ? new Date(fd.get('expires')).toISOString() : null, redeemedBy: null, disabled: false, createdBy: currentUser().id, createdAt: new Date().toISOString() }); saveState(); toast(`${qty} coupon(s) created.`); render(); }
+function handleCouponGeneration(e) { e.preventDefault(); const fd = new FormData(e.target); const qty = Math.min(100, Math.max(1, Number(fd.get('quantity')))); for (let i=0;i<qty;i++) state.coupons.push({ id: makeId('id'), displayCode: generateCouponCode(), benefitType: 'one_free_month_pro', durationDays: 30, campaign: fd.get('campaign'), expiresAt: fd.get('expires') ? new Date(fd.get('expires')).toISOString() : null, redeemedBy: null, disabled: false, createdBy: currentUser().id, createdAt: new Date().toISOString() }); saveState(); toast(`${qty} coupon(s) created.`); render(); }
 function generateCouponCode() { let code = ''; const bytes = new Uint8Array(16); crypto.getRandomValues(bytes); for (const b of bytes) code += COUPON_ALPHABET[b % COUPON_ALPHABET.length]; return code; }
 function grantPro(userId, days=30, rerender=true) { const u = state.users.find(x=>x.id===userId); if (!u) return; u.plan='pro'; u.accessStatus='active'; const current = u.accessExpiresAt && new Date(u.accessExpiresAt) > new Date() ? new Date(u.accessExpiresAt) : new Date(); current.setDate(current.getDate()+days); u.accessExpiresAt = current.toISOString(); saveState(); if (rerender) { toast('PRO access granted.'); render(); } }
-function handleAdminCreateUser(e) { e.preventDefault(); const fd = new FormData(e.target); const user = { id: crypto.randomUUID(), email: fd.get('email'), password: fd.get('password'), fullName: fd.get('fullName') || fd.get('email'), role: fd.get('role'), plan: fd.get('plan'), accessStatus: 'active', accessExpiresAt: fd.get('plan')==='pro' ? addDaysISO(365) : null, disabled: false }; state.users.push(user); saveState(); toast('User created.'); render(); }
+function handleAdminCreateUser(e) { e.preventDefault(); const fd = new FormData(e.target); const user = { id: makeId('id'), email: fd.get('email'), password: fd.get('password'), fullName: fd.get('fullName') || fd.get('email'), role: fd.get('role'), plan: fd.get('plan'), accessStatus: 'active', accessExpiresAt: fd.get('plan')==='pro' ? addDaysISO(365) : null, disabled: false }; state.users.push(user); saveState(); toast('User created.'); render(); }
 function handleUserField(e) { const u = state.users.find(x=>x.id===e.target.dataset.userId); const field = e.target.dataset.userField; if (field === 'disabled') u.disabled = e.target.checked; else if (field === 'accessExpiresAt') u.accessExpiresAt = e.target.value ? new Date(e.target.value).toISOString() : null; else u[field] = e.target.value; saveState(); toast('User updated.'); }
 function approveSubmission(id) { const s = state.submissions.find(x=>x.id===id); if (!s) return; const game = gameFromPayload(s.payload, { creator: currentUser().fullName, sourceFilename: s.sourceFilename }); state.games.push(game); s.status='published'; s.publishedGameId=game.id; if (s.importBatchId) { const batch = (state.importBatches||[]).find(b=>b.id===s.importBatchId); if (batch) batch.lastPublishedAt = new Date().toISOString(); } saveState(); toast('Submission published.'); render(); }
 function rejectSubmission(id) { const s = state.submissions.find(x=>x.id===id); s.status='rejected'; saveState(); render(); }
