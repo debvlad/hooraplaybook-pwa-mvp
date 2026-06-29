@@ -72,3 +72,18 @@ When fixing the red X remove button:
 - Fixes to mobile plan creation must not break desktop plan creation.
 - Desktop red X remove behavior must continue working.
 - Existing red X remove behavior must not regress.
+
+
+## Locked after commit `631e5d5` — 2026-06-29
+
+- My Plans red X must remain visible.
+- My Plans red X remove must continue working.
+- Modify Plan must continue opening correctly.
+- Modify Plan must not show up/down reorder buttons.
+- Mobile drag reorder in Modify Plan must continue working.
+- During mobile drag reorder, the card should follow the finger with a placeholder.
+- Modified plan order must persist after going back and reopening.
+- Modified plan order must persist after refresh.
+- Swipe left must reveal only the red X circle icon.
+- Red X remove must continue working after swipe reveal.
+- Fixes to unrelated UI polish must not break plan creation, red X remove, drag reorder, or order persistence.

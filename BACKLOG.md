@@ -217,3 +217,38 @@
   - Does not change unrelated Account page content.
   - Works on mobile.
   - No obvious console errors.
+
+
+## Done / Verified
+
+### P1 — Fix Mobile Modify Plan Reorder / Swipe Behavior
+
+- Type: Bug
+- Area: Plans / Modify Plan / Mobile
+- Status: Done
+- Commit: `631e5d5`
+- Description:
+  Mobile Modify Plan previously did not allow reliable mobile reordering or swipe/remove behavior. This ticket fixed mobile drag sorting and confirmed remove behavior.
+- Verified Result:
+  - My Plans red X is visible.
+  - My Plans red X remove works.
+  - Modify Plan opens.
+  - No up/down buttons are shown.
+  - Mobile drag reorder works.
+  - Card follows finger with placeholder.
+  - Order persists after going back and reopening.
+  - Order persists after refresh.
+  - Swipe left reveals only the red X circle icon.
+  - Red X remove works.
+  - No obvious console errors reported.
+- Acceptance Criteria:
+  - User can reorder game cards on mobile Modify Plan.
+  - Card follows finger with placeholder.
+  - Order persists after going back and reopening.
+  - Order persists after refresh.
+  - Swipe-left reveal shows only the red X circle icon.
+  - Red X remove works.
+  - No up/down buttons are shown.
+  - Existing My Plans red X remains visible.
+  - Existing My Plans red X remove remains working.
+  - No obvious console errors.

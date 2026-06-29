@@ -125,3 +125,49 @@
 - Mark P0 mobile create-plan bug as fixed and verified.
 - Lock mobile plan creation behavior so it does not break again.
 - Add low-priority UI polish tickets for the Find icon and Account page scroll position.
+
+
+## 2026-06-29 — P1 Modify Plan Mobile Reorder / Swipe Behavior Verified — Commit `631e5d5`
+
+- Ticket: P1 — Fix Mobile Modify Plan Reorder / Swipe Behavior
+- Commit: `631e5d5`
+- Commit message: Fix modify plan drag sorting
+
+### What worked
+- My Plans red X is visible.
+- My Plans red X remove works.
+- Modify Plan opens.
+- No up/down buttons are shown.
+- Mobile drag reorder works.
+- Card follows finger with placeholder.
+- Order persists after going back and reopening.
+- Order persists after refresh.
+- Swipe left reveals only the red X circle icon.
+- Red X remove works.
+- Commit completed.
+
+### What failed
+- No failure reported for this ticket.
+
+### Console errors
+- No obvious console errors reported.
+
+### Desktop result
+- Desktop still works.
+- Red X remove still works.
+
+### Mobile result
+- Mobile Modify Plan drag reorder works.
+- Mobile reorder persists after reopening.
+- Mobile reorder persists after refresh.
+- Mobile swipe-left reveal shows only the red X circle icon.
+- Mobile red X remove works.
+
+### Git / local status
+- Commit completed: `631e5d5`
+- Only untracked local item reported: `_backups/`
+
+### Decision
+- Mark P1 mobile Modify Plan reorder / swipe behavior as fixed and verified.
+- Lock the working drag reorder, persistence, swipe-left red X reveal, and red X remove behaviors.
+- Do not commit `_backups/`.

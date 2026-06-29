@@ -4,32 +4,42 @@ You are the coding assistant for my app.
 
 Work on only this revision:
 
-## P1 — Fix Mobile Modify Plan Reorder / Swipe Behavior
+## P3 — Replace Find Game Controller Icon with Magnifying Glass Icon
 
-- Type: Bug
-- Area: Plans / Modify Plan / Mobile
+- Type: UI/UX
+- Area: Bottom Navigation / Find
 - Status: Ready
 
 ### Problem
-On mobile, the `Modify Plan` page previously did not allow the user to swipe to remove or reorder game cards. Now that mobile plan creation is fixed, this mobile plan-editing behavior should be verified and fixed if still broken.
+The Find icon in the bottom navigation is currently a game controller. The user does not like it and prefers a simple standard search/find icon, like an iOS-style magnifying glass.
 
 ### Acceptance Criteria
-- User can reorder game cards on mobile Modify Plan, or a clear mobile-friendly reorder control is provided.
-- User can remove games from the Modify Plan page on mobile using the working red X remove button.
-- Existing red X remove behavior remains working on desktop.
-- Existing red X remove behavior remains working on mobile.
-- Mobile `+ Plan` create-plan flow remains working.
-- Mobile `Account > My Plans > Create a New Plan` remains working.
-- Plans continue to persist.
-- Game card timings do not return.
-- `+ Plan` grey/green behavior does not break.
-- Back arrow does not break.
-- `My Plans` remains under Account.
+- Bottom navigation Find icon uses a simple magnifying glass/search icon.
+- Icon looks like a standard search/find icon.
+- Icon still clearly represents the Find section.
+- Bottom navigation layout does not change.
+- No unrelated bottom navigation behavior changes.
+- Works on desktop.
+- Works on mobile.
 - No obvious console errors.
+
+### Locked Fixes To Preserve
+- Mobile `+ Plan` must still allow creating and saving a new plan.
+- Mobile `Account > My Plans > Create a New Plan` must still work.
+- Newly created plans must persist.
+- My Plans red X must remain visible and working.
+- Modify Plan red X must remain working.
+- Mobile drag reorder must remain working.
+- Plan order must persist after going back/reopening.
+- Plan order must persist after refresh.
+- Swipe left must reveal only the red X circle icon.
+- Game card timings must stay removed.
+- `+ Plan` must stay grey before adding and green after already added.
+- Back arrow must continue working.
+- `My Plans` must remain under Account.
 
 ### Rules
 - Fix only this issue.
-- Do not work on the Find icon in this ticket.
 - Do not work on Account page scroll position in this ticket.
 - Do not redesign unrelated screens.
 - Do not change unrelated files.

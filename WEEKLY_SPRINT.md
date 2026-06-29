@@ -79,3 +79,35 @@ Stabilize plan card behavior after the first live `3fd5a76` revision so users ca
 - Do not bring back plan game card timings.
 - Do not break grey/green `+ Plan` state.
 - Do not remove `My Plans` from Account.
+
+
+## 2026-06-29 Sprint Update — P1 Mobile Modify Plan Reorder Fixed
+
+### Completed
+- P1 — Fix Mobile Modify Plan Reorder / Swipe Behavior
+  - Commit: `631e5d5`
+  - Verified mobile drag reorder works.
+  - Verified card follows finger with placeholder.
+  - Verified order persists after going back and reopening.
+  - Verified order persists after refresh.
+  - Verified swipe-left reveals only the red X circle icon.
+  - Verified red X remove works.
+  - Verified no up/down buttons are shown.
+
+### Remaining Low-Priority Polish
+- P3 — Replace Find Game Controller Icon with Magnifying Glass Icon
+- P3 — Account Page Should Open at Top
+
+### Recommended Next Focus
+- P3 — Replace Find Game Controller Icon with Magnifying Glass Icon
+
+### Do Not Touch
+- Do not break mobile plan creation.
+- Do not break My Plans red X remove.
+- Do not break Modify Plan red X remove.
+- Do not break mobile drag reorder.
+- Do not break order persistence after reopening or refresh.
+- Do not bring back up/down reorder buttons.
+- Do not bring back plan game card timings.
+- Do not break grey/green `+ Plan` state.
+- Do not remove `My Plans` from Account.
