@@ -1,79 +1,23 @@
-# HooraPlaybook Locked Fixes
+# LOCKED_FIXES.md
 
-These fixes must never be reverted:
+## Locked after live deployment revision `3fd5a76` — 2026-06-29
 
-- Game detail pages use only one header.
-- Game detail header must show: circular image back button, logo mark, text HooraPlaybook wordmark, iOS share icon.
-- Share button copies/shares only the URL, not the description.
-- Filter icon must use assets/filter.png.
-- Sort icon must use assets/sort.png.
-- Games screen must not show the redundant category chip section.
-- Category filtering belongs on the Filter page.
-- Game cards must open the game detail page at the top.
-- My Plans must support save, name, view, rename, delete, and clickable games.
-- Admin > Users must show Grant 30 Days and Disable without horizontal scrolling.
-- Add Game must use Categories, not Purpose.
-- Standard categories:
-  - Quick and simple
-  - Wet-n-Wild
-  - Team-building
-  - Teams
-  - Circle
-  - Icebreakers
-  - Adventure
-  - Tag
-  - Sport-n-fitness
-  - Theatrical
-  - Relays
-- No Untested or Not Recommended tags.
-- All app headers must use `assets/back_button.png` for the back button image.
-- Header back chevron must return to the actual previous in-app page, not hard-code `#/app/find`.
+These behaviors were verified on the live Cloudflare deployment and must not break again:
 
-- Header HooraPlaybook wordmark must be live text, not a wordmark image. Use purple for “Hoora” and navy for “Playbook”.
-- Do not show a second filter button beside the search field when the header already has the filter icon.
-- Game detail, reviews, rating, and notes pages must never be wrapped by the global `renderAppShell()` because those pages already render their own header/frame.
-- Game detail, reviews, rating, and notes pages must never show double headers or double footers/bottom navigation.
-- All `/app/games/:id...` routes must bypass the outer app shell using `isStandaloneGameRoute()` before `renderAppShell(renderAppRoute())` is called.
-- Raw text chevrons such as `‹` must not be used in app headers; header back buttons must render the image asset `assets/back_button.png`.
+- Plan game cards must not show confusing timing/duration labels.
+- The `+ Plan` button must be grey before a game is added to a plan.
+- The `+ Plan` button must turn green after the game is already added to a plan.
+- The back arrow must continue to work as a return-to-previous-page control.
+- `My Plans` must remain accessible under Account.
+- The huge Remove button must not return to plan game cards.
+- These locked behaviors must remain working on both desktop and mobile.
 
+## Protection for Next Revision
 
-- Game pages must not show a “Download / Print PDF” button or section.
-- Game detail sticky actions must show: Rate This Game, Add Notes, and Add to Plan.
-- Add to Plan must open a choice between existing plans and Create New Plan.
-- Plan page Available materials must be a navigation button, not a text input.
-- Plan materials selector must show a tappable cloud of materials with “No Materials” first.
-## Locked update — Plan and Smart Finder materials
+When fixing the red X remove button:
 
-- Smart Finder must label the materials control as `Available Materials`.
-- Smart Finder `Available Materials` must be a navigation button with a right arrow, not a text input.
-- Smart Finder must not show preview/result cards under the `Find 3 Great Games` button.
-- Plan page must not show the plan creation form section with Plan name, session type, total minutes, group size, category, and Save Plan.
-- Saved plan cards must show a `Modify` button with `assets/edit-246.svg` to the left of `Rename`.
-- Modify Plan must list all games in the plan.
-- Modify Plan must support drag-and-drop reordering.
-- Modify Plan removable game cards must support iOS-style swipe left to remove.
-- Swipe left must reveal a red ribbon labeled `Remove`; removal happens only after passing the threshold and releasing.
-- Swipe removal must use Pointer Events, preserve vertical scrolling, avoid accidental click activation, and include a visible accessible Remove button.
-- Header HooraPlaybook text must remain live text and approximately 20% smaller than the previous oversized header text.
-- The search row must not show a second filter icon/button beside the search input when the header already has the filter icon.
-
-## Locked update — Game card Plan action and My Plans location
-
-- Game cards must use a `+ Plan` button, not an empty square icon.
-- The `+ Plan` button must open the Add to Plan menu with existing plans and Create New Plan.
-- Footer must not include the Plan button.
-- Account must include a My Plans section with a button to open My Plans.
-- My Plans page must show a `+ Create a New Plan` button near the top-right under the header.
-- Saved plan cards must include Modify, Rename, and Delete controls.
-- Modify must list games in the plan, support drag reorder, and support iOS-style swipe-left Remove.
-
-## Locked update — Version 0.3.0 plan-card, materials, and version history rules
-
-- Plan game rows must use the small red X circle image `assets/Remove.png`; do not show a text `Remove` button on plan game cards.
-- The red X remove icon must appear anywhere plan games can be removed, including the general My Plans page and the Modify Plan page.
-- Plan game rows must not show schedule timings such as `0:00 · 20 MIN`; plan timing labels are confusing and must stay removed from plan game cards.
-- Game card `+ Plan` buttons must be grey when the game is not in any saved plan and green when the game has already been added to at least one saved plan.
-- The header back image must never be clipped or truncated; `assets/back_button.png` must render fully inside the circular header button.
-- Available Materials must not show redundant nested header buttons or duplicate bottom actions. It should show the materials cloud and a single Done button.
-- The app must keep an `APP_VERSION` constant and show the version in small grey text at the bottom of the Account page.
-- `VERSION_HISTORY.md` must be updated automatically with every delivered app update, including feature changes, bug fixes, UI reversions, and locked regression rules.
+- Do not bring back game timing labels.
+- Do not change the working `+ Plan` grey/green state.
+- Do not break the back arrow.
+- Do not remove or hide `My Plans` from Account.
+- Do not redesign unrelated screens.
