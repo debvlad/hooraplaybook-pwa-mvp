@@ -123,3 +123,36 @@
   - Does not bring back game timing labels.
   - Does not break the grey/green `+ Plan` state.
   - Does not remove `My Plans` from Account.
+\n\n<!-- MOBILE_PLAN_CREATE_REGRESSION_LOCK_2026_06_29:BACKLOG -->
+
+### P0 — Regression: Restore Mobile Create New Plan Behavior
+
+- Type: Bug
+- Area: Mobile / Plans / Add to Plan
+- Status: Ready
+- Steps to Reproduce:
+  1. Open local app on mobile through the local network URL.
+  2. Use `+ Plan` to create a new plan.
+  3. Observe that visually nothing changes.
+  4. Go to `Account > My Plans > Create a New Plan`.
+  5. Enter a plan name and create it.
+  6. Observe the created message.
+  7. Return to `Account > My Plans`.
+- Expected Result:
+  - The new plan appears in `My Plans`.
+  - The new plan persists after refresh.
+  - `+ Plan` creation behaves the same on mobile as the live Cloudflare version.
+- Actual Result:
+  - `+ Plan` mobile create action does not visibly create a saved plan.
+  - `Account > My Plans > Create a New Plan` shows a success message, but `My Plans` still shows `No saved plans yet`.
+- Regression Note:
+  - The live Cloudflare version currently works correctly on mobile, so local code has regressed from known-good behavior.
+- Acceptance Criteria:
+  - Mobile `+ Plan` creates a saved plan.
+  - Mobile `Account > My Plans > Create a New Plan` creates a saved plan.
+  - Created plans appear in `My Plans` immediately.
+  - Created plans still appear after mobile refresh.
+  - Desktop create-plan behavior remains working.
+  - Red X remove behavior remains working.
+  - No generic fallback storage system is used unless it matches the app’s existing plan data model.
+  - No unrelated screens are redesigned or refactored.\n

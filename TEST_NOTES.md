@@ -75,3 +75,27 @@
 - Lock the desktop red X remove button behavior.
 - Treat mobile plan creation as the next immediate bug.
 - Next ticket should focus only on fixing mobile `Create a new plan` from the `+ Plan` dialog.
+\n\n<!-- MOBILE_PLAN_CREATE_REGRESSION_LOCK_2026_06_29:TEST_NOTES -->
+
+## 2026-06-29 — Local Test: Mobile Create New Plan Regression
+
+- Revision tested: P0 Mobile Create New Plan local patch attempt
+- What worked:
+  - Desktop create-plan behavior still works.
+  - Red X remove button functionality and visual were previously confirmed working locally.
+  - Live Cloudflare version creates new plans correctly on mobile.
+- What failed:
+  - Mobile local version does not create a usable saved plan from `+ Plan`.
+  - Mobile local version shows `"Youth Night Plae" created.` after using `Account > My Plans > Create a New Plan`, but the plan does not appear in `My Plans`.
+  - After returning to `Account > My Plans`, the screen still shows `No saved plans yet`.
+- Console errors:
+  - Not recorded in this test.
+- Desktop result:
+  - Passing / unchanged.
+- Mobile result:
+  - Failing.
+- Decision:
+  - Treat as a P0 regression.
+  - Do not continue with generic mobile fallback patches.
+  - Next coding step should compare/reuse the known-good live Cloudflare behavior and restore parity in the local project.
+  - Add a locked rule so mobile plan creation must be tested before any plan-related commit.\n

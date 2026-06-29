@@ -36,3 +36,21 @@ Stabilize plan card behavior after the first live `3fd5a76` revision so users ca
 ### Move After This
 - Mobile red X verification should happen after mobile plan creation works.
 - Mobile Modify Plan reorder/swipe remains separate unless required by this bug.
+\n\n<!-- MOBILE_PLAN_CREATE_REGRESSION_LOCK_2026_06_29:WEEKLY_SPRINT -->
+
+## Added 2026-06-29 — Sprint Update
+
+### Must Finish
+
+- P0 — Regression: Restore Mobile Create New Plan Behavior
+  - Mobile plan creation must match the known-good live Cloudflare behavior.
+  - Test both mobile entry points:
+    - `+ Plan`
+    - `Account > My Plans > Create a New Plan`
+
+### Do Not Touch This Week
+
+- Do not redesign unrelated plan screens.
+- Do not change the confirmed working red X remove button unless directly broken by the fix.
+- Do not replace working desktop create-plan behavior.
+- Do not introduce a separate fallback plan store that diverges from the app’s real plan storage/rendering model.\n

@@ -41,3 +41,23 @@
   - User cannot test the mobile red X remove button if no plans already exist.
 - Severity:
   - High. This blocks plan creation on mobile.
+\n\n<!-- MOBILE_PLAN_CREATE_REGRESSION_LOCK_2026_06_29:APP_INBOX -->
+
+## 2026-06-29 — Regression: Mobile Create New Plan Broken Locally
+
+- Type: Bug / Regression
+- Priority: P0
+- Area: Mobile / Plans / Add to Plan
+- Status: Inbox
+- Source: Mobile local testing
+- Observation:
+  - Live Cloudflare version works correctly on mobile for add-to-plan and creating new plans.
+  - Local revision regressed mobile plan creation.
+  - From `+ Plan`, creating a new plan visually does not change anything.
+  - From `Account > My Plans > Create a New Plan`, mobile shows a created message, but `My Plans` still says `No saved plans yet`.
+  - Desktop create-plan behavior still works.
+- Important conclusion:
+  - This is a regression against the live working behavior, not a new feature request.
+- Action:
+  - Restore the working mobile create-plan behavior from the live Cloudflare-compatible logic.
+  - Do not replace working plan storage/rendering with a generic fallback unless it is proven to match the app’s real plan model.\n
