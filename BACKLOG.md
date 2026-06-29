@@ -156,3 +156,64 @@
   - Red X remove behavior remains working.
   - No generic fallback storage system is used unless it matches the app’s existing plan data model.
   - No unrelated screens are redesigned or refactored.\n
+
+## Done / Verified
+
+### P0 — Fix Mobile Create New Plan from `+ Plan` Dialog
+
+- Type: Bug
+- Area: Mobile / Plans / `+ Plan` Dialog
+- Status: Done
+- Commit: `5b9bd23`
+- Description:
+  Mobile plan creation from the `+ Plan` dialog was broken. Tapping `Create a new plan` did not save anything, especially when no plans already existed.
+- Verified Result:
+  - Mobile `+ Plan` now works.
+  - Mobile `Account > My Plans > Create a New Plan` now works.
+  - Plans persist.
+  - Desktop still works.
+  - Red X remove still works.
+  - No obvious console errors reported.
+- Acceptance Criteria:
+  - On mobile, tapping `+ Plan` opens the plan dialog.
+  - User can create a new plan from that dialog.
+  - New plan saves successfully.
+  - Works when the user has zero existing plans.
+  - Works when the user already has existing plans.
+  - Works on desktop and does not break the desktop flow.
+  - No obvious console errors.
+  - Does not break the small red X remove button.
+  - Does not bring back game timing labels.
+  - Does not break the grey/green `+ Plan` state.
+  - Does not remove `My Plans` from Account.
+
+## Low Priority / UI Polish
+
+### P3 — Replace Find Game Controller Icon with Magnifying Glass Icon
+
+- Type: UI/UX
+- Area: Bottom Navigation / Find
+- Status: Inbox
+- Description:
+  The Find icon in the bottom navigation is currently a game controller. User does not like it and prefers a simple standard search/find icon, like an iOS-style magnifying glass.
+- Acceptance Criteria:
+  - Bottom navigation Find icon uses a simple magnifying glass/search icon.
+  - Icon is visually clear and standard.
+  - Icon still clearly labels the Find section.
+  - Does not change unrelated bottom navigation behavior.
+  - Works on desktop and mobile.
+  - No obvious console errors.
+
+### P3 — Account Page Should Open at Top
+
+- Type: UI/UX
+- Area: Account Page / Mobile
+- Status: Inbox
+- Description:
+  When opening the Account page, the page appears to open in the middle instead of at the top. This is cosmetic and low priority.
+- Acceptance Criteria:
+  - Opening Account starts at the top of the Account page.
+  - Does not interfere with bottom navigation.
+  - Does not change unrelated Account page content.
+  - Works on mobile.
+  - No obvious console errors.

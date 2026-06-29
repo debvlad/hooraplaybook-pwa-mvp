@@ -4,58 +4,33 @@ You are the coding assistant for my app.
 
 Work on only this revision:
 
-## P0 — Fix Mobile Create New Plan from `+ Plan` Dialog
+## P1 — Fix Mobile Modify Plan Reorder / Swipe Behavior
 
 - Type: Bug
-- Area: Mobile / Plans / `+ Plan` Dialog
+- Area: Plans / Modify Plan / Mobile
 - Status: Ready
 
 ### Problem
-On mobile, tapping `+ Plan` opens the dialog to create a new plan, but tapping `Create a new plan` does nothing. No plan is saved. This blocks mobile users from creating a plan, especially when they have no plans already created.
-
-### Steps to Reproduce
-1. Open the app on mobile.
-2. Make sure there are no plans already created.
-3. Tap `+ Plan` on a game card.
-4. In the dialog, try to create a new plan.
-5. Tap `Create a new plan`.
-
-### Expected Result
-- A new plan is created and saved.
-- The selected game is added to that new plan, or the new plan becomes available immediately so the user can add the game.
-- User can then open the plan on mobile and see the game card.
-
-### Actual Result
-- The dialog opens.
-- `Create a new plan` does nothing.
-- No plan is saved.
-- User cannot proceed with mobile plan creation.
+On mobile, the `Modify Plan` page previously did not allow the user to swipe to remove or reorder game cards. Now that mobile plan creation is fixed, this mobile plan-editing behavior should be verified and fixed if still broken.
 
 ### Acceptance Criteria
-- On mobile, tapping `+ Plan` opens the plan dialog.
-- User can create a new plan from that dialog.
-- New plan saves successfully.
-- The selected game is added to the new plan, or the new plan is immediately available for selection.
-- Works when the user has zero existing plans.
-- Works when the user already has existing plans.
-- Works on desktop and does not break the desktop flow.
-- No red console errors.
-- Does not break the small red X remove button on desktop.
-- Does not bring back game timing labels.
-- Does not break the grey/green `+ Plan` state.
-- Does not break the back arrow.
-- Does not remove `My Plans` from Account.
-
-### Locked Fixes To Preserve
-- Desktop small red X remove button on plan game cards works and must not break.
-- Plan game card timings must stay removed.
-- `+ Plan` must remain grey before adding.
-- `+ Plan` must turn green after a game is already added.
-- Back arrow must continue working.
-- `My Plans` must remain under Account.
+- User can reorder game cards on mobile Modify Plan, or a clear mobile-friendly reorder control is provided.
+- User can remove games from the Modify Plan page on mobile using the working red X remove button.
+- Existing red X remove behavior remains working on desktop.
+- Existing red X remove behavior remains working on mobile.
+- Mobile `+ Plan` create-plan flow remains working.
+- Mobile `Account > My Plans > Create a New Plan` remains working.
+- Plans continue to persist.
+- Game card timings do not return.
+- `+ Plan` grey/green behavior does not break.
+- Back arrow does not break.
+- `My Plans` remains under Account.
+- No obvious console errors.
 
 ### Rules
 - Fix only this issue.
+- Do not work on the Find icon in this ticket.
+- Do not work on Account page scroll position in this ticket.
 - Do not redesign unrelated screens.
 - Do not change unrelated files.
 - Do not remove working features.

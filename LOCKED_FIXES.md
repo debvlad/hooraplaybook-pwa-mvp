@@ -61,3 +61,14 @@ When fixing the red X remove button:
   - Do not create a second plan storage system that is not read by `My Plans`.
   - Do not use generic fallback patches unless they preserve the existing app plan model.
   - Do not remove or weaken this locked rule without explicit approval.\n
+
+## Locked after commit `5b9bd23` — 2026-06-29
+
+- Mobile `+ Plan` must allow creating a new plan from the dialog.
+- Mobile `Account > My Plans > Create a New Plan` must create and save a plan.
+- Newly created plans must persist.
+- Plan creation must work when the user has zero existing plans.
+- Plan creation must continue working when the user already has existing plans.
+- Fixes to mobile plan creation must not break desktop plan creation.
+- Desktop red X remove behavior must continue working.
+- Existing red X remove behavior must not regress.
