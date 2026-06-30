@@ -2849,3 +2849,44 @@ button.plan-game-remove-x:focus-visible,
 .hp-media-thumb-duration {
   pointer-events: none;
 }
+
+/* HOORAPLAYBOOK_LEAVE_REVIEW_REMOVE_MEDIA_V13
+   Scope: Leave Review selected-media preview remove button only.
+*/
+.hp-review-draft-media-item {
+  position: relative;
+}
+
+.hp-review-draft-media-remove {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border: 2px solid #ef1b25;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #ef1b25;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 900;
+  z-index: 4;
+  box-shadow: 0 2px 8px rgba(17, 18, 47, 0.18);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hp-review-draft-media-remove:active {
+  transform: scale(0.94);
+}
+
+.hp-review-draft-media-remove:focus-visible {
+  outline: 3px solid rgba(239, 27, 37, 0.25);
+  outline-offset: 2px;
+}

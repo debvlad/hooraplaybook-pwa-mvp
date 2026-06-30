@@ -976,11 +976,12 @@ function renderReviewDraftMediaPreview(draft = {}) {
 function renderReviewDraftMediaItem(item = {}, index = 0) {
   const isVideo = item.type === 'video';
   const label = item.name || `${isVideo ? 'Video' : 'Image'} ${index + 1}`;
+  const mediaId = item.id || String(index);
   const visual = item.thumbnailUrl
     ? `<img src="${escapeHTML(item.thumbnailUrl)}" alt="${escapeHTML(label)} preview">`
     : `<div class="hp-review-draft-media-fallback">${reviewIcon('media')}<span>${escapeHTML(isVideo ? 'Video selected' : 'Image selected')}</span></div>`;
 
-  return `<article class="hp-review-draft-media-item">${visual}<small>${escapeHTML(label)}</small></article>`;
+  return `<article class="hp-review-draft-media-item">${visual}<button class="hp-review-draft-media-remove" type="button" data-remove-review-draft-media="${escapeHTML(mediaId)}" aria-label="Remove ${escapeHTML(label)}">×</button><small>${escapeHTML(label)}</small></article>`;
 }
 
 async function hpReviewMediaFromFiles(files = [], game = {}) {
@@ -1078,6 +1079,60 @@ function hpCreateCompressedImagePreview(file) {
   });
 }
 // HOORAPLAYBOOK_REVIEW_DRAFT_MEDIA_FIX_V11_END
+
+// HOORAPLAYBOOK_LEAVE_REVIEW_REMOVE_MEDIA_V13_START
+async function removeReviewDraftMedia(mediaId) {
+  const form = byId('leave-review-form');
+  const gameId = form?.dataset?.gameId || route?.parts?.[2] || '';
+  if (!gameId || !mediaId) return;
+
+  hpPersistReviewDraftFromForm(gameId);
+
+  const draft = getUserReviewDraft(gameId);
+  const media = Array.isArray(draft.media) ? draft.media : [];
+  const removed = media.find(item => String(item.id) === String(mediaId));
+  const nextMedia = media.filter(item => String(item.id) !== String(mediaId));
+
+  if (removed?.localBlobKey && typeof hpDeleteReviewMediaBlob === 'function') {
+    try {
+      await hpDeleteReviewMediaBlob(removed.localBlobKey);
+    } catch (error) {
+      console.warn('Could not delete local review media blob.', error);
+    }
+  }
+
+  saveUserReviewDraft(gameId, {
+    media: nextMedia,
+    mediaCount: nextMedia.length
+  });
+
+  const input = byId('review-media-input');
+  if (input) input.value = '';
+
+  toast('Media removed.');
+  render();
+}
+
+async function hpDeleteReviewMediaBlob(key) {
+  if (!key || typeof hpOpenReviewMediaDb !== 'function') return;
+  const db = await hpOpenReviewMediaDb();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('media', 'readwrite');
+    tx.objectStore('media').delete(key);
+
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error || new Error('Could not delete review media blob.'));
+    };
+  });
+}
+// HOORAPLAYBOOK_LEAVE_REVIEW_REMOVE_MEDIA_V13_END
 
 function reviewAverageStars(rating = 0) {
   const rounded = Math.round(Number(rating) || 0);
@@ -1775,6 +1830,7 @@ function bindEvents() {
   document.querySelectorAll('[data-random-icebreaker]').forEach(el => el.addEventListener('click', randomIcebreaker));
   document.querySelectorAll('[data-game-vote]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleGameVote(el.dataset.gameVote); const gameId = String(el.dataset.gameVote || '').split(':')[0]; if (gameId) go(`/app/games/${gameId}/leave-review`); }));
   document.querySelectorAll('[data-review-star]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); setUserGameRating(el.dataset.reviewStar); }));
+  document.querySelectorAll('[data-remove-review-draft-media]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); removeReviewDraftMedia(el.dataset.removeReviewDraftMedia); }));
   document.querySelectorAll('[data-review-media-button]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); handleReviewMediaButton(el.dataset.reviewMediaButton); }));
   document.querySelectorAll('[data-review-media-input]').forEach(el => el.addEventListener('change', e => handleReviewMediaChange(e.target))); 
   bindLeaveReviewDraftAutosave();
