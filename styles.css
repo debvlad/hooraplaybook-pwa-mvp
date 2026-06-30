@@ -1723,3 +1723,62 @@ button.plan-game-remove-x:focus-visible,
     width: min(var(--hp-desktop-app-width), 100vw) !important;
   }
 }
+
+/* HOORAPLAYBOOK_HIDE_MAIN_MY_PLANS_DRAG_HANDLES_V2
+   Purpose: hide drag handles on the main My Plans page without breaking card layout.
+   This replaces the broken V1 rule.
+*/
+
+/* Main My Plans page: do not show drag handles/reorder affordances. */
+.saved-plan-list .drag-handle,
+.saved-plan-list [data-drag-handle],
+.plan-card:not(.modify-plan-card) .drag-handle,
+.plan-card:not(.modify-plan-card) [data-drag-handle] {
+  display: none !important;
+}
+
+/* Main My Plans page: preserve normal wide game-row content layout. */
+.saved-plan-list .draggable-row,
+.plan-card:not(.modify-plan-card) .draggable-row,
+.saved-plan-list .plan-game-row,
+.saved-plan-list .plan-game-card,
+.saved-plan-list [data-game-card] {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+/* Main My Plans page: make the game title/summary area fill available width. */
+.saved-plan-list .draggable-row > *,
+.saved-plan-list .plan-game-row > *,
+.saved-plan-list .plan-game-card > * {
+  min-width: 0;
+}
+
+/* Main My Plans page: if rows use CSS grid, keep them from collapsing into a tiny text column. */
+.saved-plan-list .draggable-row,
+.saved-plan-list .plan-game-row {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
+
+/* Keep red X remove controls visible and above content on the main My Plans page. */
+.saved-plan-list .remove-game-btn,
+.saved-plan-list .remove-btn,
+.saved-plan-list .plan-remove-game,
+.saved-plan-list [data-remove-game],
+.saved-plan-list [data-remove-from-plan] {
+  display: inline-flex !important;
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+}
+
+/* Modify Plan page: drag handles must remain visible and functional. */
+.sortable-plan .drag-handle,
+.sortable-plan [data-drag-handle],
+.modify-plan-card .drag-handle,
+.modify-plan-card [data-drag-handle],
+.modify-plan-list .drag-handle,
+.modify-plan-list [data-drag-handle] {
+  display: inline-flex !important;
+}
