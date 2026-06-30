@@ -353,13 +353,14 @@ function renderAppShell(inner, opts = {}) {
 
 function renderBottomNav() {
   const active = route.raw;
+  const findActive = active.startsWith('/app/find') || active.startsWith('/app/games');
   const items = [
-    ['/app/find', hpIcon('search'), 'Find'],
-    ['/app/favorites', hpIcon('heart'), 'Favorites'],
-    ['/app/tools', hpIcon('smile'), 'Icebreakers'],
-    ['/app/account', hpIcon('account'), 'Account']
+    ['/app/find', gameDetailIcon('search'), 'Find', findActive],
+    ['/app/favorites', gameDetailIcon('heart'), 'Favorites', active.startsWith('/app/favorites')],
+    ['/app/tools', gameDetailIcon('smile'), 'Icebreakers', active.startsWith('/app/tools')],
+    ['/app/account', gameDetailIcon('account'), 'Account', active.startsWith('/app/account')]
   ];
-  return `<nav class="bottom-nav bottom-nav-4" aria-label="Main navigation">${items.map(([path,icon,label])=>`<button class="nav-item ${active.startsWith(path)?'active':''}" data-go="${path}"><span class="nav-icon">${icon}</span><span>${label}</span></button>`).join('')}</nav>`;
+  return `<nav class="bottom-nav bottom-nav-4 hp-universal-footer" aria-label="Primary navigation">${items.map(([path,icon,label,isActive])=>`<button class="nav-item ${isActive?'active':''}" data-go="${path}"><span class="nav-icon">${icon}</span><span>${label}</span></button>`).join('')}</nav>`;
 }
 
 function renderAppRoute() {
@@ -369,6 +370,7 @@ function renderAppRoute() {
   if (p[1] === 'games' && p[2] && p[3] === 'rate') return renderRateScreen(p[2]);
   if (p[1] === 'games' && p[2] && p[3] === 'reviews') return renderReviewsScreen(p[2]);
   if (p[1] === 'games' && p[2] && p[3] === 'notes') return renderNotesScreen(p[2]);
+  if (p[1] === 'games' && p[2] && p[3] === 'suggest-bible') return renderSuggestBibleConnection(p[2]);
   if (p[1] === 'games' && p[2]) return renderGameDetail(p[2]);
   if (p[1] === 'favorites') return renderFavorites();
   if (p[1] === 'submit') return renderSubmit();
@@ -584,14 +586,183 @@ function renderSortModalIfNeeded() { return window.__sortOpen ? `<div class="mod
 function renderGameDetail(id) {
   const game = state.games.find(g => g.id === id);
   if (!game) return renderAppShell(`<main class="content"><h1>Game not found</h1></main>`);
-  game.views += 1; saveState();
+  game.views += 1;
+  saveState();
+
   const locked = !canViewGame(game);
-  return `<div class="app-frame game-page-frame"><header class="topbar light-header">${headerBackButton()}${headerBrand()}<div class="header-actions"><button class="icon-btn icon-image-btn" data-share-game="${game.id}" aria-label="Share"><img src="/assets/ios-share.svg" alt=""></button></div></header><div class="detail-title-block"><h1>${game.title}</h1><div class="rating-row" style="justify-content:flex-start;gap:12px">${stars(game.averageRating)} <span>${game.averageRating.toFixed(1)} (${game.ratingCount} Ratings)</span><button class="icon-btn heart ${isFavorite(game.id)?'active':''}" data-toggle-favorite="${game.id}">♥</button></div><p><a class="link" data-go="/app/games/${game.id}/reviews">View Reviews</a></p></div><main class="content" style="padding-top:0;padding-bottom:116px"><div class="media-hero thumb ${game.thumb}"><span>${game.title}</span></div><div class="dots"><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div><section class="content-section"><h2>Description:</h2><p>${game.description}</p></section><section class="content-section"><h2>Quick Facts:</h2><div class="quick-facts">${quickFacts(game).map(([k,v])=>`<div class="fact"><strong>${k}</strong><span>${v}</span></div>`).join('')}</div></section>${locked ? renderLockedGame(game) : renderFullGameDetails(game)}<section class="content-section"><h2>Filters:</h2><div class="tag-list">${game.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></section><section class="content-section"><h2>Creators:</h2><p>${game.creator}</p></section></main><div class="sticky-actions sticky-actions-3"><button class="btn btn-primary" data-go="/app/games/${game.id}/rate">Rate This Game</button><button class="btn btn-secondary" data-go="/app/games/${game.id}/notes">Add Notes</button><button class="btn btn-secondary" data-add-to-plan="${game.id}">Add to Plan</button></div></div>`;
+  const vote = currentGameVote(game.id);
+  const favorite = isFavorite(game.id);
+  const materials = gameDetailMaterials(game);
+  const primaryCategory = gameDetailCategory(game);
+
+  return `<div class="app-frame hp-game-detail-frame"><main class="hp-game-page" aria-label="${escapeHTML(game.title)} detail page"><header class="hp-game-header"><button class="icon-btn hp-game-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<button class="icon-btn hp-game-header-btn" data-share-game="${game.id}" aria-label="Share ${escapeHTML(game.title)}"><img src="/assets/ios-share.svg" alt=""></button></header><section class="hp-game-title-section"><h1>${escapeHTML(game.title)}</h1><section class="hp-rating-section" aria-label="Game rating"><div class="hp-rating-row"><div class="hp-detail-stars" aria-label="${game.averageRating || 0} out of 5 stars">${gameDetailStars(game.averageRating || 0)}</div><span class="hp-rating-text">${gameDetailRatingText(game)}</span><button class="hp-detail-favorite ${favorite ? 'is-active' : ''}" data-toggle-favorite="${game.id}" aria-label="${favorite ? 'Remove from' : 'Add to'} favorites">${favorite ? gameDetailIcon('heartFilled') : gameDetailIcon('heart')}</button></div><button class="hp-reviews-link" data-go="/app/games/${game.id}/reviews">View reviews</button></section></section><section class="hp-game-image-wrap">${gameDetailImage(game)}</section><button class="hp-add-to-plan-button" data-add-to-plan="${game.id}" aria-label="Add ${escapeHTML(game.title)} to Plan"><span class="hp-button-plus">+</span><span>Add to Plan</span></button><section class="hp-game-actions-row"><div class="hp-vote-control" role="group" aria-label="Vote on this game"><button class="hp-vote-button ${vote === 'up' ? 'is-up-selected' : ''}" data-game-vote="${game.id}:up" aria-label="Thumbs up ${escapeHTML(game.title)}">${gameDetailIcon('thumbUp')}</button><span class="hp-vote-divider" aria-hidden="true"></span><button class="hp-vote-button ${vote === 'down' ? 'is-down-selected' : ''}" data-game-vote="${game.id}:down" aria-label="Thumbs down ${escapeHTML(game.title)}">${gameDetailIcon('thumbDown')}</button></div><button class="hp-notes-button" data-go="/app/games/${game.id}/notes">${gameDetailIcon('edit')}<span>Add Notes</span></button></section><section class="hp-game-meta-grid" aria-label="Game facts"><article class="hp-meta-card hp-meta-card--ages">${gameDetailIcon('user')}<div class="hp-meta-label">Ages</div><div class="hp-meta-value">${game.bestAgeMin}–${game.bestAgeMax}</div></article><article class="hp-meta-card hp-meta-card--players">${gameDetailIcon('users')}<div class="hp-meta-label">Players</div><div class="hp-meta-value">${game.groupSizeMin}–${game.groupSizeMax}</div></article><article class="hp-meta-card hp-meta-card--time">${gameDetailIcon('clock')}<div class="hp-meta-label">Time</div><div class="hp-meta-value">${gameDetailTime(game)}</div></article><article class="hp-meta-card hp-meta-card--materials">${gameDetailIcon('box')}<div class="hp-meta-label">Materials</div><div class="hp-meta-value">${escapeHTML(materials)}</div></article></section><section class="hp-category-card" aria-label="Game category"><div class="hp-category-icon">${gameDetailIcon('book')}</div><div class="hp-category-content"><div class="hp-category-label">Category</div><div class="hp-category-value"><span>${escapeHTML(primaryCategory)}</span></div></div></section>${locked ? renderLockedGameDetailCard(game) : renderUnlockedGameDetailCards(game)}</main>${renderBottomNav()}${renderAddToPlanModalIfNeeded()}</div>`;
 }
+
 function quickFacts(g) { return [['Ages', `${g.bestAgeMin}–${g.bestAgeMax}`], ['Players', `${g.groupSizeMin}–${g.groupSizeMax}`], ['Time', `${g.timeMin}–${g.timeMax} min`], ['Space', g.space], ['Energy', g.energy], ['Materials', g.materials.length?g.materials.join(', '):'None'], ['Safety', g.safety], ['Prep', `${g.prep} min`]]; }
 function renderLockedGame(game) { return `<section class="content-section lock-card"><h2>Unlock this PRO game</h2><p>Free users can preview the title, summary, quick facts, rating, and tags. Upgrade to PRO for full instructions and planning tools.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></section>`; }
 function renderFullGameDetails(game) { return `${section('What to Get:', game.materials.length ? [`Gather: ${game.materials.join(', ')}`] : ['No materials needed.'])}${section('What to Prep:', [game.setup])}${section('How to Play:', game.howToPlay)}${section('Leader Script:', [game.leaderScript])}${section('Safety Notes:', [game.safetyNotes, `Avoid with: ${game.avoidWith}`, `Requires: ${game.requires}`])}${section('Variations:', [game.variations])}${section('Make It Easier:', [game.easier])}${section('Make It Harder:', [game.harder])}${section('Debrief Questions:', game.debriefQuestions)}${section('Bible Bridge:', [game.bibleBridge, `References: ${game.scripture.join(', ')}`])}`; }
 function section(title, items) { return `<section class="content-section"><h2>${title}</h2><ul>${items.filter(Boolean).map(i=>`<li>${escapeHTML(i)}</li>`).join('')}</ul></section>`; }
+
+// HOORAPLAYBOOK_GAME_PAGE_REDESIGN_V1_START
+function renderUnlockedGameDetailCards(game) {
+  return `${renderHowToPlayCard(game)}${renderVariationsCard(game)}${renderBibleConnectionsCard(game)}${renderTipsCard(game)}`;
+}
+
+function renderLockedGameDetailCard(game) {
+  return `<section class="hp-detail-section-card"><div class="hp-detail-section-icon">${gameDetailIcon('lock')}</div><div class="hp-detail-section-content"><h2>Unlock this PRO game</h2><p>Upgrade to PRO to see full instructions, variations, Bible connections, and leader tips.</p><button class="btn btn-primary full" data-go="/pricing">Upgrade to PRO</button></div></section>`;
+}
+
+function renderHowToPlayCard(game) {
+  const rules = Array.isArray(game.howToPlay) && game.howToPlay.length ? game.howToPlay : ['Explain the game clearly.', 'Play one practice round.', 'Lead the group through the activity.'];
+  return `<section class="hp-detail-section-card hp-how-to-play-section"><div class="hp-detail-section-icon">${gameDetailIcon('lightbulb')}</div><div class="hp-detail-section-content"><h2>How to Play</h2><h3>Game Setup</h3><p>${escapeHTML(game.setup || 'Prepare the play area and explain the boundaries before the game begins.')}</p><h3>Rules</h3><ol>${rules.map(rule => `<li>${escapeHTML(rule)}</li>`).join('')}</ol></div></section>`;
+}
+
+function renderVariationsCard(game) {
+  const different = game.variations || 'Try a relay version, silent challenge, team tournament, or shorter round.';
+  return `<section class="hp-detail-section-card hp-variations-section"><div class="hp-detail-section-icon hp-detail-section-icon--purple">${gameDetailIcon('sparkles')}</div><div class="hp-detail-section-content"><h2>Variations</h2><h3>Easier</h3><p>${escapeHTML(game.easier || 'Simplify the rules, reduce the time pressure, or use fewer pieces.')}</p><h3>Harder</h3><p>${escapeHTML(game.harder || 'Add a timer, extra challenge, or communication limit.')}</p><h3>Different</h3><p>${escapeHTML(different)}</p></div></section>`;
+}
+
+function renderBibleConnectionsCard(game) {
+  const references = Array.isArray(game.scripture) && game.scripture.length ? game.scripture : [];
+  const bridge = game.bibleBridge || 'Use this game as a starting point for a short discussion about teamwork, wisdom, perseverance, or listening to God’s Word.';
+  const items = references.length ? references.map(ref => `<article class="hp-bible-connection"><h3>${escapeHTML(ref)}</h3><p>${escapeHTML(bridge)}</p></article>`).join('') : `<article class="hp-bible-connection"><h3>Suggested connection</h3><p>${escapeHTML(bridge)}</p></article>`;
+  return `<section class="hp-detail-section-card hp-bible-section"><div class="hp-detail-section-icon hp-detail-section-icon--blue">${gameDetailIcon('book')}</div><div class="hp-detail-section-content"><h2>Possible Bible Verse Connections</h2>${items}<button class="hp-suggest-bible-button" data-go="/app/games/${game.id}/suggest-bible">Suggest a Bible connection</button></div></section>`;
+}
+
+function renderTipsCard(game) {
+  const tips = [
+    game.safetyNotes,
+    game.requires ? `Requires: ${game.requires}` : '',
+    game.avoidWith ? `Avoid with: ${game.avoidWith}` : '',
+    game.leaderScript ? `Leader cue: ${game.leaderScript}` : ''
+  ].filter(Boolean);
+  const safeTips = tips.length ? tips : ['Prepare materials before the session starts.', 'Demonstrate one full round before beginning.', 'Use clear boundaries and stop play if the group becomes unsafe.'];
+  return `<section class="hp-detail-section-card hp-tips-section"><div class="hp-detail-section-icon hp-detail-section-icon--orange">${gameDetailIcon('checklist')}</div><div class="hp-detail-section-content"><h2>Tips</h2><ul>${safeTips.map(tip => `<li>${escapeHTML(tip)}</li>`).join('')}</ul></div></section>`;
+}
+
+function renderSuggestBibleConnection(gameId) {
+  const game = state.games.find(g => g.id === gameId);
+  if (!game) return renderAppShell(`<main class="content"><h1>Game not found</h1></main>`);
+  return `<div class="app-frame game-page-frame hp-suggest-bible-frame"><header class="topbar light-header">${headerBackButton()}${headerBrand()}<div></div></header><main class="content no-bottom-nav"><section class="hero-card"><h1>Suggest a Bible connection</h1><p>${escapeHTML(game.title)}</p></section><form id="bible-suggestion-form" data-game-id="${game.id}" class="form-grid"><label><span class="label">Bible reference</span><input class="input" name="reference" placeholder="Psalm 119:105" required></label><label><span class="label">Connection theme</span><input class="input" name="theme" placeholder="God’s Word Guides Us" required></label><label><span class="label">Explanation</span><textarea name="description" placeholder="How does this game connect to the passage?" required></textarea></label><button class="btn btn-primary full">Submit Bible Connection</button></form></main></div>`;
+}
+
+function handleBibleSuggestion(e) {
+  e.preventDefault();
+  const gameId = e.target.dataset.gameId;
+  const fd = new FormData(e.target);
+  state.bibleSuggestions = Array.isArray(state.bibleSuggestions) ? state.bibleSuggestions : [];
+  state.bibleSuggestions.push({
+    id: makeId('id'),
+    gameId,
+    userId: currentUser()?.id || '',
+    reference: String(fd.get('reference') || '').trim(),
+    theme: String(fd.get('theme') || '').trim(),
+    description: String(fd.get('description') || '').trim(),
+    status: 'submitted',
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+  toast('Bible connection submitted.');
+  go(`/app/games/${gameId}`);
+}
+
+function currentGameVote(gameId) {
+  const userId = currentUser()?.id || 'guest';
+  state.gameVotes = state.gameVotes || {};
+  return state.gameVotes[`${userId}:${gameId}`] || null;
+}
+
+function toggleGameVote(payload) {
+  const [gameId, nextVote] = String(payload).split(':');
+  if (!['up', 'down'].includes(nextVote)) return;
+  const userId = currentUser()?.id || 'guest';
+  const key = `${userId}:${gameId}`;
+  state.gameVotes = state.gameVotes || {};
+  const previousVote = state.gameVotes[key] || null;
+  const game = state.games.find(g => g.id === gameId);
+  if (!game) return;
+  game.popularity = game.popularity || { upVotes: 0, downVotes: 0, score: 0 };
+  if (previousVote === nextVote) {
+    if (nextVote === 'up') game.popularity.upVotes = Math.max(0, (game.popularity.upVotes || 0) - 1);
+    if (nextVote === 'down') game.popularity.downVotes = Math.max(0, (game.popularity.downVotes || 0) - 1);
+    delete state.gameVotes[key];
+  } else {
+    if (previousVote === 'up') game.popularity.upVotes = Math.max(0, (game.popularity.upVotes || 0) - 1);
+    if (previousVote === 'down') game.popularity.downVotes = Math.max(0, (game.popularity.downVotes || 0) - 1);
+    if (nextVote === 'up') game.popularity.upVotes = (game.popularity.upVotes || 0) + 1;
+    if (nextVote === 'down') game.popularity.downVotes = (game.popularity.downVotes || 0) + 1;
+    state.gameVotes[key] = nextVote;
+  }
+  game.popularity.score = (game.popularity.upVotes || 0) - (game.popularity.downVotes || 0);
+  saveState();
+  render();
+}
+
+function gameDetailStars(rating = 0) {
+  const rounded = Math.round(Number(rating) || 0);
+  return [1,2,3,4,5].map(i => `<span class="${i <= rounded ? 'is-filled' : 'is-empty'}">★</span>`).join('');
+}
+
+function gameDetailRatingText(game) {
+  const count = Number(game.ratingCount || 0);
+  if (!count) return 'No ratings yet';
+  const word = count === 1 ? 'rating' : 'ratings';
+  return `${Number(game.averageRating || 0).toFixed(1)} (${count} ${word})`;
+}
+
+function gameDetailTime(game) {
+  if (Number(game.timeMin) === Number(game.timeMax)) return `${game.timeMin} min`;
+  return `${game.timeMin}–${game.timeMax} min`;
+}
+
+function gameDetailMaterials(game) {
+  const materials = game.materials || [];
+  if (!materials.length) return 'None';
+  return materials.map(item => String(item).replace(/\b\w/g, ch => ch.toUpperCase())).join(', ');
+}
+
+function gameDetailCategory(game) {
+  const allowed = ['Quick and simple','Wet-n-Wild','Team-building','Teams','Circle','Icebreakers','Adventure','Tag','Sport-n-fitness','Theatrical','Relays'];
+  const candidates = [...(game.categories || []), ...(game.tags || []), ...(game.purpose || [])].filter(Boolean);
+  const exact = candidates.find(item => allowed.includes(item));
+  if (exact) return exact;
+  if (typeof normalizeCategory === 'function') {
+    const mapped = normalizeCategory(candidates.join(' '));
+    if (allowed.includes(mapped)) return mapped;
+  }
+  return 'Quick and simple';
+}
+
+function gameDetailImage(game) {
+  const title = escapeHTML(game.title || 'Game');
+  if (game.imageUrl) return `<img class="hp-game-image" src="${escapeHTML(game.imageUrl)}" alt="${title} game illustration">`;
+  return `<div class="hp-game-image hp-detail-thumb hp-detail-thumb-${escapeHTML(game.thumb || 'camp')}" role="img" aria-label="${title} game illustration"><span>${title}</span></div>`;
+}
+
+function gameDetailIcon(name) {
+  const common = 'width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+  const icons = {
+    search: `<svg ${common}><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>`,
+    heart: `<svg ${common}><path d="M20.8 4.6a5.2 5.2 0 0 0-7.4 0L12 6l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 20.8l8.8-8.8a5.2 5.2 0 0 0 0-7.4Z"></path></svg>`,
+    heartFilled: `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.8 4.6a5.2 5.2 0 0 0-7.4 0L12 6l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 20.8l8.8-8.8a5.2 5.2 0 0 0 0-7.4Z"></path></svg>`,
+    smile: `<svg ${common}><circle cx="12" cy="12" r="9"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></svg>`,
+    account: `<svg ${common}><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+    user: `<svg ${common}><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+    users: `<svg ${common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+    clock: `<svg ${common}><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>`,
+    box: `<svg ${common}><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg>`,
+    book: `<svg ${common}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"></path></svg>`,
+    thumbUp: `<svg ${common}><path d="M7 10v11"></path><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-1.38 6A3 3 0 0 1 17.45 21H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3l3.6-5.4A2 2 0 0 1 15 5.88Z"></path></svg>`,
+    thumbDown: `<svg ${common}><path d="M17 14V3"></path><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l1.38-6A3 3 0 0 1 6.55 3H20a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3l-3.6 5.4A2 2 0 0 1 9 18.12Z"></path></svg>`,
+    edit: `<svg ${common}><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"></path></svg>`,
+    lightbulb: `<svg ${common}><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.74V17h8v-2.26A7 7 0 0 0 12 2Z"></path></svg>`,
+    sparkles: `<svg ${common}><path d="m12 3 1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3Z"></path><path d="m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z"></path><path d="m5 14 .9 2.1L8 17l-2.1.9L5 20l-.9-2.1L2 17l2.1-.9L5 14Z"></path></svg>`,
+    checklist: `<svg ${common}><path d="M9 11l2 2 4-4"></path><path d="M9 17l2 2 4-4"></path><path d="M3 5h18"></path><path d="M3 12h3"></path><path d="M3 18h3"></path></svg>`,
+    lock: `<svg ${common}><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>`
+  };
+  return icons[name] || '';
+}
+// HOORAPLAYBOOK_GAME_PAGE_REDESIGN_V1_END
 
 function renderReviewsScreen(id) {
   const g = state.games.find(x=>x.id===id); if (!g) return '';
@@ -758,6 +929,8 @@ function bindEvents() {
   document.querySelectorAll('[data-upgrade]').forEach(el => el.addEventListener('click', () => handleUpgrade(el.dataset.upgrade)));
   document.querySelectorAll('[data-share-game]').forEach(el => el.addEventListener('click', () => shareGame(el.dataset.shareGame)));
   document.querySelectorAll('[data-random-icebreaker]').forEach(el => el.addEventListener('click', randomIcebreaker));
+  document.querySelectorAll('[data-game-vote]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleGameVote(el.dataset.gameVote); }));
+  byId('bible-suggestion-form')?.addEventListener('submit', handleBibleSuggestion);
 }
 
 function toggleFilter(f) { state.filters = state.filters.includes(f) ? state.filters.filter(x=>x!==f) : [...state.filters, f]; saveState(); render(); }
