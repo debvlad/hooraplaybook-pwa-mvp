@@ -30,6 +30,14 @@ The Find icon in the bottom navigation is currently a game controller. The user 
 - No obvious console errors.
 
 ### Locked Fixes To Preserve
+- Thumbs up must open Leave a Review page.
+- Thumbs down must cancel thumbs up and open Leave a Review page.
+- Review page header must show only back button and HooraPlaybook logo.
+- Rating star selection must work.
+- Public average/count must update immediately.
+- Review submission must work and return to game page.
+- Game Page redesign must remain working.
+- Find Games redesign must remain working.
 - Main My Plans page must not show drag handles on game rows.
 - Main My Plans game rows must not collapse or squeeze.
 - My Plans game titles and descriptions must remain readable.
@@ -37,8 +45,6 @@ The Find icon in the bottom navigation is currently a game controller. The user 
 - Modify Plan drag handles must remain available.
 - Modify Plan drag sorting must remain working.
 - Red X remove behavior must remain working.
-- Find Games redesign must remain working.
-- Game Page redesign must remain working.
 - Universal light footer must remain working.
 - Desktop width consistency must remain working.
 - Mobile `+ Plan` must still allow creating and saving a new plan.

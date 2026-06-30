@@ -234,3 +234,43 @@
 - Treat V2 as the successful corrective fix.
 - Mark P3 — Hide Drag Handles on Main My Plans Page as fixed and locally verified after V2.
 - Do not update `RELEASE_NOTES.md` until this batch is deployed live.
+
+
+## 2026-06-30 — Local Test — P1 Open Leave Review Page After Thumbs Up/Down Vote
+
+### Revision tested
+- Ticket: P1 — Open Leave Review Page After Thumbs Up/Down Vote
+- Status: Fixed, tested locally, ready/committed after git commit
+- Commit: Not provided in PM note
+- Deployment status: Not deployed yet
+
+### What worked
+- Thumbs up opens Leave a Review page.
+- Thumbs down cancels thumbs up and opens Leave a Review page.
+- Review page header has only back button and HooraPlaybook logo.
+- Game title appears below header.
+- `Your rating` appears.
+- Five grey stars appear.
+- Star selection fills correctly.
+- Public average/count updates immediately.
+- Review text box appears.
+- `Add images or Video` opens media picker.
+- Submit Review works.
+- Success message appears.
+- App returns to game page.
+- Game Page redesign still works.
+- Find Games redesign still works.
+- My Plans layout still works.
+- Modify Plan drag sorting still works.
+- Red X remove behavior still works.
+
+### What failed
+- No failures reported for this ticket.
+
+### Console errors
+- No obvious console errors reported.
+
+### Decision
+- Mark P1 review-after-vote flow as fixed and locally verified.
+- Lock the working thumbs vote → Leave Review flow.
+- Do not update `RELEASE_NOTES.md` until this batch is deployed live.

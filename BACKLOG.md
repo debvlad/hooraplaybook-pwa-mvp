@@ -340,3 +340,52 @@
   - No unrelated plan card layout changes.
   - Works on desktop.
   - Works on mobile.
+
+
+## Done / Locally Verified
+
+### P1 — Open Leave Review Page After Thumbs Up/Down Vote
+
+- Type: Feature
+- Area: Game Page / Reviews / Voting
+- Status: Done
+- Deployment Status: Not deployed yet
+- Commit: Not provided in PM note
+- Description:
+  After a user taps thumbs up or thumbs down on the Game Page, the app opens the Leave a Review page. Thumbs down cancels thumbs up before opening the review flow.
+- Verified Result:
+  - Thumbs up opens Leave a Review page.
+  - Thumbs down cancels thumbs up and opens Leave a Review page.
+  - Review page header has only back button and HooraPlaybook logo.
+  - Game title appears below header.
+  - `Your rating` appears.
+  - Five grey stars appear.
+  - Star selection fills correctly.
+  - Public average/count updates immediately.
+  - Review text box appears.
+  - `Add images or Video` opens media picker.
+  - Submit Review works.
+  - Success message appears.
+  - App returns to game page.
+  - Game Page redesign still works.
+  - Find Games redesign still works.
+  - My Plans layout still works.
+  - Modify Plan drag sorting still works.
+  - Red X remove behavior still works.
+- Acceptance Criteria:
+  - Thumbs up opens Leave a Review page.
+  - Thumbs down cancels thumbs up and opens Leave a Review page.
+  - Review page header shows only back button and HooraPlaybook logo.
+  - Game title appears below header.
+  - Rating stars render and can be selected.
+  - Public average/count updates immediately.
+  - Review text box is visible.
+  - Media picker opens from `Add images or Video`.
+  - Submit Review works.
+  - Success message appears.
+  - App returns to game page.
+  - Existing Game Page redesign remains working.
+  - Existing Find Games redesign remains working.
+  - Existing My Plans layout remains working.
+  - Existing Modify Plan drag sorting remains working.
+  - Existing red X remove behavior remains working.

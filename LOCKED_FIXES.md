@@ -102,3 +102,25 @@ When fixing the red X remove button:
 - Game Page redesign must continue working.
 - Universal light footer must continue working.
 - Desktop width consistency must continue working.
+
+
+## Locked after local review-flow verification — 2026-06-30
+
+- Thumbs up on the Game Page must open the Leave a Review page.
+- Thumbs down must cancel thumbs up and open the Leave a Review page.
+- Review page header must show only the back button and HooraPlaybook logo.
+- Game title must appear below the Review page header.
+- `Your rating` must appear on the Review page.
+- Five grey stars must appear before selection.
+- Star selection must fill correctly.
+- Public average/count must update immediately after rating/review.
+- Review text box must remain visible.
+- `Add images or Video` must open the media picker.
+- Submit Review must work.
+- Success message must appear after submitting.
+- App must return to the game page after review submission.
+- Review-flow changes must not break Game Page redesign.
+- Review-flow changes must not break Find Games redesign.
+- Review-flow changes must not break My Plans layout.
+- Review-flow changes must not break Modify Plan drag sorting.
+- Review-flow changes must not break red X remove behavior.

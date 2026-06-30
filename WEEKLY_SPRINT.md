@@ -162,3 +162,47 @@ Stabilize plan card behavior after the first live `3fd5a76` revision so users ca
 - Do not break Game Page redesign.
 - Do not break universal light footer.
 - Do not break desktop width consistency.
+
+
+## 2026-06-30 Sprint Update — Review Flow After Vote Locally Verified
+
+### Completed Locally
+- P1 — Open Leave Review Page After Thumbs Up/Down Vote
+  - Verified thumbs up opens Leave a Review page.
+  - Verified thumbs down cancels thumbs up and opens Leave a Review page.
+  - Verified review page header has only back button and HooraPlaybook logo.
+  - Verified game title appears below header.
+  - Verified `Your rating` appears.
+  - Verified five grey stars appear and selection fills correctly.
+  - Verified public average/count updates immediately.
+  - Verified review text box appears.
+  - Verified `Add images or Video` opens media picker.
+  - Verified Submit Review works.
+  - Verified success message appears.
+  - Verified app returns to game page.
+  - Verified Game Page redesign still works.
+  - Verified Find Games redesign still works.
+  - Verified My Plans layout still works.
+  - Verified Modify Plan drag sorting still works.
+  - Verified red X remove behavior still works.
+
+### Current Deployment Plan
+- Do not deploy yet unless user decides to push the current batch live.
+- Continue local revisions and deploy as a stable batch later.
+
+### Recommended Next Focus
+- P3 — Replace Find Game Controller Icon with Magnifying Glass Icon
+
+### Do Not Touch
+- Do not break thumbs up/down review flow.
+- Do not break review page header.
+- Do not break rating star selection.
+- Do not break public average/count update.
+- Do not break media picker.
+- Do not break Submit Review.
+- Do not break return-to-game-page behavior.
+- Do not break Game Page redesign.
+- Do not break Find Games redesign.
+- Do not break My Plans layout.
+- Do not break Modify Plan drag sorting.
+- Do not break red X remove behavior.
