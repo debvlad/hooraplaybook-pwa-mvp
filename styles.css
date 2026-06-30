@@ -1552,3 +1552,122 @@ button.plan-game-remove-x:focus-visible,
     font-size: 18px;
   }
 }
+
+/* HOORAPLAYBOOK_UNIVERSAL_LIGHT_FOOTER_V1
+   Purpose: Make the bottom footer light and universal on every app page.
+   Scope: Footer styling only. Does not change page content or plan/game functionality.
+*/
+.bottom-nav,
+.bottom-nav.bottom-nav-4,
+.app-frame .bottom-nav,
+.find-shell .bottom-nav,
+.hp-game-detail-frame .bottom-nav {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 0 !important;
+  transform: translateX(-50%) !important;
+  width: min(560px, 100vw) !important;
+  height: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+  padding: 9px 18px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-top: 1px solid var(--hp-soft-border, var(--gp-border, #e8ebf1)) !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 4px !important;
+  z-index: 50 !important;
+  color: var(--hp-footer-inactive, #4f5875) !important;
+  box-shadow: 0 -6px 20px rgba(17, 22, 47, 0.04) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
+.bottom-nav .nav-item,
+.bottom-nav.bottom-nav-4 .nav-item,
+.app-frame .bottom-nav .nav-item,
+.find-shell .bottom-nav .nav-item,
+.hp-game-detail-frame .bottom-nav .nav-item {
+  min-height: 58px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--hp-footer-inactive, #4f5875) !important;
+  text-decoration: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  padding: 0 !important;
+}
+
+.bottom-nav .nav-item .nav-icon,
+.bottom-nav.bottom-nav-4 .nav-item .nav-icon,
+.app-frame .bottom-nav .nav-item .nav-icon,
+.find-shell .bottom-nav .nav-item .nav-icon,
+.hp-game-detail-frame .bottom-nav .nav-item .nav-icon {
+  width: 29px !important;
+  height: 29px !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 27px !important;
+  line-height: 1 !important;
+}
+
+.bottom-nav .nav-item .nav-icon svg,
+.bottom-nav.bottom-nav-4 .nav-item .nav-icon svg,
+.app-frame .bottom-nav .nav-item .nav-icon svg,
+.find-shell .bottom-nav .nav-item .nav-icon svg,
+.hp-game-detail-frame .bottom-nav .nav-item .nav-icon svg {
+  width: 27px !important;
+  height: 27px !important;
+  stroke-width: 2 !important;
+  display: block !important;
+}
+
+.bottom-nav .nav-item.active,
+.bottom-nav.bottom-nav-4 .nav-item.active,
+.app-frame .bottom-nav .nav-item.active,
+.find-shell .bottom-nav .nav-item.active,
+.hp-game-detail-frame .bottom-nav .nav-item.active {
+  color: var(--hp-green-dark, var(--gp-lime-dark, #4d7834)) !important;
+}
+
+.bottom-nav .nav-item:focus-visible {
+  outline: 3px solid rgba(93, 139, 63, 0.22) !important;
+  outline-offset: -3px !important;
+  border-radius: 14px !important;
+}
+
+.content,
+.find-page,
+.filter-body,
+.game-page-frame .content,
+.fullscreen-page .content {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.hp-game-page {
+  padding-bottom: calc(102px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.sticky-actions {
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+@media (min-width: 760px) {
+  .bottom-nav,
+  .bottom-nav.bottom-nav-4,
+  .app-frame .bottom-nav,
+  .find-shell .bottom-nav,
+  .hp-game-detail-frame .bottom-nav {
+    position: sticky !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+  }
+}
