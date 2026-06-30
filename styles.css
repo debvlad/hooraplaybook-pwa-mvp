@@ -2727,3 +2727,59 @@ button.plan-game-remove-x:focus-visible,
     flex-direction: column !important;
   }
 }
+
+/* HOORAPLAYBOOK_REVIEW_DRAFT_MEDIA_FIX_V11
+   Scope: Leave Review selected-media previews only.
+*/
+.hp-review-draft-media-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: -6px;
+}
+
+.hp-review-draft-media-item {
+  min-width: 0;
+}
+
+.hp-review-draft-media-item img,
+.hp-review-draft-media-fallback {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 1px solid var(--hp-border, #dde1e8);
+  background: #f3f5f7;
+  object-fit: cover;
+  display: block;
+}
+
+.hp-review-draft-media-fallback {
+  display: grid;
+  place-items: center;
+  color: var(--hp-muted, #6f7484);
+  padding: 10px;
+  text-align: center;
+}
+
+.hp-review-draft-media-fallback svg {
+  width: 26px;
+  height: 26px;
+}
+
+.hp-review-draft-media-fallback span {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.hp-review-draft-media-item small {
+  display: block;
+  margin-top: 5px;
+  color: var(--hp-muted, #6f7484);
+  font-size: 12px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -775,7 +775,7 @@ function renderLeaveReviewPage(gameId) {
   const userRating = getUserGameRating(gameId) || 0;
   const reviewDraft = getUserReviewDraft(gameId);
 
-  return `<div class="app-frame hp-review-frame"><main class="hp-review-page" aria-label="Leave a review for ${escapeHTML(game.title)}"><header class="hp-review-header"><button class="icon-btn hp-review-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<span aria-hidden="true"></span></header><section class="hp-review-title-section"><h1>${escapeHTML(game.title)}</h1></section><section class="hp-review-rating-section" aria-label="Your rating"><h2>Your rating</h2><div class="hp-review-star-row" role="radiogroup" aria-label="Select your star rating">${[1,2,3,4,5].map(value => `<button class="hp-review-star ${value <= userRating ? 'is-selected' : ''}" type="button" data-review-star="${game.id}:${value}" role="radio" aria-checked="${value === userRating ? 'true' : 'false'}" aria-label="${value} star${value === 1 ? '' : 's'}">★</button>`).join('')}</div><p>Tap a star to rate. Your rating updates the public average.</p><div class="hp-current-average-card"><div class="hp-current-average-stars" aria-label="${game.averageRating || 0} out of 5 stars">${reviewAverageStars(game.averageRating || 0)}</div><span>Current average</span><strong>${reviewRatingText(game)}</strong></div></section><form id="leave-review-form" class="hp-review-form" data-game-id="${game.id}"><label class="hp-review-textarea-label"><span>Review</span><textarea name="review" placeholder="Share what worked, what didn’t, and any tips for other leaders...">${escapeHTML(reviewDraft.text || '')}</textarea></label><input id="review-media-input" class="hp-review-file-input" type="file" accept="image/*,video/*" multiple data-review-media-input="${game.id}"><button class="hp-add-media-button" type="button" data-review-media-button="${game.id}">${reviewIcon('media')}<span>${reviewDraft.mediaCount ? `${reviewDraft.mediaCount} file${reviewDraft.mediaCount === 1 ? '' : 's'} selected` : 'Add images or Video'}</span></button><button class="hp-submit-review-button" type="submit">Submit Review</button></form></main></div>`;
+  return `<div class="app-frame hp-review-frame"><main class="hp-review-page" aria-label="Leave a review for ${escapeHTML(game.title)}"><header class="hp-review-header"><button class="icon-btn hp-review-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<span aria-hidden="true"></span></header><section class="hp-review-title-section"><h1>${escapeHTML(game.title)}</h1></section><section class="hp-review-rating-section" aria-label="Your rating"><h2>Your rating</h2><div class="hp-review-star-row" role="radiogroup" aria-label="Select your star rating">${[1,2,3,4,5].map(value => `<button class="hp-review-star ${value <= userRating ? 'is-selected' : ''}" type="button" data-review-star="${game.id}:${value}" role="radio" aria-checked="${value === userRating ? 'true' : 'false'}" aria-label="${value} star${value === 1 ? '' : 's'}">★</button>`).join('')}</div><p>Tap a star to rate. Your rating updates the public average.</p><div class="hp-current-average-card"><div class="hp-current-average-stars" aria-label="${game.averageRating || 0} out of 5 stars">${reviewAverageStars(game.averageRating || 0)}</div><span>Current average</span><strong>${reviewRatingText(game)}</strong></div></section><form id="leave-review-form" class="hp-review-form" data-game-id="${game.id}"><label class="hp-review-textarea-label"><span>Review</span><textarea name="review" placeholder="Share what worked, what didn’t, and any tips for other leaders...">${escapeHTML(reviewDraft.text || '')}</textarea></label><input id="review-media-input" class="hp-review-file-input" type="file" accept="image/*,video/*" multiple data-review-media-input="${game.id}"><button class="hp-add-media-button" type="button" data-review-media-button="${game.id}">${reviewIcon('media')}<span>${hpReviewDraftMediaLabel(reviewDraft)}</span></button>${renderReviewDraftMediaPreview(reviewDraft)}<button class="hp-submit-review-button" type="submit">Submit Review</button></form></main></div>`;
 }
 
 function getReviewUserId() {
@@ -815,25 +815,73 @@ function setUserGameRating(payload) {
 
 function getUserReviewDraft(gameId) {
   state.reviewDrafts = state.reviewDrafts || {};
-  return state.reviewDrafts[`${getReviewUserId()}:${gameId}`] || { text: '', mediaCount: 0 };
+  const draft = state.reviewDrafts[`${getReviewUserId()}:${gameId}`] || {};
+  return {
+    text: draft.text || '',
+    mediaCount: Number(draft.mediaCount || (Array.isArray(draft.media) ? draft.media.length : 0) || 0),
+    media: Array.isArray(draft.media) ? draft.media : []
+  };
 }
 
 function saveUserReviewDraft(gameId, patch = {}) {
   state.reviewDrafts = state.reviewDrafts || {};
   const key = `${getReviewUserId()}:${gameId}`;
-  state.reviewDrafts[key] = { ...getUserReviewDraft(gameId), ...patch };
-  saveState();
+  const currentDraft = getUserReviewDraft(gameId);
+  const nextDraft = { ...currentDraft, ...patch };
+  if (Array.isArray(nextDraft.media)) nextDraft.mediaCount = nextDraft.media.length;
+  state.reviewDrafts[key] = nextDraft;
+
+  try {
+    saveState();
+  } catch (error) {
+    console.warn('Review draft was too large to save with previews. Saving media metadata only.', error);
+    if (Array.isArray(nextDraft.media)) {
+      state.reviewDrafts[key] = {
+        ...nextDraft,
+        media: nextDraft.media.map(item => ({
+          id: item.id,
+          type: item.type,
+          name: item.name,
+          size: item.size,
+          status: item.status || 'pending',
+          durationSeconds: item.durationSeconds
+        })),
+        mediaPreviewWarning: true
+      };
+      saveState();
+    } else {
+      throw error;
+    }
+  }
 }
 
 function handleReviewMediaButton(gameId) {
+  hpPersistReviewDraftFromForm(gameId);
   const input = document.getElementById('review-media-input');
   input?.click();
 }
 
-function handleReviewMediaChange(input) {
+async function handleReviewMediaChange(input) {
   const gameId = input.dataset.reviewMediaInput;
-  const count = input.files ? input.files.length : 0;
-  saveUserReviewDraft(gameId, { mediaCount: count });
+  hpPersistReviewDraftFromForm(gameId);
+
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+
+  const game = state.games.find(g => g.id === gameId) || {};
+  const limitedFiles = files.slice(0, 6);
+
+  try {
+    const media = await hpReviewMediaFromFiles(limitedFiles, game);
+    saveUserReviewDraft(gameId, { media, mediaCount: media.length });
+    toast(`${media.length} file${media.length === 1 ? '' : 's'} selected.`);
+  } catch (error) {
+    console.warn('Could not save selected review media preview.', error);
+    const fallbackMedia = hpReviewMediaMetadataFromFiles(limitedFiles);
+    saveUserReviewDraft(gameId, { media: fallbackMedia, mediaCount: fallbackMedia.length });
+    toast('Media selected. Image preview was not available locally.');
+  }
+
   render();
 }
 
@@ -843,14 +891,21 @@ function handleLeaveReviewSubmit(e) {
   const game = state.games.find(g => g.id === gameId);
   if (!game) return;
 
+  hpPersistReviewDraftFromForm(gameId);
+
   const fd = new FormData(e.target);
   const text = String(fd.get('review') || '').trim();
   const rating = getUserGameRating(gameId);
   const draft = getUserReviewDraft(gameId);
+  const draftMedia = Array.isArray(draft.media) ? draft.media : [];
 
   state.gameReviews = Array.isArray(state.gameReviews) ? state.gameReviews : [];
   const userId = getReviewUserId();
   const existing = state.gameReviews.find(review => review.gameId === gameId && review.userId === userId);
+
+  const savedMedia = draftMedia.length
+    ? draftMedia
+    : (existing?.media || hpBuildReviewMedia(draft.mediaCount || 0, game));
 
   const savedReview = {
     id: existing?.id || makeId('review'),
@@ -862,8 +917,8 @@ function handleLeaveReviewSubmit(e) {
     moderatedReviewText: text,
     status: 'pending',
     reviewerName: currentUser()?.fullName || currentUser()?.email || 'User',
-    mediaCount: draft.mediaCount || 0,
-    media: existing?.media || hpBuildReviewMedia(draft.mediaCount || 0, game),
+    mediaCount: savedMedia.length || draft.mediaCount || 0,
+    media: savedMedia,
     submittedAt: existing?.submittedAt || new Date().toISOString(),
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -875,11 +930,142 @@ function handleLeaveReviewSubmit(e) {
     state.gameReviews.push(savedReview);
   }
 
-  saveUserReviewDraft(gameId, { text, mediaCount: draft.mediaCount || 0 });
+  saveUserReviewDraft(gameId, { text, mediaCount: savedReview.mediaCount, media: savedMedia });
   saveState();
   toast('Review submitted.');
   go(`/app/games/${gameId}`);
 }
+
+// HOORAPLAYBOOK_REVIEW_DRAFT_MEDIA_FIX_V11_START
+function bindLeaveReviewDraftAutosave() {
+  const form = byId('leave-review-form');
+  if (!form) return;
+  const gameId = form.dataset.gameId;
+  const textarea = form.querySelector('textarea[name="review"]');
+  if (!gameId || !textarea) return;
+
+  textarea.addEventListener('input', () => {
+    saveUserReviewDraft(gameId, { text: textarea.value });
+  });
+
+  textarea.addEventListener('change', () => {
+    saveUserReviewDraft(gameId, { text: textarea.value });
+  });
+}
+
+function hpPersistReviewDraftFromForm(gameId) {
+  const form = byId('leave-review-form');
+  if (!form || !gameId) return;
+  const textarea = form.querySelector('textarea[name="review"]');
+  if (!textarea) return;
+  saveUserReviewDraft(gameId, { text: textarea.value });
+}
+
+function hpReviewDraftMediaLabel(draft = {}) {
+  const count = Number(draft.mediaCount || (Array.isArray(draft.media) ? draft.media.length : 0) || 0);
+  if (!count) return 'Add images or Video';
+  return `${count} file${count === 1 ? '' : 's'} selected`;
+}
+
+function renderReviewDraftMediaPreview(draft = {}) {
+  const media = Array.isArray(draft.media) ? draft.media : [];
+  if (!media.length) return '';
+  return `<div class="hp-review-draft-media-grid" aria-label="Selected review media">${media.map((item, index) => renderReviewDraftMediaItem(item, index)).join('')}</div>`;
+}
+
+function renderReviewDraftMediaItem(item = {}, index = 0) {
+  const isVideo = item.type === 'video';
+  const label = item.name || `${isVideo ? 'Video' : 'Image'} ${index + 1}`;
+  const visual = item.thumbnailUrl
+    ? `<img src="${escapeHTML(item.thumbnailUrl)}" alt="${escapeHTML(label)} preview">`
+    : `<div class="hp-review-draft-media-fallback">${reviewIcon('media')}<span>${escapeHTML(isVideo ? 'Video selected' : 'Image selected')}</span></div>`;
+
+  return `<article class="hp-review-draft-media-item">${visual}<small>${escapeHTML(label)}</small></article>`;
+}
+
+async function hpReviewMediaFromFiles(files = [], game = {}) {
+  const media = [];
+
+  for (const [index, file] of files.entries()) {
+    const isVideo = file.type.startsWith('video/');
+    const isImage = file.type.startsWith('image/');
+
+    if (isImage) {
+      const thumbnailUrl = await hpCreateCompressedImagePreview(file);
+      media.push({
+        id: `media-${Date.now().toString(36)}-${index}`,
+        type: 'image',
+        name: file.name || `Image ${index + 1}`,
+        size: file.size || 0,
+        mimeType: file.type || 'image',
+        thumbnailUrl,
+        url: thumbnailUrl,
+        status: 'pending'
+      });
+    } else if (isVideo) {
+      media.push({
+        id: `media-${Date.now().toString(36)}-${index}`,
+        type: 'video',
+        name: file.name || `Video ${index + 1}`,
+        size: file.size || 0,
+        mimeType: file.type || 'video',
+        thumbnailUrl: game.imageUrl || '',
+        url: '',
+        status: 'pending',
+        durationSeconds: 0
+      });
+    }
+  }
+
+  return media;
+}
+
+function hpReviewMediaMetadataFromFiles(files = []) {
+  return files.map((file, index) => ({
+    id: `media-${Date.now().toString(36)}-${index}`,
+    type: file.type && file.type.startsWith('video/') ? 'video' : 'image',
+    name: file.name || `Media ${index + 1}`,
+    size: file.size || 0,
+    mimeType: file.type || '',
+    thumbnailUrl: '',
+    url: '',
+    status: 'pending',
+    durationSeconds: file.type && file.type.startsWith('video/') ? 0 : undefined
+  }));
+}
+
+function hpCreateCompressedImagePreview(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          const maxSide = 900;
+          const scale = Math.min(1, maxSide / Math.max(img.width || maxSide, img.height || maxSide));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round((img.width || maxSide) * scale));
+          canvas.height = Math.max(1, Math.round((img.height || maxSide) * scale));
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.72));
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      img.onerror = () => reject(new Error('Could not create local image preview.'));
+      img.src = String(reader.result || '');
+    };
+
+    reader.onerror = () => reject(reader.error || new Error('Could not read image file.'));
+    reader.readAsDataURL(file);
+  });
+}
+// HOORAPLAYBOOK_REVIEW_DRAFT_MEDIA_FIX_V11_END
 
 function reviewAverageStars(rating = 0) {
   const rounded = Math.round(Number(rating) || 0);
@@ -1408,6 +1594,7 @@ function bindEvents() {
   document.querySelectorAll('[data-review-star]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); setUserGameRating(el.dataset.reviewStar); }));
   document.querySelectorAll('[data-review-media-button]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); handleReviewMediaButton(el.dataset.reviewMediaButton); }));
   document.querySelectorAll('[data-review-media-input]').forEach(el => el.addEventListener('change', e => handleReviewMediaChange(e.target))); 
+  bindLeaveReviewDraftAutosave();
   byId('leave-review-form')?.addEventListener('submit', handleLeaveReviewSubmit);
   byId('bible-suggestion-form')?.addEventListener('submit', handleBibleSuggestion);
   document.querySelectorAll('[data-open-moderation-review]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('button,a')) return; go(`/app/account/moderate-reviews/${el.dataset.openModerationReview}`); }));
