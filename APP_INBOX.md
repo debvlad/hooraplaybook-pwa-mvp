@@ -61,3 +61,11 @@
 - Action:
   - Restore the working mobile create-plan behavior from the live Cloudflare-compatible logic.
   - Do not replace working plan storage/rendering with a generic fallback unless it is proven to match the app’s real plan model.\n
+
+## 2026-06-29 — Game Page Redesign Reference Added
+
+### UI/UX — Detailed Game Page redesign instructions uploaded
+- Source: User uploaded `GAME_PAGE_CODING_INSTRUCTIONS.md`, `APP. Game Page.png`, and `Universal footer.png`.
+- Use these as the source of truth for the next single coding ticket:
+  - P1 — Redesign Game Page Layout and Functionality
+- The ticket should stay scoped only to the individual Game Page.

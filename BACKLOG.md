@@ -252,3 +252,43 @@
   - Existing My Plans red X remains visible.
   - Existing My Plans red X remove remains working.
   - No obvious console errors.
+
+
+## Ready / Detailed
+
+### P1 — Redesign Game Page Layout and Functionality
+
+- Type: UI/UX
+- Area: Game Detail Page
+- Status: Ready
+- Reference File:
+  - `GAME_PAGE_CODING_INSTRUCTIONS.md`
+- Visual References:
+  - `APP. Game Page.png`
+  - `Universal footer.png`
+- Description:
+  Redesign the individual Game Page using the detailed coding instructions and attached mockup direction. The page should become a polished iOS-style HooraPlaybook detail screen with a custom game-page header, title, rating/reviews/favorite section, game image, `+ Add to Plan`, vote buttons, Add Notes, metadata cards, category, How to Play, Variations, Bible Connections, Tips, and the universal footer.
+- Acceptance Criteria:
+  - Header has circular back button, centered HooraPlaybook logo, and circular iOS-style share button.
+  - Header does not show sort or filter icons.
+  - Game title is large, bold, dark navy, and left aligned.
+  - Rating row includes stars, rating text, favorite heart, and `View reviews`.
+  - Game image uses 1.55 width-to-height ratio.
+  - `+ Add to Plan` opens existing Pick a Plan / Create New Plan flow.
+  - Thumbs up and thumbs down are separate functional buttons with remembered vote state.
+  - Add Notes opens personal notes for the current game.
+  - Four metadata cards show Ages, Players, Time, and Materials.
+  - Category section is static and has no right chevron.
+  - How to Play includes Game Setup and Rules.
+  - Variations section is included.
+  - Possible Bible Verse Connections section is included and has a `Suggest a Bible connection` button.
+  - Tips section is included.
+  - Universal footer shows exactly Find, Favorites, Icebreakers, Account.
+  - Find remains active in the footer on the Game Page.
+  - Works on desktop.
+  - Works on mobile.
+  - No obvious console errors.
+  - Existing Find Games redesign is not broken.
+  - Existing Add to Plan picker and mobile plan creation are not broken.
+  - Existing My Plans red X remove is not broken.
+  - Existing Modify Plan drag sorting is not broken.

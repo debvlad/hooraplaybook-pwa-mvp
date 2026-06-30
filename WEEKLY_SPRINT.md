@@ -111,3 +111,21 @@ Stabilize plan card behavior after the first live `3fd5a76` revision so users ca
 - Do not bring back plan game card timings.
 - Do not break grey/green `+ Plan` state.
 - Do not remove `My Plans` from Account.
+
+
+## 2026-06-29 Sprint Detail Update — Game Page Redesign
+
+### Next Focus
+- P1 — Redesign Game Page Layout and Functionality
+
+### Source of Truth for This Ticket
+- Use `GAME_PAGE_CODING_INSTRUCTIONS.md`.
+- Use the attached `APP. Game Page.png` as the visual direction.
+- Use `Universal footer.png` for the footer visual identity.
+
+### Scope Boundary
+- Only update the individual Game Page.
+- Do not redesign Find Games again.
+- Do not change unrelated plan screens.
+- Do not change unrelated Account/Favorites/Icebreakers pages.
+- Preserve all locked plan creation, remove, reorder, and Find Games behaviors.
