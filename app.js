@@ -1067,6 +1067,33 @@ function renderMaterialsSelector() {
 
 function renderSortModalIfNeeded() { return window.__sortOpen ? `<div class="modal-backdrop" data-close-sort><div class="bottom-sheet" onclick="event.stopPropagation()"><h2>Sort by</h2>${SORT_OPTIONS.map(o=>`<label class="radio-row ${state.sort===o?'active':''}" data-set-sort="${o}"><span class="radio-circle"></span><span>${o}</span></label>`).join('')}<button class="btn btn-primary full" data-close-sort>Apply</button><button class="btn btn-secondary full" style="margin-top:12px" data-close-sort>Cancel</button></div></div>` : ''; }
 
+// HOORAPLAYBOOK_GAME_DETAIL_VISUAL_POLISH_V1F_START
+function hpGamePlayersShortLabel(game = {}) {
+  const source = String(game.groupSizeText || hpGamePlayersLabel?.(game) || '').trim();
+  if (!source) return `${game.groupSizeMin || ''}+`;
+
+  const firstPart = source.split(';')[0].trim();
+  const plusMatch = firstPart.match(/\d+\s*\+/);
+  if (plusMatch) return plusMatch[0].replace(/\s+/g, '');
+
+  const rangeMatch = firstPart.match(/\d+\s*[-–]\s*\d+\+?/);
+  if (rangeMatch) return rangeMatch[0].replace(/\s+/g, '');
+
+  const firstNumber = firstPart.match(/\d+/);
+  return firstNumber ? firstNumber[0] : firstPart.replace(/\bplayers?\b/gi, '').trim();
+}
+
+function hpGameDurationShortLabel(game = {}) {
+  const source = String(game.durationText || gameDetailTime?.(game) || '').trim();
+  if (!source) return '';
+  return source
+    .replace(/\bminutes?\b/gi, 'min')
+    .replace(/\s*-\s*/g, '–')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+// HOORAPLAYBOOK_GAME_DETAIL_VISUAL_POLISH_V1F_END
+
 function renderGameDetail(id) {
   const game = state.games.find(g => g.id === id);
   if (!game) return renderAppShell(`<main class="content"><h1>Game not found</h1></main>`);
@@ -1076,10 +1103,8 @@ function renderGameDetail(id) {
   const locked = !canViewGame(game);
   const vote = currentGameVote(game.id);
   const favorite = isFavorite(game.id);
-  const materials = gameDetailMaterials(game);
-  const primaryCategory = gameDetailCategory(game);
 
-  return `<div class="app-frame hp-game-detail-frame"><main class="hp-game-page" aria-label="${escapeHTML(game.title)} detail page"><header class="hp-game-header"><button class="icon-btn hp-game-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<button class="icon-btn hp-game-header-btn" data-share-game="${game.id}" aria-label="Share ${escapeHTML(game.title)}"><img src="/assets/ios-share.svg" alt=""></button></header><section class="hp-game-title-section"><h1>${escapeHTML(game.title)}</h1><section class="hp-rating-section" aria-label="Game rating"><div class="hp-rating-row"><div class="hp-detail-stars" aria-label="${game.averageRating || 0} out of 5 stars">${gameDetailStars(game.averageRating || 0)}</div><span class="hp-rating-text">${gameDetailRatingText(game)}</span><button class="hp-detail-favorite ${favorite ? 'is-active' : ''}" data-toggle-favorite="${game.id}" aria-label="${favorite ? 'Remove from' : 'Add to'} favorites">${favorite ? gameDetailIcon('heartFilled') : gameDetailIcon('heart')}</button></div><button class="hp-reviews-link" data-go="/app/games/${game.id}/reviews">View reviews</button></section></section><section class="hp-game-image-wrap">${gameDetailImage(game)}</section><button class="hp-add-to-plan-button" data-add-to-plan="${game.id}" aria-label="Add ${escapeHTML(game.title)} to Plan"><span class="hp-button-plus">+</span><span>Add to Plan</span></button><section class="hp-game-actions-row"><div class="hp-vote-control" role="group" aria-label="Vote on this game"><button class="hp-vote-button ${vote === 'up' ? 'is-up-selected' : ''}" data-game-vote="${game.id}:up" aria-label="Thumbs up ${escapeHTML(game.title)}">${gameDetailIcon('thumbUp')}</button><span class="hp-vote-divider" aria-hidden="true"></span><button class="hp-vote-button ${vote === 'down' ? 'is-down-selected' : ''}" data-game-vote="${game.id}:down" aria-label="Thumbs down ${escapeHTML(game.title)}">${gameDetailIcon('thumbDown')}</button></div><button class="hp-notes-button" data-go="/app/games/${game.id}/notes">${gameDetailIcon('edit')}<span>Add Notes</span></button></section><section class="hp-game-meta-grid" aria-label="Game facts"><article class="hp-meta-card hp-meta-card--ages">${gameDetailIcon('user')}<div class="hp-meta-label">Ages</div><div class="hp-meta-value">${escapeHTML(hpGameAgeLabel(game))}</div></article><article class="hp-meta-card hp-meta-card--players">${gameDetailIcon('users')}<div class="hp-meta-label">Players</div><div class="hp-meta-value">${escapeHTML(hpGamePlayersLabel(game))}</div></article><article class="hp-meta-card hp-meta-card--time">${gameDetailIcon('clock')}<div class="hp-meta-label">Time</div><div class="hp-meta-value">${escapeHTML(gameDetailTime(game))}</div></article><article class="hp-meta-card hp-meta-card--difficulty">${gameDetailIcon('checklist')}<div class="hp-meta-label">Difficulty</div><div class="hp-meta-value">${escapeHTML(hpGameDifficultyLabel(game))}</div></article></section><section class="hp-category-card" aria-label="Game category"><div class="hp-category-icon">${gameDetailIcon('book')}</div><div class="hp-category-content"><div class="hp-category-label">Category</div><div class="hp-category-value"><span>${escapeHTML(primaryCategory)}</span></div></div></section>${locked ? renderLockedGameDetailCard(game) : renderUnlockedGameDetailCards(game)}</main>${renderBottomNav()}${renderAddToPlanModalIfNeeded()}</div>`;
+  return `<div class="app-frame hp-game-detail-frame"><main class="hp-game-page" aria-label="${escapeHTML(game.title)} detail page"><header class="hp-game-header"><button class="icon-btn hp-game-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<button class="icon-btn hp-game-header-btn" data-share-game="${game.id}" aria-label="Share ${escapeHTML(game.title)}"><img src="/assets/ios-share.svg" alt=""></button></header><section class="hp-game-title-section"><h1>${escapeHTML(game.title)}</h1><section class="hp-rating-section" aria-label="Game rating"><div class="hp-rating-row"><div class="hp-detail-stars" aria-label="${game.averageRating || 0} out of 5 stars">${gameDetailStars(game.averageRating || 0)}</div><span class="hp-rating-text">${gameDetailRatingText(game)}</span><button class="hp-detail-favorite ${favorite ? 'is-active' : ''}" data-toggle-favorite="${game.id}" aria-label="${favorite ? 'Remove from' : 'Add to'} favorites">${favorite ? gameDetailIcon('heartFilled') : gameDetailIcon('heart')}</button></div><button class="hp-reviews-link" data-go="/app/games/${game.id}/reviews">View reviews</button></section></section><section class="hp-game-image-wrap">${gameDetailImage(game)}</section><button class="hp-add-to-plan-button" data-add-to-plan="${game.id}" aria-label="Add ${escapeHTML(game.title)} to Plan"><span class="hp-button-plus">+</span><span>Add to Plan</span></button><section class="hp-game-actions-row"><div class="hp-vote-control" role="group" aria-label="Vote on this game"><button class="hp-vote-button hp-vote-button--like ${vote === 'up' ? 'is-up-selected is-selected' : ''}" data-game-vote="${game.id}:up" aria-label="Like ${escapeHTML(game.title)}">${gameDetailIcon('thumbUp')}<span class="hp-vote-label">Like</span></button><span class="hp-vote-divider" aria-hidden="true"></span><button class="hp-vote-button hp-vote-button--dislike ${vote === 'down' ? 'is-down-selected is-selected' : ''}" data-game-vote="${game.id}:down" aria-label="Dislike ${escapeHTML(game.title)}">${gameDetailIcon('thumbDown')}<span class="hp-vote-label">Dislike</span></button></div><button class="hp-notes-button" data-go="/app/games/${game.id}/notes">${gameDetailIcon('edit')}<span>Add Note</span></button></section><section class="hp-game-meta-grid" aria-label="Game facts"><article class="hp-meta-card hp-meta-card--ages">${gameDetailIcon('user')}<div class="hp-meta-label">Ages</div><div class="hp-meta-value">${escapeHTML(hpGameAgeLabel(game))}</div></article><article class="hp-meta-card hp-meta-card--players">${gameDetailIcon('users')}<div class="hp-meta-label">Players</div><div class="hp-meta-value">${escapeHTML(hpGamePlayersShortLabel(game))}</div></article><article class="hp-meta-card hp-meta-card--time">${gameDetailIcon('clock')}<div class="hp-meta-label">Time</div><div class="hp-meta-value">${escapeHTML(hpGameDurationShortLabel(game))}</div></article><article class="hp-meta-card hp-meta-card--difficulty">${gameDetailIcon('checklist')}<div class="hp-meta-label">Difficulty</div><div class="hp-meta-value">${escapeHTML(hpGameDifficultyLabel(game))}</div></article></section>${locked ? renderLockedGameDetailCard(game) : renderUnlockedGameDetailCards(game)}</main>${renderBottomNav()}${renderAddToPlanModalIfNeeded()}</div>`;
 }
 
 function quickFacts(g) { return [['Ages', `${g.bestAgeMin}–${g.bestAgeMax}`], ['Players', `${g.groupSizeMin}–${g.groupSizeMax}`], ['Time', `${g.timeMin}–${g.timeMax} min`], ['Space', g.space], ['Energy', g.energy], ['Materials', g.materials.length?g.materials.join(', '):'None'], ['Safety', g.safety], ['Prep', `${g.prep} min`]]; }
@@ -1090,10 +1115,12 @@ function section(title, items) { return `<section class="content-section"><h2>${
 // HOORAPLAYBOOK_GAME_PAGE_REDESIGN_V1_START
 // HOORAPLAYBOOK_GAME_DETAIL_LAYOUT_V1C_START
 function renderGameInfoSection(title, iconName, bodyText) {
+  if (String(title || '').trim().toLowerCase() === 'category') return '';
+
   const text = String(bodyText || '').trim();
   if (!text) return '';
 
-  return `<section class="hp-game-info-section"><h2 class="hp-game-info-heading"><span class="hp-game-info-heading-icon">${gameDetailIcon(iconName)}</span><span>${escapeHTML(title)}</span></h2><div class="hp-game-info-card">${hpReadableGameText(text)}</div></section>`;
+  return `<section class="hp-game-info-section"><h2 class="hp-game-info-heading"><span class="hp-game-info-heading-icon">${gameDetailIcon(iconName)}</span><span>${escapeHTML(title)}</span></h2><div class="hp-game-info-card">${hpReadableGameText ? hpReadableGameText(text) : escapeHTML(text).replace(/\n/g, '<br>')}</div></section>`;
 }
 
 function hpReadableGameText(value = '') {
@@ -1122,18 +1149,151 @@ function hpReadableGameText(value = '') {
 }
 // HOORAPLAYBOOK_GAME_DETAIL_LAYOUT_V1C_END
 
+// HOORAPLAYBOOK_GAME_DETAIL_VISUAL_IDENTITY_V1E_START
+function hpSplitContentLines(value = '') {
+  return String(value || '')
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(Boolean);
+}
+
+function hpCleanListLine(line = '') {
+  return String(line || '')
+    .replace(/^-+\s*/, '')
+    .replace(/^\d+\.\s+/, '')
+    .trim();
+}
+
+function hpListFromText(value = '') {
+  return hpSplitContentLines(value)
+    .filter(line => line.startsWith('- ') || /^\d+\.\s+/.test(line))
+    .map(hpCleanListLine)
+    .filter(Boolean);
+}
+
+function hpNumberedStepsFromText(value = '') {
+  return hpSplitContentLines(value)
+    .filter(line => /^\d+\.\s+/.test(line))
+    .map(hpCleanListLine)
+    .filter(Boolean);
+}
+
+function hpParagraphLinesFromText(value = '') {
+  return hpSplitContentLines(value)
+    .filter(line => !line.startsWith('- ') && !/^\d+\.\s+/.test(line))
+    .filter(Boolean);
+}
+
+function hpGameMaterialsArray(game = {}) {
+  const fromText = hpListFromText(game.materialsText || '');
+  if (fromText.length) return fromText;
+  if (Array.isArray(game.materials) && game.materials.length) return game.materials.map(item => String(item || '').trim()).filter(Boolean);
+  const label = typeof hpGameMaterialsLabel === 'function' ? hpGameMaterialsLabel(game) : '';
+  return label ? label.split(',').map(item => item.trim()).filter(Boolean) : [];
+}
+
+function hpGameCategoryChips(game = {}) {
+  const items = [
+    game.categoryText || (typeof gameDetailCategory === 'function' ? gameDetailCategory(game) : ''),
+    ...(Array.isArray(game.categories) ? game.categories : []),
+    ...(Array.isArray(game.purpose) ? game.purpose : [])
+  ].map(item => String(item || '').trim()).filter(Boolean);
+
+  return [...new Set(items)].slice(0, 4);
+}
+
+function hpScriptureChips(game = {}) {
+  const fromText = hpListFromText(game.bibleVerseText || '');
+  if (fromText.length) return fromText;
+  if (Array.isArray(game.scripture) && game.scripture.length) return game.scripture.map(item => String(item || '').trim()).filter(Boolean);
+  const bridge = String(game.bibleBridge || '').trim();
+  return bridge ? [bridge] : [];
+}
+
+function renderHpGameSectionHeader(title, iconName) {
+  return `<h2 class="hp-v1e-section-header"><span class="hp-v1e-section-icon">${gameDetailIcon(iconName)}</span><span>${escapeHTML(title)}</span></h2>`;
+}
+
+function renderHpMaterialsSection(game) {
+  const materials = hpGameMaterialsArray(game);
+  const chips = materials.length
+    ? materials.map(item => `<span class="hp-v1e-material-chip"><span aria-hidden="true">✓</span>${escapeHTML(item)}</span>`).join('')
+    : `<span class="hp-v1e-material-chip"><span aria-hidden="true">✓</span>None</span>`;
+
+  return `<section class="hp-v1e-section hp-v1e-materials-section">${renderHpGameSectionHeader('Materials', 'box')}<div class="hp-v1e-materials-grid">${chips}</div></section>`;
+}
+
+function renderHpCategorySection(game) {
+  const chips = hpGameCategoryChips(game);
+  if (!chips.length) return '';
+
+  return `<section class="hp-v1e-section hp-v1e-category-section">${renderHpGameSectionHeader('Category', 'book')}<div class="hp-v1e-chip-row">${chips.map(item => `<span class="hp-v1e-category-chip">${escapeHTML(item)}</span>`).join('')}</div></section>`;
+}
+
+function renderHpStepsSection(game) {
+  const source = game.howToPlayText || (Array.isArray(game.howToPlay) ? game.howToPlay.map((step, index) => `${index + 1}. ${step}`).join('\n') : '');
+  const steps = hpNumberedStepsFromText(source);
+  const paragraphs = hpParagraphLinesFromText(source);
+
+  const stepRows = steps.length
+    ? steps.map((step, index) => `<div class="hp-v1e-step-row"><span class="hp-v1e-step-number">${index + 1}</span><p class="hp-v1e-step-text">${escapeHTML(step)}</p></div>`).join('')
+    : `<p class="hp-v1e-body-text">${escapeHTML(source || 'Explain the game clearly, play one practice round, and lead the group through the activity.')}</p>`;
+
+  const notes = paragraphs.length
+    ? `<div class="hp-v1e-step-notes">${paragraphs.map(line => `<p>${escapeHTML(line)}</p>`).join('')}</div>`
+    : '';
+
+  return `<section class="hp-v1e-section hp-v1e-how-section">${renderHpGameSectionHeader('How to Play', 'lightbulb')}<div class="hp-v1e-steps-card">${stepRows}${notes}</div></section>`;
+}
+
+function renderHpVariationsSection(game) {
+  const source = game.variationsText || game.variations || '';
+  if (!String(source || '').trim()) return '';
+
+  const items = hpListFromText(source);
+  const paragraphs = hpParagraphLinesFromText(source);
+
+  const body = items.length
+    ? `<ul class="hp-v1e-variation-list">${items.map(item => `<li>${escapeHTML(item)}</li>`).join('')}</ul>`
+    : `<div class="hp-v1e-body-text">${paragraphs.map(line => `<p>${escapeHTML(line)}</p>`).join('')}</div>`;
+
+  return `<section class="hp-v1e-section hp-v1e-variations-section">${renderHpGameSectionHeader('Make It More Fun', 'sparkles')}<div class="hp-v1e-variations-card">${body}</div></section>`;
+}
+
+function renderHpBibleSection(game) {
+  const chips = hpScriptureChips(game);
+  if (!chips.length) return '';
+
+  return `<section class="hp-v1e-section hp-v1e-bible-section">${renderHpGameSectionHeader('Bible Connection', 'book')}<div class="hp-v1e-verse-chip-list">${chips.map(item => `<button class="hp-v1e-verse-chip" type="button">${escapeHTML(item)}</button>`).join('')}</div></section>`;
+}
+
+function renderHpTipsSection(game) {
+  const source = game.tipsText || '';
+  const tips = hpListFromText(source);
+  const fallback = [
+    game.safetyNotes,
+    game.requires ? `Requires: ${game.requires}` : '',
+    game.avoidWith ? `Avoid with: ${game.avoidWith}` : '',
+    game.leaderScript ? `Leader cue: ${game.leaderScript}` : ''
+  ].filter(Boolean);
+  const items = tips.length ? tips : fallback;
+
+  if (!items.length) return '';
+
+  return `<section class="hp-v1e-section hp-v1e-tips-section">${renderHpGameSectionHeader('Tips', 'checklist')}<div class="hp-v1e-tips-card"><ul>${items.map(item => `<li>${escapeHTML(item)}</li>`).join('')}</ul></div></section>`;
+}
+// HOORAPLAYBOOK_GAME_DETAIL_VISUAL_IDENTITY_V1E_END
+
 function renderUnlockedGameDetailCards(game) {
-  return `${renderMaterialsCard(game)}${renderCategoryCard(game)}${renderHowToPlayCard(game)}${renderVariationsCard(game)}${renderBibleConnectionsCard(game)}${renderTipsCard(game)}`;
+  return `${renderCategoryCard(game)}${renderMaterialsCard(game)}${renderHowToPlayCard(game)}${renderVariationsCard(game)}${renderBibleConnectionsCard(game)}${renderTipsCard(game)}`;
 }
 
 function renderMaterialsCard(game) {
-  const materials = hpGameMaterialsLabel(game);
-  return renderGameInfoSection('Materials', 'box', materials);
+  return renderHpMaterialsSection(game);
 }
 
 function renderCategoryCard(game) {
-  const category = game.categoryText || gameDetailCategory(game);
-  return renderGameInfoSection('Category', 'book', category);
+  return renderHpCategorySection(game);
 }
 
 function renderGameDifficultyCard(game) {
@@ -1145,49 +1305,19 @@ function renderLockedGameDetailCard(game) {
 }
 
 function renderHowToPlayCard(game) {
-  if (game.howToPlayText) {
-    return renderGameInfoSection('How to Play', 'lightbulb', game.howToPlayText);
-  }
-
-  const rules = Array.isArray(game.howToPlay) && game.howToPlay.length ? game.howToPlay : ['Explain the game clearly.', 'Play one practice round.', 'Lead the group through the activity.'];
-  const fallback = `Game Setup\n${game.setup || 'Prepare the play area and explain the boundaries before the game begins.'}\n\nRules\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`;
-  return renderGameInfoSection('How to Play', 'lightbulb', fallback);
+  return renderHpStepsSection(game);
 }
 
 function renderVariationsCard(game) {
-  if (game.variationsText) {
-    return renderGameInfoSection('Variations', 'sparkles', game.variationsText);
-  }
-
-  const different = game.variations || 'Try a relay version, silent challenge, team tournament, or shorter round.';
-  const fallback = `Easier\n${game.easier || 'Simplify the rules, reduce the time pressure, or use fewer pieces.'}\n\nHarder\n${game.harder || 'Add a timer, extra challenge, or communication limit.'}\n\nDifferent\n${different}`;
-  return renderGameInfoSection('Variations', 'sparkles', fallback);
+  return renderHpVariationsSection(game);
 }
 
 function renderBibleConnectionsCard(game) {
-  if (game.bibleVerseText) {
-    return renderGameInfoSection('Possible Bible Verse', 'book', game.bibleVerseText);
-  }
-
-  const references = Array.isArray(game.scripture) && game.scripture.length ? game.scripture : [];
-  const bridge = game.bibleBridge || 'Use this game as a starting point for a short discussion about teamwork, wisdom, perseverance, or listening to God’s Word.';
-  const fallback = references.length ? `${references.join('\n')}\n\n${bridge}` : bridge;
-  return renderGameInfoSection('Possible Bible Verse', 'book', fallback);
+  return renderHpBibleSection(game);
 }
 
 function renderTipsCard(game) {
-  if (game.tipsText) {
-    return renderGameInfoSection('Tips', 'checklist', game.tipsText);
-  }
-
-  const tips = [
-    game.safetyNotes,
-    game.requires ? `Requires: ${game.requires}` : '',
-    game.avoidWith ? `Avoid with: ${game.avoidWith}` : '',
-    game.leaderScript ? `Leader cue: ${game.leaderScript}` : ''
-  ].filter(Boolean);
-  const safeTips = tips.length ? tips : ['Prepare materials before the session starts.', 'Demonstrate one full round before beginning.', 'Use clear boundaries and stop play if the group becomes unsafe.'];
-  return renderGameInfoSection('Tips', 'checklist', safeTips.map(tip => `- ${tip}`).join('\n'));
+  return renderHpTipsSection(game);
 }
 
 function renderSuggestBibleConnection(gameId) {
@@ -1245,7 +1375,6 @@ function toggleGameVote(payload) {
   }
   game.popularity.score = (game.popularity.upVotes || 0) - (game.popularity.downVotes || 0);
   saveState();
-  render();
 }
 
 function gameDetailStars(rating = 0) {

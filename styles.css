@@ -3009,3 +3009,698 @@ button.plan-game-remove-x:focus-visible,
 .hp-meta-card--difficulty .hp-meta-value {
   font-weight: 900;
 }
+
+/* HOORAPLAYBOOK_GAME_DETAIL_VISUAL_IDENTITY_V1E
+   Scope: individual game detail page polish only.
+   Goal: premium top hierarchy, 2x2 metadata, lighter secondary actions,
+   and varied lower content modules.
+*/
+:root {
+  --hp-v1e-navy: #11152F;
+  --hp-v1e-muted: #4E5872;
+  --hp-v1e-soft-muted: #70778C;
+  --hp-v1e-green: #5B8F3E;
+  --hp-v1e-green-soft: #6FA65B;
+  --hp-v1e-green-dark: #315F2F;
+  --hp-v1e-green-tint: #EEF7E9;
+  --hp-v1e-blue: #2E63C7;
+  --hp-v1e-page: #FAFBF7;
+  --hp-v1e-card: #FFFFFF;
+  --hp-v1e-border: rgba(18, 24, 48, 0.08);
+  --hp-v1e-warm: #FFF6D8;
+}
+
+/* Warm premium page rhythm and bottom-nav safety */
+.hp-game-detail-page,
+.hp-game-detail-frame,
+.hp-game-detail-scroll,
+.hp-game-detail-content,
+.hp-detail-page,
+.hp-detail-frame,
+.hp-detail-scroll,
+.hp-detail-content {
+  background: var(--hp-v1e-page);
+}
+
+.hp-game-detail-page,
+.hp-game-detail-scroll,
+.hp-game-detail-content,
+.hp-detail-page,
+.hp-detail-scroll,
+.hp-detail-content {
+  padding-bottom: calc(140px + env(safe-area-inset-bottom));
+}
+
+/* Title and rating polish without changing the header structure */
+.hp-game-detail-title,
+.hp-detail-title,
+.hp-game-title {
+  color: var(--hp-v1e-navy);
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  font-weight: 900;
+}
+
+.hp-game-rating-row,
+.hp-detail-rating-row,
+.hp-rating-row {
+  align-items: center;
+  gap: 8px;
+}
+
+.hp-game-rating-row [data-go*="/reviews"],
+.hp-detail-rating-row [data-go*="/reviews"],
+.hp-rating-row [data-go*="/reviews"],
+.hp-view-reviews-link,
+.hp-detail-reviews-link,
+a[href*="/reviews"] {
+  color: var(--hp-v1e-green);
+  font-size: 15px !important;
+  font-weight: 750 !important;
+  text-decoration: none !important;
+  text-underline-offset: 0 !important;
+}
+
+.hp-game-rating-row [data-go*="/reviews"]::after,
+.hp-detail-rating-row [data-go*="/reviews"]::after,
+.hp-view-reviews-link::after,
+.hp-detail-reviews-link::after {
+  content: " →";
+}
+
+/* Hero feels more like an intentional visual system */
+.hp-game-hero,
+.hp-detail-hero,
+.hp-game-hero-card,
+.hp-detail-hero-card,
+.hp-game-detail-hero,
+.hp-detail-image-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px !important;
+  box-shadow: 0 16px 38px rgba(18, 24, 48, 0.12) !important;
+}
+
+.hp-game-hero::after,
+.hp-detail-hero::after,
+.hp-game-hero-card::after,
+.hp-detail-hero-card::after,
+.hp-game-detail-hero::after,
+.hp-detail-image-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.35), transparent 24%),
+    radial-gradient(circle at 82% 28%, rgba(255,216,77,0.22), transparent 24%),
+    linear-gradient(135deg, rgba(255,255,255,0.06), rgba(17,21,47,0.08));
+  mix-blend-mode: screen;
+}
+
+/* Primary and secondary actions */
+.hp-add-to-plan-button,
+.hp-primary-action,
+.hp-primary-cta,
+button[data-add-to-plan],
+button[data-plan-game],
+[data-open-add-to-plan] {
+  min-height: 64px !important;
+  border-radius: 18px !important;
+  font-size: 22px !important;
+  font-weight: 850 !important;
+  box-shadow: 0 12px 26px rgba(91, 143, 62, 0.22) !important;
+}
+
+.hp-secondary-actions,
+.hp-game-secondary-actions,
+.hp-detail-secondary-actions,
+.hp-game-actions-secondary {
+  gap: 10px !important;
+  align-items: center;
+}
+
+.hp-secondary-actions button,
+.hp-game-secondary-actions button,
+.hp-detail-secondary-actions button,
+.hp-game-actions-secondary button,
+.hp-vote-button,
+.hp-notes-button,
+button[data-vote-game],
+button[data-go*="/notes"] {
+  min-height: 54px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(18, 24, 48, 0.10) !important;
+  background: #ffffff !important;
+  color: var(--hp-v1e-green) !important;
+  font-size: 16px !important;
+  font-weight: 750 !important;
+  box-shadow: 0 6px 18px rgba(18, 24, 48, 0.055) !important;
+}
+
+/* 2x2 metadata grid */
+.hp-game-meta-grid,
+.hp-detail-meta-grid,
+.hp-meta-grid,
+.game-meta-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  margin-top: 22px !important;
+  margin-bottom: 22px !important;
+}
+
+.hp-game-meta-grid .hp-meta-card,
+.hp-detail-meta-grid .hp-meta-card,
+.hp-meta-grid .hp-meta-card,
+.game-meta-grid .meta-card,
+.hp-meta-card {
+  min-height: 112px !important;
+  border-radius: 22px !important;
+  padding: 17px 16px !important;
+  background: #ffffff !important;
+  border: 1px solid var(--hp-v1e-border) !important;
+  box-shadow: 0 10px 24px rgba(18, 24, 48, 0.045) !important;
+  text-align: left !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+}
+
+.hp-meta-card svg,
+.meta-card svg {
+  width: 28px !important;
+  height: 28px !important;
+  color: var(--hp-v1e-blue) !important;
+  margin-bottom: 10px !important;
+}
+
+.hp-meta-label,
+.meta-label {
+  color: var(--hp-v1e-soft-muted) !important;
+  font-size: 14px !important;
+  line-height: 1.15 !important;
+  font-weight: 700 !important;
+  margin-bottom: 6px !important;
+}
+
+.hp-meta-value,
+.meta-value {
+  color: var(--hp-v1e-navy) !important;
+  font-size: 23px !important;
+  line-height: 1.08 !important;
+  font-weight: 900 !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* New content module system */
+.hp-v1e-section {
+  margin: 26px 0 0;
+  padding: 0;
+}
+
+.hp-v1e-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 0 2px;
+  color: var(--hp-v1e-navy);
+  font-size: 22px;
+  line-height: 1.16;
+  font-weight: 850;
+  letter-spacing: -0.018em;
+}
+
+.hp-v1e-section-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--hp-v1e-green-tint);
+  color: var(--hp-v1e-green-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.hp-v1e-section-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Materials: fast checklist chips */
+.hp-v1e-materials-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hp-v1e-material-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--hp-v1e-green-tint);
+  color: var(--hp-v1e-navy);
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 650;
+  border: 1px solid rgba(49, 95, 47, 0.08);
+}
+
+/* Category: metadata chips, not a large card */
+.hp-v1e-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hp-v1e-category-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--hp-v1e-green-tint);
+  color: var(--hp-v1e-green-dark);
+  font-size: 15px;
+  font-weight: 780;
+}
+
+/* How to Play: strongest lower content card */
+.hp-v1e-steps-card {
+  background: #ffffff;
+  border: 1px solid rgba(18, 24, 48, 0.06);
+  border-radius: 24px;
+  box-shadow: 0 12px 30px rgba(22, 28, 45, 0.055);
+  padding: 18px 18px 20px;
+}
+
+.hp-v1e-step-row {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(18, 24, 48, 0.055);
+}
+
+.hp-v1e-step-row:first-child {
+  padding-top: 0;
+}
+
+.hp-v1e-step-row:last-of-type {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.hp-v1e-step-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--hp-v1e-green-tint);
+  color: var(--hp-v1e-green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.hp-v1e-step-text,
+.hp-v1e-body-text,
+.hp-v1e-step-notes p,
+.hp-v1e-tips-card li,
+.hp-v1e-variation-list li {
+  color: var(--hp-v1e-navy);
+  font-size: 16.5px;
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.hp-v1e-step-text {
+  margin: 2px 0 0;
+}
+
+.hp-v1e-step-notes {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(18, 24, 48, 0.12);
+}
+
+.hp-v1e-step-notes p,
+.hp-v1e-body-text p {
+  margin: 0 0 10px;
+}
+
+.hp-v1e-step-notes p:last-child,
+.hp-v1e-body-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* Variations: warm playful secondary module */
+.hp-v1e-variations-card {
+  background: var(--hp-v1e-warm);
+  border: 1px solid rgba(18, 24, 48, 0.05);
+  border-radius: 24px;
+  padding: 18px 20px;
+  box-shadow: 0 8px 22px rgba(18, 24, 48, 0.035);
+}
+
+.hp-v1e-variation-list,
+.hp-v1e-tips-card ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* Bible references: compact tappable chips */
+.hp-v1e-verse-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hp-v1e-verse-chip {
+  min-height: 40px;
+  border: 1px solid #DDEAD6;
+  background: #ffffff;
+  color: var(--hp-v1e-green-dark);
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-size: 15px;
+  font-weight: 780;
+  box-shadow: 0 6px 16px rgba(18, 24, 48, 0.04);
+}
+
+/* Tips: practical but lower visual weight */
+.hp-v1e-tips-card {
+  background: #ffffff;
+  border: 1px solid rgba(18, 24, 48, 0.06);
+  border-radius: 22px;
+  padding: 17px 19px;
+  box-shadow: 0 8px 24px rgba(22, 28, 45, 0.04);
+}
+
+/* Retire older repeated card patterns for the content modules if they remain in DOM */
+.hp-game-info-section .hp-game-info-card,
+.hp-detail-section-card.hp-difficulty-section,
+.hp-detail-section-card.hp-how-to-play-section,
+.hp-detail-section-card.hp-variations-section,
+.hp-detail-section-card.hp-bible-section,
+.hp-detail-section-card.hp-tips-section {
+  box-shadow: 0 8px 22px rgba(18, 24, 48, 0.04);
+}
+
+@media (min-width: 700px) {
+  .hp-game-meta-grid,
+  .hp-detail-meta-grid,
+  .hp-meta-grid,
+  .game-meta-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+/* HOORAPLAYBOOK_GAME_DETAIL_VISUAL_POLISH_V1F
+   Scope: follow-up fixes from desktop/mobile V1E testing.
+*/
+.hp-game-meta-grid,
+.hp-detail-meta-grid,
+.hp-meta-grid,
+.game-meta-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+@media (min-width: 700px) {
+  .hp-game-meta-grid,
+  .hp-detail-meta-grid,
+  .hp-meta-grid,
+  .game-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Keep individual thumb buttons, remove the extra shared outer border/capsule. */
+.hp-secondary-actions:has(button[data-vote-game]),
+.hp-game-secondary-actions:has(button[data-vote-game]),
+.hp-detail-secondary-actions:has(button[data-vote-game]),
+.hp-game-actions-secondary:has(button[data-vote-game]),
+.hp-vote-group,
+.hp-vote-toggle,
+.hp-thumbs-toggle,
+.hp-thumbs-group,
+.hp-like-dislike-group,
+.hp-reaction-toggle,
+.hp-reaction-group {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.hp-secondary-actions > div:has(button[data-vote-game]),
+.hp-game-secondary-actions > div:has(button[data-vote-game]),
+.hp-detail-secondary-actions > div:has(button[data-vote-game]),
+.hp-game-actions-secondary > div:has(button[data-vote-game]) {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  gap: 10px !important;
+}
+
+/* Keep border around each thumb button only. */
+button[data-vote-game],
+.hp-vote-button,
+.hp-thumb-button,
+.hp-like-button,
+.hp-dislike-button {
+  border: 1px solid rgba(18, 24, 48, 0.10) !important;
+  box-shadow: 0 6px 18px rgba(18, 24, 48, 0.055) !important;
+  background: #ffffff !important;
+}
+
+/* Category chips are informational, so they are always blue. */
+.hp-v1e-category-section {
+  order: -2;
+}
+
+.hp-v1e-materials-section {
+  order: -1;
+}
+
+.hp-v1e-category-section .hp-v1e-section-icon {
+  background: #EAF1FF !important;
+  color: #2E63C7 !important;
+}
+
+.hp-v1e-category-chip {
+  background: #EAF1FF !important;
+  color: #2E63C7 !important;
+  border: 1px solid rgba(46, 99, 199, 0.16) !important;
+}
+
+/* Remove any legacy full-width Category card if an older renderer still outputs it. */
+.hp-game-info-section.hp-game-info-section--category,
+.hp-detail-section-card.hp-category-section,
+.hp-category-section.hp-detail-section-card {
+  display: none !important;
+}
+
+/* Bump readable content one step larger. */
+.hp-v1e-step-text,
+.hp-v1e-body-text,
+.hp-v1e-step-notes p,
+.hp-v1e-tips-card li,
+.hp-v1e-variation-list li {
+  font-size: 17.5px !important;
+  line-height: 1.58 !important;
+}
+
+.hp-v1e-material-chip,
+.hp-v1e-category-chip,
+.hp-v1e-verse-chip {
+  font-size: 16px !important;
+}
+
+.hp-v1e-section-header {
+  font-size: 23px !important;
+}
+
+/* HOORAPLAYBOOK_DIRECT_GAME_ACTION_ROW_V1J
+   Direct renderer/CSS fix only.
+   No MutationObserver, no DOM cleanup loop.
+*/
+.hp-game-actions-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) !important;
+  gap: 13px !important;
+  margin-top: 14px !important;
+  margin-bottom: 16px !important;
+  align-items: stretch !important;
+}
+
+.hp-vote-control {
+  height: 56px !important;
+  min-height: 56px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) !important;
+  align-items: center !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  border: 1px solid #DEE4EC !important;
+  border-radius: 18px !important;
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.05) !important;
+  padding: 0 !important;
+}
+
+.hp-vote-button {
+  height: 56px !important;
+  min-height: 56px !important;
+  width: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: #4F873C !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  padding: 0 9px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hp-vote-button svg {
+  width: 25px !important;
+  height: 25px !important;
+  stroke-width: 2.35 !important;
+  color: currentColor !important;
+  stroke: currentColor !important;
+  flex: 0 0 auto !important;
+}
+
+.hp-vote-label {
+  display: inline-block !important;
+  color: currentColor !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+}
+
+.hp-vote-divider {
+  width: 1px !important;
+  height: 27px !important;
+  background: #DDE2EA !important;
+  align-self: center !important;
+}
+
+.hp-vote-button:active,
+.hp-notes-button:active {
+  background: #F3F8EF !important;
+}
+
+.hp-vote-button.is-up-selected {
+  background: #EEF7E9 !important;
+  color: #4F873C !important;
+  font-weight: 700 !important;
+}
+
+.hp-vote-button.is-down-selected {
+  background: #FDECEC !important;
+  color: #C93333 !important;
+  font-weight: 700 !important;
+}
+
+.hp-vote-button.is-up-selected .hp-vote-label,
+.hp-vote-button.is-down-selected .hp-vote-label {
+  font-weight: 700 !important;
+}
+
+.hp-notes-button {
+  height: 56px !important;
+  min-height: 56px !important;
+  border: 1px solid #DEE4EC !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.05) !important;
+  color: #4F873C !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 11px !important;
+  padding: 0 13px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hp-notes-button svg {
+  width: 26px !important;
+  height: 26px !important;
+  stroke-width: 2.35 !important;
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.hp-v1e-bible-section .hp-v1e-section-icon {
+  background: #EAF1FF !important;
+  color: #2E63C7 !important;
+}
+
+.hp-v1e-verse-chip,
+.hp-v1e-bible-section .hp-v1e-verse-chip {
+  background: #EAF1FF !important;
+  color: #2E63C7 !important;
+  border: 1px solid rgba(46, 99, 199, 0.18) !important;
+}
+
+.hp-v1e-step-text,
+.hp-v1e-body-text,
+.hp-v1e-step-notes p,
+.hp-v1e-tips-card li,
+.hp-v1e-variation-list li,
+.hp-game-info-card,
+.hp-readable-list li {
+  font-size: 19px !important;
+  line-height: 1.62 !important;
+  font-weight: 500 !important;
+}
+
+@media (max-width: 360px) {
+  .hp-game-actions-row {
+    gap: 9px !important;
+  }
+
+  .hp-vote-button,
+  .hp-notes-button {
+    font-size: 14.5px !important;
+    gap: 7px !important;
+  }
+
+  .hp-vote-label {
+    font-size: 14.5px !important;
+  }
+
+  .hp-vote-button svg {
+    width: 23px !important;
+    height: 23px !important;
+  }
+
+  .hp-notes-button svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
