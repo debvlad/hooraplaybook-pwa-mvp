@@ -2890,3 +2890,122 @@ button.plan-game-remove-x:focus-visible,
   outline: 3px solid rgba(239, 27, 37, 0.25);
   outline-offset: 2px;
 }
+
+/* HOORAPLAYBOOK_V1_GAME_LIBRARY_RESET
+   Scope: V1 game content display only.
+*/
+.hp-verbatim-text {
+  color: var(--hp-ink, #11122f);
+  font-size: 15px;
+  line-height: 1.48;
+  font-weight: 500;
+  white-space: normal;
+}
+
+.hp-verbatim-text br {
+  line-height: 1.65;
+}
+
+.hp-difficulty-section .hp-verbatim-text {
+  font-weight: 800;
+  color: var(--hp-green-dark, #4d7834);
+}
+
+.hp-detail-section-content .hp-verbatim-text + .hp-verbatim-text {
+  margin-top: 10px;
+}
+
+/* HOORAPLAYBOOK_GAME_DETAIL_LAYOUT_V1C
+   Scope: individual game detail content sections.
+*/
+.hp-game-info-section {
+  margin: 18px 0 0;
+}
+
+.hp-game-info-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 9px;
+  padding: 0 2px;
+  color: var(--hp-ink, #11122f);
+  font-size: 18px;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.hp-game-info-heading-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: rgba(93, 139, 63, 0.12);
+  color: var(--hp-green, #5d8b3f);
+}
+
+.hp-game-info-heading-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.hp-game-info-card {
+  margin: 0;
+  padding: 15px 16px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(17, 18, 47, 0.08);
+  border: 1px solid rgba(17, 18, 47, 0.06);
+  color: var(--hp-ink, #11122f);
+  font-size: 16px;
+  line-height: 1.55;
+  font-weight: 520;
+}
+
+.hp-game-info-card p {
+  margin: 0 0 11px;
+}
+
+.hp-game-info-card p:last-child {
+  margin-bottom: 0;
+}
+
+.hp-game-info-card .hp-readable-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.hp-game-info-card .hp-readable-list li {
+  margin: 0 0 9px;
+  padding-left: 2px;
+}
+
+.hp-game-info-card .hp-readable-list li:last-child {
+  margin-bottom: 0;
+}
+
+.hp-detail-section-card.hp-difficulty-section,
+.hp-detail-section-card.hp-how-to-play-section,
+.hp-detail-section-card.hp-variations-section,
+.hp-detail-section-card.hp-bible-section,
+.hp-detail-section-card.hp-tips-section {
+  padding-left: 16px;
+}
+
+.hp-detail-section-card.hp-difficulty-section > .hp-detail-section-icon,
+.hp-detail-section-card.hp-how-to-play-section > .hp-detail-section-icon,
+.hp-detail-section-card.hp-variations-section > .hp-detail-section-icon,
+.hp-detail-section-card.hp-bible-section > .hp-detail-section-icon,
+.hp-detail-section-card.hp-tips-section > .hp-detail-section-icon {
+  display: none;
+}
+
+/* HOORAPLAYBOOK_GAME_DETAIL_DIFFICULTY_CARD_V1D
+   Scope: top quick-info difficulty card only.
+*/
+.hp-meta-card--difficulty .hp-meta-value {
+  font-weight: 900;
+}

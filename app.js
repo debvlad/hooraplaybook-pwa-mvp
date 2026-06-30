@@ -1,117 +1,547 @@
 const APP_NAME = 'HooraPlaybook';
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '1.0.0';
 const APP_LOGO = '<span class="brand-hoora">Hoora</span><span class="brand-playbook">Playbook</span>';
 const STANDARD_CATEGORIES = ['Quick and simple','Wet-n-Wild','Team-building','Teams','Circle','Icebreakers','Adventure','Tag','Sport-n-fitness','Theatrical','Relays'];
 const AVAILABLE_MATERIALS = ['No Materials','Cups','Paper','Balls','Chairs','Rope','Balloons','Cones','Tape'];
-const APP_KEY = 'hooraplaybook_pwa_state_v2';
+const APP_KEY = 'hooraplaybook_pwa_state_v1_0';
 const COUPON_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 const DEFAULT_GAMES = [
   {
-    id: 'cup-stack-relay', slug: 'cup-stack-relay', title: 'Cup Stack Relay', accessLevel: 'free', featured: true, tested: true,
-    shortDescription: 'Teams race to build and rebuild cup towers while communicating under pressure.',
-    description: 'A fast, easy indoor team challenge that turns simple cups into a cooperation relay.',
-    purpose: ['Fun', 'Teamwork', 'Competition', 'Icebreaker'], tags: ['All Play', 'Teams', 'Cups', 'Relay Race', 'Indoor', 'Low Prep'],
-    bestAgeMin: 10, bestAgeMax: 18, minRecommendedAge: 8, groupSizeMin: 8, groupSizeMax: 30, timeMin: 10, timeMax: 18,
-    indoorOutdoor: 'both', space: 'Large room / gym / field', materials: ['cups'], energy: 'High', prep: 4, leaderDifficulty: 'Easy', safety: 'Low Risk', contact: 'None', embarrassment: 'Low', noise: 'High', ministry: 'Low', thumb: 'cups',
-    setup: 'Give each team a stack of cups. Mark a start line and a build zone. Show the tower pattern before starting.',
-    howToPlay: ['Divide the group into teams of 4–6.', 'One player at a time runs to the build zone and adds or moves one cup.', 'The team must complete the tower pattern before the next team.', 'Run another round with a new pattern or with silent communication only.'],
-    leaderScript: 'Your goal is not just to be fast. Your goal is to communicate clearly under pressure. Decide your plan before the countdown starts.',
-    winCondition: 'First team to correctly build the assigned cup structure wins the round.',
-    safetyNotes: 'Use plastic cups only. Mark clear running lanes. If space is tight, make it a walking relay.',
-    avoidWith: 'Very small rooms or groups that become aggressive in relays.', requires: 'Clear lanes and leader supervision.',
-    variations: 'Silent round, one-handed round, reverse build, blind architect who explains without touching.',
-    easier: 'Use fewer cups and allow everyone to talk.', harder: 'Use a more complex tower and require silent communication.',
-    debriefQuestions: ['What helped your team move faster?', 'Who became the communicator?', 'What happens when everyone talks at once?'],
-    bibleBridge: 'Use as a bridge to 1 Corinthians 12: every part of the body matters and each person contributes.',
-    scripture: ['1 Corinthians 12:12–27'], creator: 'HooraPlaybook Team', averageRating: 4.8, ratingCount: 18, reviewCount: 6, views: 220
+    "id": "five-second-rule",
+    "slug": "five-second-rule",
+    "title": "Five Second Rule",
+    "accessLevel": "free",
+    "featured": true,
+    "tested": true,
+    "shortDescription": "A fast partner guessing game where one player has only five seconds to describe a movie or word without using forbidden clues.",
+    "description": "A fast partner guessing game where one player has only five seconds to describe a movie or word without using forbidden clues.",
+    "ageText": "10+",
+    "groupSizeText": "2+ players; best with pairs, crews, or a large group watching several contestants.",
+    "durationText": "5-15 minutes",
+    "categoryText": "Quick and simple",
+    "difficultyText": "Easy",
+    "materialsText": "- PowerPoint or slides with movie titles or words\n- Screen/projector or large display\n- Five-second timer\n- Optional scorekeeper",
+    "howToPlayText": "1. Choose a category that most students will know, such as Disney/Pixar movies, popular movies, animals, food, or Bible characters.\n2. Select two players, or have everyone divide into partners.\n3. Show the prompt to the describer and the audience, but keep it hidden from the guesser.\n4. Start the five-second timer immediately. The describer gives clues without using words from the title, naming actors, or singing songs connected to the answer.\n5. The guesser tries to answer before time runs out.\n6. Switch roles for the next prompt. Continue for a set number of rounds, or rotate new players to the front.\n\nStarter prompt ideas\n- Disney/Pixar/movie options from the PDF include: Guardians of the Galaxy, Pinocchio, Beauty and the Beast, Frozen, The Lion King, Dumbo, 101 Dalmatians, Pirates of the Caribbean, Ant-Man, Bambi, Captain Marvel, Toy Story, The Incredibles, Finding Nemo, Monsters Inc., Star Wars, Moana, Wall-E, and Mulan.",
+    "variationsText": "- Play crew vs. crew and award a point for each correct guess.\n- Let every student play at the same time in pairs instead of doing only an upfront game.\n- Use themed word banks: movies, Bible stories, food, camp activities, youth group inside jokes, or holiday words.",
+    "bibleVerseText": "- James 1:19\n- Proverbs 18:13\n- Colossians 4:6",
+    "tipsText": "- Use prompts that are familiar to the whole group; unfamiliar titles make the game feel frustrating instead of funny.\n- Do not give players prep time; the pressure is what makes the game work.\n- Clearly explain forbidden clues before the first round.\n- Keep the pace quick and rotate players often.",
+    "tagsText": "- Communication\n- Listening\n- Quick thinking\n- Movies\n- Icebreaker\n- Youth group",
+    "sourceText": "Processed from *Epic (and Easy) Youth Ministry Games* by YouthWorks, PDF page 3.",
+    "purpose": [
+      "Quick and simple"
+    ],
+    "categories": [
+      "Quick and simple"
+    ],
+    "tags": [
+      "Communication",
+      "Listening",
+      "Quick thinking",
+      "Movies",
+      "Icebreaker",
+      "Youth group"
+    ],
+    "bestAgeMin": 10,
+    "bestAgeMax": 99,
+    "minRecommendedAge": 10,
+    "groupSizeMin": 2,
+    "groupSizeMax": 100,
+    "timeMin": 5,
+    "timeMax": 15,
+    "indoorOutdoor": "both",
+    "space": "Flexible",
+    "materials": [
+      "PowerPoint or slides with movie titles or words",
+      "Screen/projector or large display",
+      "Five-second timer",
+      "Optional scorekeeper"
+    ],
+    "energy": "Medium",
+    "prep": 5,
+    "leaderDifficulty": "Easy",
+    "safety": "Low Risk",
+    "contact": "None",
+    "embarrassment": "Low",
+    "noise": "Medium",
+    "ministry": "Low",
+    "thumb": "camp",
+    "setup": "",
+    "howToPlay": [
+      "Choose a category that most students will know, such as Disney/Pixar movies, popular movies, animals, food, or Bible characters.",
+      "Select two players, or have everyone divide into partners.",
+      "Show the prompt to the describer and the audience, but keep it hidden from the guesser.",
+      "Start the five-second timer immediately. The describer gives clues without using words from the title, naming actors, or singing songs connected to the answer.",
+      "The guesser tries to answer before time runs out.",
+      "Switch roles for the next prompt. Continue for a set number of rounds, or rotate new players to the front."
+    ],
+    "leaderScript": "",
+    "winCondition": "",
+    "safetyNotes": "",
+    "avoidWith": "",
+    "requires": "",
+    "variations": "- Play crew vs. crew and award a point for each correct guess.\n- Let every student play at the same time in pairs instead of doing only an upfront game.\n- Use themed word banks: movies, Bible stories, food, camp activities, youth group inside jokes, or holiday words.",
+    "easier": "",
+    "harder": "",
+    "debriefQuestions": [],
+    "bibleBridge": "- James 1:19\n- Proverbs 18:13\n- Colossians 4:6",
+    "scripture": [
+      "James 1:19",
+      "Proverbs 18:13",
+      "Colossians 4:6"
+    ],
+    "creator": "HooraPlaybook Team",
+    "averageRating": 0,
+    "ratingCount": 0,
+    "reviewCount": 0,
+    "views": 0,
+    "searchText": "Five Second Rule\nA fast partner guessing game where one player has only five seconds to describe a movie or word without using forbidden clues.\n10+\n2+ players; best with pairs, crews, or a large group watching several contestants.\n5-15 minutes\nQuick and simple\nEasy\n- PowerPoint or slides with movie titles or words\n- Screen/projector or large display\n- Five-second timer\n- Optional scorekeeper\n1. Choose a category that most students will know, such as Disney/Pixar movies, popular movies, animals, food, or Bible characters.\n2. Select two players, or have everyone divide into partners.\n3. Show the prompt to the describer and the audience, but keep it hidden from the guesser.\n4. Start the five-second timer immediately. The describer gives clues without using words from the title, naming actors, or singing songs connected to the answer.\n5. The guesser tries to answer before time runs out.\n6. Switch roles for the next prompt. Continue for a set number of rounds, or rotate new players to the front.\n\nStarter prompt ideas\n- Disney/Pixar/movie options from the PDF include: Guardians of the Galaxy, Pinocchio, Beauty and the Beast, Frozen, The Lion King, Dumbo, 101 Dalmatians, Pirates of the Caribbean, Ant-Man, Bambi, Captain Marvel, Toy Story, The Incredibles, Finding Nemo, Monsters Inc., Star Wars, Moana, Wall-E, and Mulan.\n- Play crew vs. crew and award a point for each correct guess.\n- Let every student play at the same time in pairs instead of doing only an upfront game.\n- Use themed word banks: movies, Bible stories, food, camp activities, youth group inside jokes, or holiday words.\n- James 1:19\n- Proverbs 18:13\n- Colossians 4:6\n- Use prompts that are familiar to the whole group; unfamiliar titles make the game feel frustrating instead of funny.\n- Do not give players prep time; the pressure is what makes the game work.\n- Clearly explain forbidden clues before the first round.\n- Keep the pace quick and rotate players often.\n- Communication\n- Listening\n- Quick thinking\n- Movies\n- Icebreaker\n- Youth group"
   },
   {
-    id: 'silent-builder', slug: 'silent-builder', title: 'Silent Builder', accessLevel: 'free', featured: true, tested: true,
-    shortDescription: 'A quiet communication game where teams build a structure without speaking.',
-    description: 'A medium-energy teamwork activity that quickly reveals communication habits.',
-    purpose: ['Teamwork', 'Communication', 'Leadership'], tags: ['Teams', 'Communication', 'Cups', 'Paper', 'Indoor', 'Debrief'],
-    bestAgeMin: 12, bestAgeMax: 18, minRecommendedAge: 10, groupSizeMin: 6, groupSizeMax: 24, timeMin: 15, timeMax: 25,
-    indoorOutdoor: 'indoor', space: 'Tables or floor space', materials: ['cups', 'paper'], energy: 'Medium', prep: 5, leaderDifficulty: 'Moderate', safety: 'Low Risk', contact: 'None', embarrassment: 'Low', noise: 'Low', ministry: 'Low', thumb: 'team',
-    setup: 'Prepare identical supplies for each team. Create or display a simple target structure.',
-    howToPlay: ['Divide players into teams.', 'Show the target structure for 20 seconds.', 'Teams rebuild it without speaking.', 'After the round, let teams discuss what they learned and try again.'],
-    leaderScript: 'You cannot talk during the build. Pay attention to what your team communicates without words.',
-    winCondition: 'The most accurate structure after the time limit wins.',
-    safetyNotes: 'Low physical risk. Watch that quieter players are not ignored by dominant teammates.',
-    avoidWith: 'Groups that are too young to handle silence or frustration.', requires: 'A visible example structure and equal supplies.',
-    variations: 'Assign one observer per team. Let only one person see the target and communicate silently.',
-    easier: 'Allow whispering for younger groups.', harder: 'Shorten the viewing time or add more pieces.',
-    debriefQuestions: ['How did your team decide what to do?', 'What made communication hard?', 'Who did you listen to and why?'],
-    bibleBridge: 'Use as a bridge to James 1:19 about being quick to hear and slow to speak.',
-    scripture: ['James 1:19'], creator: 'HooraPlaybook Team', averageRating: 4.7, ratingCount: 12, reviewCount: 4, views: 184
+    "id": "buzz-word",
+    "slug": "buzz-word",
+    "title": "Buzz Word",
+    "accessLevel": "free",
+    "featured": true,
+    "tested": true,
+    "shortDescription": "Two players or teams race to name words from a category without repeating answers, hesitating too long, or going off-topic.",
+    "description": "Two players or teams race to name words from a category without repeating answers, hesitating too long, or going off-topic.",
+    "ageText": "10+",
+    "groupSizeText": "2+ players; best with 2 contestants up front or two large teams.",
+    "durationText": "5-10 minutes",
+    "categoryText": "Quick and simple",
+    "difficultyText": "Easy",
+    "materialsText": "- PowerPoint or screen with categories\n- Prepared category list\n- Bell, whistle, buzzer, or other signal\n- Judge or facilitator",
+    "howToPlayText": "1. Call two contestants up front, or divide the room into two teams and choose one representative at a time.\n2. Announce a category, such as colors, pizza toppings, animals, sports, states, or superheroes.\n3. Players alternate saying one word that fits the category.\n4. A player is out if they take more than three seconds, repeat an answer, or say something outside the category.\n5. The surviving player or team earns the point. Start a new round with a new category.\n\nCategory ideas\n- Category ideas include: colors, safari animals, reptiles, U.S. states, boy bands, Taylor Swift songs, car brands, sports that use a ball, pizza toppings, dinosaurs, outdoor winter activities, famous artists, music genres, Marvel superheroes, dog breeds, kitchen utensils, and types of juice.",
+    "variationsText": "- Play boys vs. girls, adults vs. students, middle school vs. high school, or crew vs. crew.\n- Use a buzzer for wrong answers or time violations.\n- Make the final round harder by using a narrower category.",
+    "bibleVerseText": "- Proverbs 15:28\n- Ephesians 4:29\n- James 3:5",
+    "tipsText": "- Prepare categories before the event; this game gets awkward if the leader has to improvise.\n- Choose a judge who knows the categories well and can make quick decisions.\n- Begin with easy categories and increase difficulty as students understand the game.\n- Keep the three-second rule consistent so the game feels fair.",
+    "tagsText": "- Quick thinking\n- Words\n- Competition\n- Team challenge\n- Youth group",
+    "sourceText": "Processed from *Epic (and Easy) Youth Ministry Games* by YouthWorks, PDF page 4.",
+    "purpose": [
+      "Quick and simple"
+    ],
+    "categories": [
+      "Quick and simple"
+    ],
+    "tags": [
+      "Quick thinking",
+      "Words",
+      "Competition",
+      "Team challenge",
+      "Youth group"
+    ],
+    "bestAgeMin": 10,
+    "bestAgeMax": 99,
+    "minRecommendedAge": 10,
+    "groupSizeMin": 2,
+    "groupSizeMax": 100,
+    "timeMin": 5,
+    "timeMax": 10,
+    "indoorOutdoor": "both",
+    "space": "Flexible",
+    "materials": [
+      "PowerPoint or screen with categories",
+      "Prepared category list",
+      "Bell, whistle, buzzer, or other signal",
+      "Judge or facilitator"
+    ],
+    "energy": "High",
+    "prep": 5,
+    "leaderDifficulty": "Easy",
+    "safety": "Low Risk",
+    "contact": "None",
+    "embarrassment": "Low",
+    "noise": "Medium",
+    "ministry": "Low",
+    "thumb": "camp",
+    "setup": "",
+    "howToPlay": [
+      "Call two contestants up front, or divide the room into two teams and choose one representative at a time.",
+      "Announce a category, such as colors, pizza toppings, animals, sports, states, or superheroes.",
+      "Players alternate saying one word that fits the category.",
+      "A player is out if they take more than three seconds, repeat an answer, or say something outside the category.",
+      "The surviving player or team earns the point. Start a new round with a new category."
+    ],
+    "leaderScript": "",
+    "winCondition": "",
+    "safetyNotes": "",
+    "avoidWith": "",
+    "requires": "",
+    "variations": "- Play boys vs. girls, adults vs. students, middle school vs. high school, or crew vs. crew.\n- Use a buzzer for wrong answers or time violations.\n- Make the final round harder by using a narrower category.",
+    "easier": "",
+    "harder": "",
+    "debriefQuestions": [],
+    "bibleBridge": "- Proverbs 15:28\n- Ephesians 4:29\n- James 3:5",
+    "scripture": [
+      "Proverbs 15:28",
+      "Ephesians 4:29",
+      "James 3:5"
+    ],
+    "creator": "HooraPlaybook Team",
+    "averageRating": 0,
+    "ratingCount": 0,
+    "reviewCount": 0,
+    "views": 0,
+    "searchText": "Buzz Word\nTwo players or teams race to name words from a category without repeating answers, hesitating too long, or going off-topic.\n10+\n2+ players; best with 2 contestants up front or two large teams.\n5-10 minutes\nQuick and simple\nEasy\n- PowerPoint or screen with categories\n- Prepared category list\n- Bell, whistle, buzzer, or other signal\n- Judge or facilitator\n1. Call two contestants up front, or divide the room into two teams and choose one representative at a time.\n2. Announce a category, such as colors, pizza toppings, animals, sports, states, or superheroes.\n3. Players alternate saying one word that fits the category.\n4. A player is out if they take more than three seconds, repeat an answer, or say something outside the category.\n5. The surviving player or team earns the point. Start a new round with a new category.\n\nCategory ideas\n- Category ideas include: colors, safari animals, reptiles, U.S. states, boy bands, Taylor Swift songs, car brands, sports that use a ball, pizza toppings, dinosaurs, outdoor winter activities, famous artists, music genres, Marvel superheroes, dog breeds, kitchen utensils, and types of juice.\n- Play boys vs. girls, adults vs. students, middle school vs. high school, or crew vs. crew.\n- Use a buzzer for wrong answers or time violations.\n- Make the final round harder by using a narrower category.\n- Proverbs 15:28\n- Ephesians 4:29\n- James 3:5\n- Prepare categories before the event; this game gets awkward if the leader has to improvise.\n- Choose a judge who knows the categories well and can make quick decisions.\n- Begin with easy categories and increase difficulty as students understand the game.\n- Keep the three-second rule consistent so the game feels fair.\n- Quick thinking\n- Words\n- Competition\n- Team challenge\n- Youth group"
   },
   {
-    id: 'pass-the-pattern', slug: 'pass-the-pattern', title: 'Pass the Pattern', accessLevel: 'free', featured: false, tested: true,
-    shortDescription: 'Players pass a rhythm or motion pattern around a circle without breaking the flow.',
-    description: 'A no-material focus game that works as a quick warm-up or concentration challenge.',
-    purpose: ['Fun', 'Icebreaker', 'Calm Down'], tags: ['All Play', 'No Materials', 'Circle', 'No Prep', 'Focus'],
-    bestAgeMin: 9, bestAgeMax: 16, minRecommendedAge: 7, groupSizeMin: 8, groupSizeMax: 35, timeMin: 6, timeMax: 12,
-    indoorOutdoor: 'both', space: 'Flexible', materials: [], energy: 'Medium', prep: 0, leaderDifficulty: 'Easy', safety: 'Low Risk', contact: 'None', embarrassment: 'Low', noise: 'Medium', ministry: 'Low', thumb: 'calm',
-    setup: 'Have everyone stand or sit in a circle.',
-    howToPlay: ['The leader starts a simple pattern such as clap-snap-stomp.', 'The next person repeats it and adds one motion.', 'Continue around the circle.', 'Restart as a team challenge when the pattern breaks.'],
-    leaderScript: 'This is a group challenge. If someone misses it, we restart together and try to beat our record.',
-    winCondition: 'Try to complete a full circle without breaking the pattern.',
-    safetyNotes: 'Avoid making one player feel like the reason the group failed. Restart cheerfully.',
-    avoidWith: 'Groups that mock mistakes.', requires: 'Positive leader framing.',
-    variations: 'Use sounds, motions, Bible books, or camp theme words.', easier: 'Use only two motions.', harder: 'Speed up or add direction changes.',
-    debriefQuestions: ['What helped you remember?', 'How did the group respond to mistakes?'], bibleBridge: 'A gentle bridge to Galatians 6:2 about carrying one another’s burdens.', scripture: ['Galatians 6:2'], creator: 'HooraPlaybook Team', averageRating: 4.3, ratingCount: 7, reviewCount: 2, views: 110
+    "id": "dance-your-hats-and-gloves-off",
+    "slug": "dance-your-hats-and-gloves-off",
+    "title": "Dance Your Hats and Gloves Off!",
+    "accessLevel": "free",
+    "featured": true,
+    "tested": true,
+    "shortDescription": "A silly dance competition where contestants try to dance off their hats and gloves while judges score their performance.",
+    "description": "A silly dance competition where contestants try to dance off their hats and gloves while judges score their performance.",
+    "ageText": "11+",
+    "groupSizeText": "3 performers plus an audience; works with medium or large groups.",
+    "durationText": "5-10 minutes",
+    "categoryText": "Theatrical",
+    "difficultyText": "Easy",
+    "materialsText": "- Hats or buffs\n- Kitchen gloves\n- Youth-appropriate upbeat music\n- Speaker\n- Three judges",
+    "howToPlayText": "1. Choose three contestants to be dancers.\n2. Give each contestant kitchen gloves and a hat or buff.\n3. One contestant dances for 30 seconds while trying to shake off the hat and gloves.\n4. Judges score the contestant for dance moves and personality.\n5. Award five bonus points if the contestant successfully dances off the hat and gloves.\n6. Repeat with the remaining contestants and declare the highest score the winner.",
+    "variationsText": "- Run it as a team contest where each team chooses one dancer.\n- Let the crowd cheer to influence a bonus point.\n- Create a final dance-off between the top two contestants.",
+    "bibleVerseText": "- Psalm 149:3\n- 2 Samuel 6:14\n- Colossians 3:17",
+    "tipsText": "- Wash thrift-store hats or buffs before using them.\n- Make sure the music and dance expectations are appropriate for your ministry setting.\n- Judges with funny but kind commentary make the game much better.\n- Encourage the crowd to cheer so the room energy stays high.",
+    "tagsText": "- Dance\n- Laughter\n- Performance\n- High energy\n- Camp",
+    "sourceText": "Processed from *Epic (and Easy) Youth Ministry Games* by YouthWorks, PDF page 5.",
+    "purpose": [
+      "Theatrical"
+    ],
+    "categories": [
+      "Theatrical"
+    ],
+    "tags": [
+      "Dance",
+      "Laughter",
+      "Performance",
+      "High energy",
+      "Camp"
+    ],
+    "bestAgeMin": 11,
+    "bestAgeMax": 99,
+    "minRecommendedAge": 11,
+    "groupSizeMin": 3,
+    "groupSizeMax": 100,
+    "timeMin": 5,
+    "timeMax": 10,
+    "indoorOutdoor": "both",
+    "space": "Flexible",
+    "materials": [
+      "Hats or buffs",
+      "Kitchen gloves",
+      "Youth-appropriate upbeat music",
+      "Speaker",
+      "Three judges"
+    ],
+    "energy": "High",
+    "prep": 5,
+    "leaderDifficulty": "Easy",
+    "safety": "Low Risk",
+    "contact": "None",
+    "embarrassment": "Low",
+    "noise": "Medium",
+    "ministry": "Low",
+    "thumb": "lesson",
+    "setup": "",
+    "howToPlay": [
+      "Choose three contestants to be dancers.",
+      "Give each contestant kitchen gloves and a hat or buff.",
+      "One contestant dances for 30 seconds while trying to shake off the hat and gloves.",
+      "Judges score the contestant for dance moves and personality.",
+      "Award five bonus points if the contestant successfully dances off the hat and gloves.",
+      "Repeat with the remaining contestants and declare the highest score the winner."
+    ],
+    "leaderScript": "",
+    "winCondition": "",
+    "safetyNotes": "",
+    "avoidWith": "",
+    "requires": "",
+    "variations": "- Run it as a team contest where each team chooses one dancer.\n- Let the crowd cheer to influence a bonus point.\n- Create a final dance-off between the top two contestants.",
+    "easier": "",
+    "harder": "",
+    "debriefQuestions": [],
+    "bibleBridge": "- Psalm 149:3\n- 2 Samuel 6:14\n- Colossians 3:17",
+    "scripture": [
+      "Psalm 149:3",
+      "2 Samuel 6:14",
+      "Colossians 3:17"
+    ],
+    "creator": "HooraPlaybook Team",
+    "averageRating": 0,
+    "ratingCount": 0,
+    "reviewCount": 0,
+    "views": 0,
+    "searchText": "Dance Your Hats and Gloves Off!\nA silly dance competition where contestants try to dance off their hats and gloves while judges score their performance.\n11+\n3 performers plus an audience; works with medium or large groups.\n5-10 minutes\nTheatrical\nEasy\n- Hats or buffs\n- Kitchen gloves\n- Youth-appropriate upbeat music\n- Speaker\n- Three judges\n1. Choose three contestants to be dancers.\n2. Give each contestant kitchen gloves and a hat or buff.\n3. One contestant dances for 30 seconds while trying to shake off the hat and gloves.\n4. Judges score the contestant for dance moves and personality.\n5. Award five bonus points if the contestant successfully dances off the hat and gloves.\n6. Repeat with the remaining contestants and declare the highest score the winner.\n- Run it as a team contest where each team chooses one dancer.\n- Let the crowd cheer to influence a bonus point.\n- Create a final dance-off between the top two contestants.\n- Psalm 149:3\n- 2 Samuel 6:14\n- Colossians 3:17\n- Wash thrift-store hats or buffs before using them.\n- Make sure the music and dance expectations are appropriate for your ministry setting.\n- Judges with funny but kind commentary make the game much better.\n- Encourage the crowd to cheer so the room energy stays high.\n- Dance\n- Laughter\n- Performance\n- High energy\n- Camp"
   },
   {
-    id: 'four-corners-purpose', slug: 'four-corners-purpose', title: 'Four Corners Purpose', accessLevel: 'free', featured: false, tested: true,
-    shortDescription: 'A movement icebreaker where corners of the room represent answers to simple questions.',
-    description: 'A low-prep way to get a group moving and learning about each other.',
-    purpose: ['Icebreaker', 'Fun', 'Classroom'], tags: ['All Play', 'Indoor', 'No Materials', 'Good for Newcomers', 'Low Prep'],
-    bestAgeMin: 8, bestAgeMax: 18, minRecommendedAge: 6, groupSizeMin: 8, groupSizeMax: 60, timeMin: 8, timeMax: 16,
-    indoorOutdoor: 'indoor', space: 'Large room', materials: [], energy: 'Medium', prep: 2, leaderDifficulty: 'Easy', safety: 'Low Risk', contact: 'None', embarrassment: 'Low', noise: 'Medium', ministry: 'Low', thumb: 'calm',
-    setup: 'Assign four corners as A, B, C, and D.', howToPlay: ['Read a question with four answers.', 'Players move to the corner that matches their answer.', 'Ask one or two volunteers why they chose it.', 'Repeat with new questions.'],
-    leaderScript: 'Move to the answer that fits you best. There are no wrong answers, and you can pass if you do not want to explain.',
-    winCondition: 'No winner; the goal is connection.', safetyNotes: 'No running. Keep questions light for new groups.', avoidWith: 'Tiny rooms.', requires: 'Clear corners and no personal/embarrassing questions.',
-    variations: 'Use lesson-theme questions or teamwork debrief questions.', easier: 'Use only two sides of the room.', harder: 'Ask teams to create questions.', debriefQuestions: ['What answer surprised you?', 'What did you learn about the group?'], bibleBridge: 'Can introduce how different people have different gifts and preferences.', scripture: ['Romans 12:4–6'], creator: 'HooraPlaybook Team', averageRating: 4.1, ratingCount: 9, reviewCount: 1, views: 147
+    "id": "reverse-charades",
+    "slug": "reverse-charades",
+    "title": "Reverse Charades",
+    "accessLevel": "free",
+    "featured": false,
+    "tested": true,
+    "shortDescription": "The whole audience silently acts out a word while one guesser up front tries to figure it out.",
+    "description": "The whole audience silently acts out a word while one guesser up front tries to figure it out.",
+    "ageText": "10+",
+    "groupSizeText": "6-100+ players; works as one large group or in crews.",
+    "durationText": "10-15 minutes",
+    "categoryText": "Theatrical",
+    "difficultyText": "Easy",
+    "materialsText": "- PowerPoint or slides with word prompts\n- Screen/projector\n- Optional timer\n- Optional large paper or poster for off-site play",
+    "howToPlayText": "1. Choose one guesser and have them stand with their back to the screen.\n2. Show a word to the audience so everyone can see it except the guesser.\n3. The audience silently acts out the word without speaking or making sound effects.\n4. The guesser tries to identify the word.\n5. Move to the next prompt with the same guesser, rotate a new guesser, or score how many words can be guessed in a set time.\n\nStarter word ideas\n- Word ideas include: church, carrot, water, Monopoly, Baby Yoda, coffee, tree, paint brush, musical keyboard, typing, air mattress, Mountain Dew, castle, horse, frog, flower, and Thor.",
+    "variationsText": "- Play “how many can you guess in 60 seconds?”\n- Bring up a whole crew and see how many people can each guess one word within three minutes.\n- Play crew vs. crew, church vs. church, or one side of the room vs. the other.\n- Let the audience choose the next word while the guesser is out of the room.\n- For off-site play, write the words on large paper instead of using slides.",
+    "bibleVerseText": "- Romans 12:4-5\n- 1 Corinthians 12:12-27\n- Ecclesiastes 4:9-10",
+    "tipsText": "- Have a plan for skipping a word if the guesser gets stuck and the audience gets tired.\n- Encourage everyone to participate instead of letting only the boldest students act.\n- Mix easy and harder words, but avoid prompts that are nearly impossible to act out.\n- Decide in advance whether pointing or using props is allowed.",
+    "tagsText": "- Teamwork\n- Nonverbal communication\n- Drama\n- Group participation\n- Icebreaker",
+    "sourceText": "Processed from *Epic (and Easy) Youth Ministry Games* by YouthWorks, PDF page 6.",
+    "purpose": [
+      "Theatrical"
+    ],
+    "categories": [
+      "Theatrical"
+    ],
+    "tags": [
+      "Teamwork",
+      "Nonverbal communication",
+      "Drama",
+      "Group participation",
+      "Icebreaker"
+    ],
+    "bestAgeMin": 10,
+    "bestAgeMax": 99,
+    "minRecommendedAge": 10,
+    "groupSizeMin": 6,
+    "groupSizeMax": 100,
+    "timeMin": 10,
+    "timeMax": 15,
+    "indoorOutdoor": "both",
+    "space": "Flexible",
+    "materials": [
+      "PowerPoint or slides with word prompts",
+      "Screen/projector",
+      "Optional timer",
+      "Optional large paper or poster for off-site play"
+    ],
+    "energy": "Medium",
+    "prep": 5,
+    "leaderDifficulty": "Easy",
+    "safety": "Low Risk",
+    "contact": "None",
+    "embarrassment": "Low",
+    "noise": "Medium",
+    "ministry": "Low",
+    "thumb": "lesson",
+    "setup": "",
+    "howToPlay": [
+      "Choose one guesser and have them stand with their back to the screen.",
+      "Show a word to the audience so everyone can see it except the guesser.",
+      "The audience silently acts out the word without speaking or making sound effects.",
+      "The guesser tries to identify the word.",
+      "Move to the next prompt with the same guesser, rotate a new guesser, or score how many words can be guessed in a set time."
+    ],
+    "leaderScript": "",
+    "winCondition": "",
+    "safetyNotes": "",
+    "avoidWith": "",
+    "requires": "",
+    "variations": "- Play “how many can you guess in 60 seconds?”\n- Bring up a whole crew and see how many people can each guess one word within three minutes.\n- Play crew vs. crew, church vs. church, or one side of the room vs. the other.\n- Let the audience choose the next word while the guesser is out of the room.\n- For off-site play, write the words on large paper instead of using slides.",
+    "easier": "",
+    "harder": "",
+    "debriefQuestions": [],
+    "bibleBridge": "- Romans 12:4-5\n- 1 Corinthians 12:12-27\n- Ecclesiastes 4:9-10",
+    "scripture": [
+      "Romans 12:4-5",
+      "1 Corinthians 12:12-27",
+      "Ecclesiastes 4:9-10"
+    ],
+    "creator": "HooraPlaybook Team",
+    "averageRating": 0,
+    "ratingCount": 0,
+    "reviewCount": 0,
+    "views": 0,
+    "searchText": "Reverse Charades\nThe whole audience silently acts out a word while one guesser up front tries to figure it out.\n10+\n6-100+ players; works as one large group or in crews.\n10-15 minutes\nTheatrical\nEasy\n- PowerPoint or slides with word prompts\n- Screen/projector\n- Optional timer\n- Optional large paper or poster for off-site play\n1. Choose one guesser and have them stand with their back to the screen.\n2. Show a word to the audience so everyone can see it except the guesser.\n3. The audience silently acts out the word without speaking or making sound effects.\n4. The guesser tries to identify the word.\n5. Move to the next prompt with the same guesser, rotate a new guesser, or score how many words can be guessed in a set time.\n\nStarter word ideas\n- Word ideas include: church, carrot, water, Monopoly, Baby Yoda, coffee, tree, paint brush, musical keyboard, typing, air mattress, Mountain Dew, castle, horse, frog, flower, and Thor.\n- Play “how many can you guess in 60 seconds?”\n- Bring up a whole crew and see how many people can each guess one word within three minutes.\n- Play crew vs. crew, church vs. church, or one side of the room vs. the other.\n- Let the audience choose the next word while the guesser is out of the room.\n- For off-site play, write the words on large paper instead of using slides.\n- Romans 12:4-5\n- 1 Corinthians 12:12-27\n- Ecclesiastes 4:9-10\n- Have a plan for skipping a word if the guesser gets stuck and the audience gets tired.\n- Encourage everyone to participate instead of letting only the boldest students act.\n- Mix easy and harder words, but avoid prompts that are nearly impossible to act out.\n- Decide in advance whether pointing or using props is allowed.\n- Teamwork\n- Nonverbal communication\n- Drama\n- Group participation\n- Icebreaker"
   },
   {
-    id: 'human-knot-lite', slug: 'human-knot-lite', title: 'Human Knot Lite', accessLevel: 'pro', featured: false, tested: true,
-    shortDescription: 'A safer, leader-guided version of the classic human knot teamwork challenge.',
-    description: 'A trust and communication activity with clear boundaries and opt-out adaptations.',
-    purpose: ['Teamwork', 'Trust', 'Communication'], tags: ['Teams', 'Trust', 'Light Contact', 'Debrief', 'PRO'],
-    bestAgeMin: 12, bestAgeMax: 18, minRecommendedAge: 10, groupSizeMin: 6, groupSizeMax: 14, timeMin: 10, timeMax: 18,
-    indoorOutdoor: 'both', space: 'Open area', materials: [], energy: 'Medium', prep: 0, leaderDifficulty: 'Moderate', safety: 'Moderate Risk', contact: 'Light', embarrassment: 'Medium', noise: 'Medium', ministry: 'Medium', thumb: 'team',
-    setup: 'Groups of 6–8 stand in circles. Explain boundaries and allow anyone to choose observer/coach role.',
-    howToPlay: ['Players reach across and hold two different hands.', 'Without letting go, the group untangles into a circle.', 'No pulling, twisting, or forcing.', 'Leader stops immediately if anyone is uncomfortable.'],
-    leaderScript: 'This game uses light hand contact. If you would rather coach from the outside, that is a valuable role too.',
-    winCondition: 'Complete the untangle safely, or improve teamwork over two rounds.', safetyNotes: 'Require consent for hand contact. No pulling, pushing, or twisting. Use small groups only.',
-    avoidWith: 'Groups with strong mixed-gender boundaries, first-time visitors, or high discomfort with touch.', requires: 'Consent, active supervision, and opt-out role.', variations: 'Use rope loops instead of hands.', easier: 'Use smaller groups.', harder: 'Add silent communication.', debriefQuestions: ['How did you decide who to follow?', 'What made the knot easier or harder?'], bibleBridge: 'A bridge to unity and patience in Ephesians 4:2–3.', scripture: ['Ephesians 4:2–3'], creator: 'HooraPlaybook Team', averageRating: 4.5, ratingCount: 11, reviewCount: 3, views: 190
+    "id": "secret-dancer",
+    "slug": "secret-dancer",
+    "title": "Secret Dancer",
+    "accessLevel": "free",
+    "featured": false,
+    "tested": true,
+    "shortDescription": "A circle-based follow-the-leader dance game where a detective tries to identify the secret person leading the moves.",
+    "description": "A circle-based follow-the-leader dance game where a detective tries to identify the secret person leading the moves.",
+    "ageText": "10+",
+    "groupSizeText": "8-30 per circle; larger groups can split into crews.",
+    "durationText": "5-10 minutes",
+    "categoryText": "Circle",
+    "difficultyText": "Easy",
+    "materialsText": "- Youth-appropriate upbeat music\n- Speaker\n- Open space",
+    "howToPlayText": "1. Have the group stand in a circle.\n2. Choose one player to be the detective. The detective closes their eyes or steps away briefly.\n3. The facilitator silently chooses one secret dancer.\n4. Start the music. The secret dancer begins an appropriate dance move, and everyone copies it.\n5. The secret dancer changes moves often while trying not to be noticed.\n6. The detective watches the group and gets three guesses to identify the secret dancer.\n7. Choose a new detective and a new secret dancer for the next round.",
+    "variationsText": "- Play one big circle if you have enough space.\n- Run the first or final round as a large-group demonstration while crews stay together.\n- Make it easier by allowing slower move changes, or harder by requiring the secret dancer to change moves more often.",
+    "bibleVerseText": "- Hebrews 13:7\n- 1 Corinthians 11:1\n- Proverbs 11:14",
+    "tipsText": "- Keep the game short; no more than about five minutes.\n- This works especially well outside or in a large room.\n- If it is too easy, make a bigger circle and put the detective in the middle.\n- Remind students to keep dance moves appropriate.",
+    "tagsText": "- Leadership\n- Following\n- Observation\n- Dance\n- High energy\n- Outdoor",
+    "sourceText": "Processed from *Epic (and Easy) Youth Ministry Games* by YouthWorks, PDF page 7.",
+    "purpose": [
+      "Circle"
+    ],
+    "categories": [
+      "Circle"
+    ],
+    "tags": [
+      "Leadership",
+      "Following",
+      "Observation",
+      "Dance",
+      "High energy",
+      "Outdoor"
+    ],
+    "bestAgeMin": 10,
+    "bestAgeMax": 99,
+    "minRecommendedAge": 10,
+    "groupSizeMin": 8,
+    "groupSizeMax": 100,
+    "timeMin": 5,
+    "timeMax": 10,
+    "indoorOutdoor": "both",
+    "space": "Flexible",
+    "materials": [
+      "Youth-appropriate upbeat music",
+      "Speaker",
+      "Open space"
+    ],
+    "energy": "High",
+    "prep": 5,
+    "leaderDifficulty": "Easy",
+    "safety": "Low Risk",
+    "contact": "None",
+    "embarrassment": "Low",
+    "noise": "Medium",
+    "ministry": "Low",
+    "thumb": "lesson",
+    "setup": "",
+    "howToPlay": [
+      "Have the group stand in a circle.",
+      "Choose one player to be the detective. The detective closes their eyes or steps away briefly.",
+      "The facilitator silently chooses one secret dancer.",
+      "Start the music. The secret dancer begins an appropriate dance move, and everyone copies it.",
+      "The secret dancer changes moves often while trying not to be noticed.",
+      "The detective watches the group and gets three guesses to identify the secret dancer.",
+      "Choose a new detective and a new secret dancer for the next round."
+    ],
+    "leaderScript": "",
+    "winCondition": "",
+    "safetyNotes": "",
+    "avoidWith": "",
+    "requires": "",
+    "variations": "- Play one big circle if you have enough space.\n- Run the first or final round as a large-group demonstration while crews stay together.\n- Make it easier by allowing slower move changes, or harder by requiring the secret dancer to change moves more often.",
+    "easier": "",
+    "harder": "",
+    "debriefQuestions": [],
+    "bibleBridge": "- Hebrews 13:7\n- 1 Corinthians 11:1\n- Proverbs 11:14",
+    "scripture": [
+      "Hebrews 13:7",
+      "1 Corinthians 11:1",
+      "Proverbs 11:14"
+    ],
+    "creator": "HooraPlaybook Team",
+    "averageRating": 0,
+    "ratingCount": 0,
+    "reviewCount": 0,
+    "views": 0,
+    "searchText": "Secret Dancer\nA circle-based follow-the-leader dance game where a detective tries to identify the secret person leading the moves.\n10+\n8-30 per circle; larger groups can split into crews.\n5-10 minutes\nCircle\nEasy\n- Youth-appropriate upbeat music\n- Speaker\n- Open space\n1. Have the group stand in a circle.\n2. Choose one player to be the detective. The detective closes their eyes or steps away briefly.\n3. The facilitator silently chooses one secret dancer.\n4. Start the music. The secret dancer begins an appropriate dance move, and everyone copies it.\n5. The secret dancer changes moves often while trying not to be noticed.\n6. The detective watches the group and gets three guesses to identify the secret dancer.\n7. Choose a new detective and a new secret dancer for the next round.\n- Play one big circle if you have enough space.\n- Run the first or final round as a large-group demonstration while crews stay together.\n- Make it easier by allowing slower move changes, or harder by requiring the secret dancer to change moves more often.\n- Hebrews 13:7\n- 1 Corinthians 11:1\n- Proverbs 11:14\n- Keep the game short; no more than about five minutes.\n- This works especially well outside or in a large room.\n- If it is too easy, make a bigger circle and put the detective in the middle.\n- Remind students to keep dance moves appropriate.\n- Leadership\n- Following\n- Observation\n- Dance\n- High energy\n- Outdoor"
   },
   {
-    id: 'paper-tower-test', slug: 'paper-tower-test', title: 'Paper Tower Test', accessLevel: 'pro', featured: true, tested: true,
-    shortDescription: 'Teams build the tallest free-standing tower using only paper and tape.',
-    description: 'A classic leadership challenge with strong debrief potential for planning, testing, and communication.',
-    purpose: ['Teamwork', 'Leadership', 'Communication', 'Classroom'], tags: ['Teams', 'Paper', 'Leadership', 'Debrief', 'Indoor', 'PRO'],
-    bestAgeMin: 10, bestAgeMax: 18, minRecommendedAge: 8, groupSizeMin: 6, groupSizeMax: 36, timeMin: 20, timeMax: 35,
-    indoorOutdoor: 'indoor', space: 'Tables or floor space', materials: ['paper', 'tape'], energy: 'Medium', prep: 5, leaderDifficulty: 'Easy', safety: 'Low Risk', contact: 'None', embarrassment: 'Low', noise: 'Medium', ministry: 'Low', thumb: 'lesson',
-    setup: 'Give each team the same amount of paper and tape. Set a visible timer.', howToPlay: ['Teams have a fixed time to build the tallest free-standing tower.', 'No attaching the tower to furniture, walls, or people.', 'Measure towers only after hands are removed.', 'Debrief the planning process.'], leaderScript: 'You have limited supplies and limited time. Decide quickly, test early, and learn as you go.', winCondition: 'Tallest free-standing tower wins.', safetyNotes: 'No climbing on chairs or tables to build higher.', avoidWith: 'Groups without tables or floor space.', requires: 'Equal supplies, timer, measuring tape.', variations: 'Add a marshmallow or object that must sit on top.', easier: 'Give more tape.', harder: 'No talking for the first two minutes.', debriefQuestions: ['Did you plan first or start building?', 'What changed after testing?', 'Who helped the team learn?'], bibleBridge: 'A bridge to Luke 14:28 about counting the cost.', scripture: ['Luke 14:28'], creator: 'HooraPlaybook Team', averageRating: 4.9, ratingCount: 16, reviewCount: 7, views: 240
-  },
-  {
-    id: 'scripture-bridge-race', slug: 'scripture-bridge-race', title: 'Scripture Bridge Race', accessLevel: 'pro', featured: false, tested: true,
-    shortDescription: 'Teams connect game clues to Bible themes and explain the connection.',
-    description: 'A ministry-friendly game that opens a lesson without forcing an awkward transition.',
-    purpose: ['Bible Bridge', 'Lesson Bridge', 'Review'], tags: ['Bible Bridge', 'Teams', 'Lesson', 'Indoor', 'PRO'],
-    bestAgeMin: 12, bestAgeMax: 18, minRecommendedAge: 10, groupSizeMin: 8, groupSizeMax: 30, timeMin: 12, timeMax: 22,
-    indoorOutdoor: 'indoor', space: 'Any room', materials: ['paper'], energy: 'Medium', prep: 10, leaderDifficulty: 'Moderate', safety: 'Low Risk', contact: 'None', embarrassment: 'Low', noise: 'Medium', ministry: 'Low', thumb: 'lesson',
-    setup: 'Prepare clue cards with themes such as trust, unity, forgiveness, perseverance, and wisdom.', howToPlay: ['Teams draw a clue card.', 'They pick one matching Bible idea or story.', 'They explain the connection in one sentence.', 'Award points for clear, thoughtful connections.'], leaderScript: 'Do not stretch the Bible to fit the game. Make a simple, honest connection.', winCondition: 'Most clear and responsible connections wins.', safetyNotes: 'Do not shame wrong answers. Keep doctrine simple and accurate.', avoidWith: 'Groups that do not know any Bible stories unless leaders provide hints.', requires: 'Prepared clue cards.', variations: 'Give each team Scripture references to choose from.', easier: 'Use multiple-choice verses.', harder: 'Require a real-life application.', debriefQuestions: ['What theme was easiest to connect?', 'What makes a Bible connection responsible?'], bibleBridge: 'Designed as the Bible bridge.', scripture: ['2 Timothy 3:16–17'], creator: 'HooraPlaybook Team', averageRating: 4.6, ratingCount: 5, reviewCount: 2, views: 98
-  },
-  {
-    id: 'balloon-boundary-blitz', slug: 'balloon-boundary-blitz', title: 'Balloon Boundary Blitz', accessLevel: 'free', featured: false, tested: false,
-    shortDescription: 'Teams keep balloons inside a boundary while following changing rules.',
-    description: 'A high-energy game for camps or gyms that needs clear safety boundaries.',
-    purpose: ['Fun', 'Competition', 'Camp'], tags: ['Outdoor', 'Gym', 'Balloons', 'High Energy', 'Needs Boundaries'],
-    bestAgeMin: 8, bestAgeMax: 16, minRecommendedAge: 7, groupSizeMin: 10, groupSizeMax: 50, timeMin: 10, timeMax: 18,
-    indoorOutdoor: 'both', space: 'Gym or outdoor field', materials: ['balloons'], energy: 'High', prep: 8, leaderDifficulty: 'Moderate', safety: 'Moderate Risk', contact: 'Light', embarrassment: 'Low', noise: 'High', ministry: 'Low', thumb: 'camp',
-    setup: 'Inflate balloons and mark a clear boundary. Remove obstacles.', howToPlay: ['Teams try to keep their balloons in the air and inside their zone.', 'If a balloon touches the floor or leaves the zone, it is out.', 'Add rules each round such as elbows only or team must rotate.', 'Stop if play becomes too rough.'], leaderScript: 'Fast is fun, but safe is required. No diving, pushing, or sliding.', winCondition: 'Team with the most balloons remaining wins.', safetyNotes: 'No latex allergy participants unless using alternatives. No diving or pushing. Clear the floor.', avoidWith: 'Latex allergies, tiny rooms, highly aggressive groups.', requires: 'Open space and active supervision.', variations: 'Use beach balls instead of balloons.', easier: 'Use larger balloons and bigger zones.', harder: 'Add more balloons or movement constraints.', debriefQuestions: ['How did rules change your strategy?', 'How did your team recover from mistakes?'], bibleBridge: 'Optional bridge to self-control and boundaries.', scripture: ['Proverbs 25:28'], creator: 'HooraPlaybook Team', averageRating: 3.9, ratingCount: 8, reviewCount: 1, views: 102
+    "id": "social-distance-pictionary",
+    "slug": "social-distance-pictionary",
+    "title": "Social Distance Pictionary",
+    "accessLevel": "free",
+    "featured": false,
+    "tested": true,
+    "shortDescription": "Teams try to guess drawings made with a marker attached to a long pole, making normal Pictionary much harder and funnier.",
+    "description": "Teams try to guess drawings made with a marker attached to a long pole, making normal Pictionary much harder and funnier.",
+    "ageText": "10+",
+    "groupSizeText": "6-100+ players; best in crews or teams.",
+    "durationText": "10-20 minutes",
+    "categoryText": "Team-building",
+    "difficultyText": "Moderate",
+    "materialsText": "- One six-foot pole per team if possible\n- Markers taped to the ends of poles\n- Whiteboard, butcher paper, or large poster paper\n- Tape to secure paper\n- Prepared list of drawable words",
+    "howToPlayText": "1. Decide whether to play as one large group or in separate crews. Crews work best if you have enough supplies.\n2. Give each team a large drawing surface and a long pole with a marker taped to the end.\n3. Choose an artist for each team and give all artists the same word or a set of words.\n4. The artist draws while holding only the far end of the pole.\n5. Their team guesses the word. You can score by the number guessed within a time limit or by which team finishes a short list first.\n6. Rotate artists so more students participate.",
+    "variationsText": "- Play as a large-group upfront game with one crew guessing.\n- Give each crew three words and rank teams by who finishes first, second, and third.\n- Create an art-gallery moment afterward where crews show their favorite picture.",
+    "bibleVerseText": "- Ecclesiastes 4:9-10\n- 1 Corinthians 12:14-20\n- Colossians 3:23",
+    "tipsText": "- Protect walls and floors. Use large paper, tape it securely, and clean accidental marks quickly.\n- A whiteboard is the safest drawing surface if available.\n- Tell teams not to shout answers loudly if every crew has the same prompts.\n- Plan how you will deliver words to each crew without confusion.",
+    "tagsText": "- Creativity\n- Drawing\n- Teamwork\n- Communication\n- Challenge",
+    "sourceText": "Processed from *Epic (and Easy) Youth Ministry Games* by YouthWorks, PDF page 8.",
+    "purpose": [
+      "Team-building"
+    ],
+    "categories": [
+      "Team-building"
+    ],
+    "tags": [
+      "Creativity",
+      "Drawing",
+      "Teamwork",
+      "Communication",
+      "Challenge"
+    ],
+    "bestAgeMin": 10,
+    "bestAgeMax": 99,
+    "minRecommendedAge": 10,
+    "groupSizeMin": 6,
+    "groupSizeMax": 100,
+    "timeMin": 10,
+    "timeMax": 20,
+    "indoorOutdoor": "both",
+    "space": "Flexible",
+    "materials": [
+      "One six-foot pole per team if possible",
+      "Markers taped to the ends of poles",
+      "Whiteboard, butcher paper, or large poster paper",
+      "Tape to secure paper",
+      "Prepared list of drawable words"
+    ],
+    "energy": "Medium",
+    "prep": 5,
+    "leaderDifficulty": "Moderate",
+    "safety": "Low Risk",
+    "contact": "None",
+    "embarrassment": "Low",
+    "noise": "Medium",
+    "ministry": "Low",
+    "thumb": "team",
+    "setup": "",
+    "howToPlay": [
+      "Decide whether to play as one large group or in separate crews. Crews work best if you have enough supplies.",
+      "Give each team a large drawing surface and a long pole with a marker taped to the end.",
+      "Choose an artist for each team and give all artists the same word or a set of words.",
+      "The artist draws while holding only the far end of the pole.",
+      "Their team guesses the word. You can score by the number guessed within a time limit or by which team finishes a short list first.",
+      "Rotate artists so more students participate."
+    ],
+    "leaderScript": "",
+    "winCondition": "",
+    "safetyNotes": "",
+    "avoidWith": "",
+    "requires": "",
+    "variations": "- Play as a large-group upfront game with one crew guessing.\n- Give each crew three words and rank teams by who finishes first, second, and third.\n- Create an art-gallery moment afterward where crews show their favorite picture.",
+    "easier": "",
+    "harder": "",
+    "debriefQuestions": [],
+    "bibleBridge": "- Ecclesiastes 4:9-10\n- 1 Corinthians 12:14-20\n- Colossians 3:23",
+    "scripture": [
+      "Ecclesiastes 4:9-10",
+      "1 Corinthians 12:14-20",
+      "Colossians 3:23"
+    ],
+    "creator": "HooraPlaybook Team",
+    "averageRating": 0,
+    "ratingCount": 0,
+    "reviewCount": 0,
+    "views": 0,
+    "searchText": "Social Distance Pictionary\nTeams try to guess drawings made with a marker attached to a long pole, making normal Pictionary much harder and funnier.\n10+\n6-100+ players; best in crews or teams.\n10-20 minutes\nTeam-building\nModerate\n- One six-foot pole per team if possible\n- Markers taped to the ends of poles\n- Whiteboard, butcher paper, or large poster paper\n- Tape to secure paper\n- Prepared list of drawable words\n1. Decide whether to play as one large group or in separate crews. Crews work best if you have enough supplies.\n2. Give each team a large drawing surface and a long pole with a marker taped to the end.\n3. Choose an artist for each team and give all artists the same word or a set of words.\n4. The artist draws while holding only the far end of the pole.\n5. Their team guesses the word. You can score by the number guessed within a time limit or by which team finishes a short list first.\n6. Rotate artists so more students participate.\n- Play as a large-group upfront game with one crew guessing.\n- Give each crew three words and rank teams by who finishes first, second, and third.\n- Create an art-gallery moment afterward where crews show their favorite picture.\n- Ecclesiastes 4:9-10\n- 1 Corinthians 12:14-20\n- Colossians 3:23\n- Protect walls and floors. Use large paper, tape it securely, and clean accidental marks quickly.\n- A whiteboard is the safest drawing surface if available.\n- Tell teams not to shout answers loudly if every crew has the same prompts.\n- Plan how you will deliver words to each crew without confusion.\n- Creativity\n- Drawing\n- Teamwork\n- Communication\n- Challenge"
   }
 ];
 
@@ -185,9 +615,13 @@ function loadState() {
     users: DEFAULT_USERS,
     currentUserId: null,
     games: DEFAULT_GAMES,
-    favorites: { 'u-free': ['cup-stack-relay'], 'u-pro': ['cup-stack-relay', 'paper-tower-test'] },
+    favorites: { 'u-free': [], 'u-pro': [] },
     notes: {},
     ratings: seedRatings(),
+    gameReviews: [],
+    reviewDrafts: {},
+    userGameRatings: {},
+    gameVotes: {},
     submissions: [],
     importBatches: [],
     coupons: [],
@@ -204,12 +638,7 @@ function loadState() {
 }
 
 function seedRatings() {
-  return [
-    { id: 'r1', userId: 'u-pro', gameId: 'cup-stack-relay', rating: 5, reviewText: 'Easy to explain and worked perfectly with our youth group.', createdAt: addDaysISO(-22), reviewStatus: 'published', mediaStatus: 'approved' },
-    { id: 'r2', userId: 'u-free', gameId: 'cup-stack-relay', rating: 5, reviewText: 'The silent round made it even better.', createdAt: addDaysISO(-7), reviewStatus: 'published', mediaStatus: 'approved' },
-    { id: 'r3', userId: 'u-pro', gameId: 'paper-tower-test', rating: 5, reviewText: 'Strong debrief. Great for leadership night.', createdAt: addDaysISO(-3), reviewStatus: 'published', mediaStatus: 'approved' },
-    { id: 'r4', userId: 'u-free', gameId: 'balloon-boundary-blitz', rating: 3, reviewText: 'Fun, but you really need enough space.', createdAt: addDaysISO(-14), reviewStatus: 'published', mediaStatus: 'approved' }
-  ];
+  return [];
 }
 
 
@@ -457,13 +886,65 @@ function renderFindGameVisual(game) {
   return `<div class="hp-game-image hp-thumb-${escapeHTML(game.thumb || 'camp')}"><span>${escapeHTML(game.title)}</span></div>`;
 }
 
+// HOORAPLAYBOOK_V1_GAME_LIBRARY_HELPERS_START
+function hpVerbatimText(value = '') {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return `<div class="hp-verbatim-text">${escapeHTML(text).replace(/\n/g, '<br>')}</div>`;
+}
+
+function hpGameSearchText(game = {}) {
+  return [
+    game.title,
+    game.shortDescription,
+    game.description,
+    game.ageText,
+    game.groupSizeText,
+    game.durationText,
+    game.categoryText,
+    game.difficultyText,
+    game.materialsText,
+    game.howToPlayText,
+    game.variationsText,
+    game.bibleVerseText,
+    game.tipsText,
+    game.tagsText,
+    game.searchText,
+    Array.isArray(game.materials) ? game.materials.join(' ') : '',
+    Array.isArray(game.tags) ? game.tags.join(' ') : '',
+    Array.isArray(game.purpose) ? game.purpose.join(' ') : '',
+    Array.isArray(game.scripture) ? game.scripture.join(' ') : ''
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function hpGameAgeLabel(game = {}) {
+  return game.ageText || `${game.bestAgeMin || ''}–${game.bestAgeMax || ''}`;
+}
+
+function hpGamePlayersLabel(game = {}) {
+  return game.groupSizeText || `${game.groupSizeMin || ''}–${game.groupSizeMax || ''} players`;
+}
+
+function hpGameDurationLabel(game = {}) {
+  return game.durationText || gameDetailTime(game);
+}
+
+function hpGameMaterialsLabel(game = {}) {
+  return game.materialsText || gameDetailMaterials(game);
+}
+
+function hpGameDifficultyLabel(game = {}) {
+  return game.difficultyText || game.leaderDifficulty || 'Easy';
+}
+// HOORAPLAYBOOK_V1_GAME_LIBRARY_HELPERS_END
+
 function renderFindGameMeta(game) {
   const items = [
-    [hpIcon('users'), `${game.groupSizeMin}–${game.groupSizeMax} players`],
-    [hpIcon('user'), `Ages ${game.bestAgeMin}–${game.bestAgeMax}`],
-    [hpIcon('clock'), game.timeMin === game.timeMax ? `${game.timeMin} min` : `${game.timeMin}–${game.timeMax} min`],
-    [hpIcon('book'), hpPrimaryCategory(game)],
-    [hpIcon('box'), hpMaterialLabel(game)]
+    [hpIcon('users'), hpGamePlayersLabel(game)],
+    [hpIcon('user'), `Ages ${hpGameAgeLabel(game)}`],
+    [hpIcon('clock'), hpGameDurationLabel(game)],
+    [hpIcon('book'), game.categoryText || hpPrimaryCategory(game)],
+    [hpIcon('box'), hpGameMaterialsLabel(game).replace(/^- /gm, '').replace(/\n/g, ', ')]
   ];
 
   return items.map(([icon, label]) => `<span class="hp-meta-item">${icon}<span>${escapeHTML(label)}</span></span>`).join('');
@@ -521,7 +1002,7 @@ function renderNoResults() { return `<div class="card" style="padding:24px"><h2>
 function getFilteredGames() {
   const q = state.search.trim().toLowerCase();
   let games = state.games.filter(g => g.status !== 'archived');
-  if (q) games = games.filter(g => [g.title,g.shortDescription,g.description,g.materials.join(' '),g.tags.join(' '),g.purpose.join(' ')].join(' ').toLowerCase().includes(q));
+  if (q) games = games.filter(g => hpGameSearchText(g).includes(q));
   const filters = state.filters;
   filters.forEach(f => {
     const n = f.toLowerCase();
@@ -598,7 +1079,7 @@ function renderGameDetail(id) {
   const materials = gameDetailMaterials(game);
   const primaryCategory = gameDetailCategory(game);
 
-  return `<div class="app-frame hp-game-detail-frame"><main class="hp-game-page" aria-label="${escapeHTML(game.title)} detail page"><header class="hp-game-header"><button class="icon-btn hp-game-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<button class="icon-btn hp-game-header-btn" data-share-game="${game.id}" aria-label="Share ${escapeHTML(game.title)}"><img src="/assets/ios-share.svg" alt=""></button></header><section class="hp-game-title-section"><h1>${escapeHTML(game.title)}</h1><section class="hp-rating-section" aria-label="Game rating"><div class="hp-rating-row"><div class="hp-detail-stars" aria-label="${game.averageRating || 0} out of 5 stars">${gameDetailStars(game.averageRating || 0)}</div><span class="hp-rating-text">${gameDetailRatingText(game)}</span><button class="hp-detail-favorite ${favorite ? 'is-active' : ''}" data-toggle-favorite="${game.id}" aria-label="${favorite ? 'Remove from' : 'Add to'} favorites">${favorite ? gameDetailIcon('heartFilled') : gameDetailIcon('heart')}</button></div><button class="hp-reviews-link" data-go="/app/games/${game.id}/reviews">View reviews</button></section></section><section class="hp-game-image-wrap">${gameDetailImage(game)}</section><button class="hp-add-to-plan-button" data-add-to-plan="${game.id}" aria-label="Add ${escapeHTML(game.title)} to Plan"><span class="hp-button-plus">+</span><span>Add to Plan</span></button><section class="hp-game-actions-row"><div class="hp-vote-control" role="group" aria-label="Vote on this game"><button class="hp-vote-button ${vote === 'up' ? 'is-up-selected' : ''}" data-game-vote="${game.id}:up" aria-label="Thumbs up ${escapeHTML(game.title)}">${gameDetailIcon('thumbUp')}</button><span class="hp-vote-divider" aria-hidden="true"></span><button class="hp-vote-button ${vote === 'down' ? 'is-down-selected' : ''}" data-game-vote="${game.id}:down" aria-label="Thumbs down ${escapeHTML(game.title)}">${gameDetailIcon('thumbDown')}</button></div><button class="hp-notes-button" data-go="/app/games/${game.id}/notes">${gameDetailIcon('edit')}<span>Add Notes</span></button></section><section class="hp-game-meta-grid" aria-label="Game facts"><article class="hp-meta-card hp-meta-card--ages">${gameDetailIcon('user')}<div class="hp-meta-label">Ages</div><div class="hp-meta-value">${game.bestAgeMin}–${game.bestAgeMax}</div></article><article class="hp-meta-card hp-meta-card--players">${gameDetailIcon('users')}<div class="hp-meta-label">Players</div><div class="hp-meta-value">${game.groupSizeMin}–${game.groupSizeMax}</div></article><article class="hp-meta-card hp-meta-card--time">${gameDetailIcon('clock')}<div class="hp-meta-label">Time</div><div class="hp-meta-value">${gameDetailTime(game)}</div></article><article class="hp-meta-card hp-meta-card--materials">${gameDetailIcon('box')}<div class="hp-meta-label">Materials</div><div class="hp-meta-value">${escapeHTML(materials)}</div></article></section><section class="hp-category-card" aria-label="Game category"><div class="hp-category-icon">${gameDetailIcon('book')}</div><div class="hp-category-content"><div class="hp-category-label">Category</div><div class="hp-category-value"><span>${escapeHTML(primaryCategory)}</span></div></div></section>${locked ? renderLockedGameDetailCard(game) : renderUnlockedGameDetailCards(game)}</main>${renderBottomNav()}${renderAddToPlanModalIfNeeded()}</div>`;
+  return `<div class="app-frame hp-game-detail-frame"><main class="hp-game-page" aria-label="${escapeHTML(game.title)} detail page"><header class="hp-game-header"><button class="icon-btn hp-game-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<button class="icon-btn hp-game-header-btn" data-share-game="${game.id}" aria-label="Share ${escapeHTML(game.title)}"><img src="/assets/ios-share.svg" alt=""></button></header><section class="hp-game-title-section"><h1>${escapeHTML(game.title)}</h1><section class="hp-rating-section" aria-label="Game rating"><div class="hp-rating-row"><div class="hp-detail-stars" aria-label="${game.averageRating || 0} out of 5 stars">${gameDetailStars(game.averageRating || 0)}</div><span class="hp-rating-text">${gameDetailRatingText(game)}</span><button class="hp-detail-favorite ${favorite ? 'is-active' : ''}" data-toggle-favorite="${game.id}" aria-label="${favorite ? 'Remove from' : 'Add to'} favorites">${favorite ? gameDetailIcon('heartFilled') : gameDetailIcon('heart')}</button></div><button class="hp-reviews-link" data-go="/app/games/${game.id}/reviews">View reviews</button></section></section><section class="hp-game-image-wrap">${gameDetailImage(game)}</section><button class="hp-add-to-plan-button" data-add-to-plan="${game.id}" aria-label="Add ${escapeHTML(game.title)} to Plan"><span class="hp-button-plus">+</span><span>Add to Plan</span></button><section class="hp-game-actions-row"><div class="hp-vote-control" role="group" aria-label="Vote on this game"><button class="hp-vote-button ${vote === 'up' ? 'is-up-selected' : ''}" data-game-vote="${game.id}:up" aria-label="Thumbs up ${escapeHTML(game.title)}">${gameDetailIcon('thumbUp')}</button><span class="hp-vote-divider" aria-hidden="true"></span><button class="hp-vote-button ${vote === 'down' ? 'is-down-selected' : ''}" data-game-vote="${game.id}:down" aria-label="Thumbs down ${escapeHTML(game.title)}">${gameDetailIcon('thumbDown')}</button></div><button class="hp-notes-button" data-go="/app/games/${game.id}/notes">${gameDetailIcon('edit')}<span>Add Notes</span></button></section><section class="hp-game-meta-grid" aria-label="Game facts"><article class="hp-meta-card hp-meta-card--ages">${gameDetailIcon('user')}<div class="hp-meta-label">Ages</div><div class="hp-meta-value">${escapeHTML(hpGameAgeLabel(game))}</div></article><article class="hp-meta-card hp-meta-card--players">${gameDetailIcon('users')}<div class="hp-meta-label">Players</div><div class="hp-meta-value">${escapeHTML(hpGamePlayersLabel(game))}</div></article><article class="hp-meta-card hp-meta-card--time">${gameDetailIcon('clock')}<div class="hp-meta-label">Time</div><div class="hp-meta-value">${escapeHTML(gameDetailTime(game))}</div></article><article class="hp-meta-card hp-meta-card--difficulty">${gameDetailIcon('checklist')}<div class="hp-meta-label">Difficulty</div><div class="hp-meta-value">${escapeHTML(hpGameDifficultyLabel(game))}</div></article></section><section class="hp-category-card" aria-label="Game category"><div class="hp-category-icon">${gameDetailIcon('book')}</div><div class="hp-category-content"><div class="hp-category-label">Category</div><div class="hp-category-value"><span>${escapeHTML(primaryCategory)}</span></div></div></section>${locked ? renderLockedGameDetailCard(game) : renderUnlockedGameDetailCards(game)}</main>${renderBottomNav()}${renderAddToPlanModalIfNeeded()}</div>`;
 }
 
 function quickFacts(g) { return [['Ages', `${g.bestAgeMin}–${g.bestAgeMax}`], ['Players', `${g.groupSizeMin}–${g.groupSizeMax}`], ['Time', `${g.timeMin}–${g.timeMax} min`], ['Space', g.space], ['Energy', g.energy], ['Materials', g.materials.length?g.materials.join(', '):'None'], ['Safety', g.safety], ['Prep', `${g.prep} min`]]; }
@@ -607,8 +1088,56 @@ function renderFullGameDetails(game) { return `${section('What to Get:', game.ma
 function section(title, items) { return `<section class="content-section"><h2>${title}</h2><ul>${items.filter(Boolean).map(i=>`<li>${escapeHTML(i)}</li>`).join('')}</ul></section>`; }
 
 // HOORAPLAYBOOK_GAME_PAGE_REDESIGN_V1_START
+// HOORAPLAYBOOK_GAME_DETAIL_LAYOUT_V1C_START
+function renderGameInfoSection(title, iconName, bodyText) {
+  const text = String(bodyText || '').trim();
+  if (!text) return '';
+
+  return `<section class="hp-game-info-section"><h2 class="hp-game-info-heading"><span class="hp-game-info-heading-icon">${gameDetailIcon(iconName)}</span><span>${escapeHTML(title)}</span></h2><div class="hp-game-info-card">${hpReadableGameText(text)}</div></section>`;
+}
+
+function hpReadableGameText(value = '') {
+  const text = String(value || '').trim();
+  if (!text) return '';
+
+  const lines = text.split(/\n+/).map(line => line.trim()).filter(Boolean);
+  const listLike = lines.length > 1 && lines.every(line => line.startsWith('- ') || /^\d+\.\s+/.test(line));
+
+  if (listLike) {
+    const ordered = lines.every(line => /^\d+\.\s+/.test(line));
+    const items = lines.map(line => line.replace(/^-+\s*/, '').replace(/^\d+\.\s+/, ''));
+    const tag = ordered ? 'ol' : 'ul';
+    return `<${tag} class="hp-readable-list">${items.map(item => `<li>${escapeHTML(item)}</li>`).join('')}</${tag}>`;
+  }
+
+  const html = lines.map(line => {
+    if (line.startsWith('- ')) return `<li>${escapeHTML(line.slice(2))}</li>`;
+    if (/^\d+\.\s+/.test(line)) return `<li>${escapeHTML(line.replace(/^\d+\.\s+/, ''))}</li>`;
+    return `<p>${escapeHTML(line)}</p>`;
+  }).join('');
+
+  if (lines.some(line => line.startsWith('- '))) return `<ul class="hp-readable-list">${html}</ul>`;
+  if (lines.some(line => /^\d+\.\s+/.test(line))) return `<ol class="hp-readable-list">${html}</ol>`;
+  return html;
+}
+// HOORAPLAYBOOK_GAME_DETAIL_LAYOUT_V1C_END
+
 function renderUnlockedGameDetailCards(game) {
-  return `${renderHowToPlayCard(game)}${renderVariationsCard(game)}${renderBibleConnectionsCard(game)}${renderTipsCard(game)}`;
+  return `${renderMaterialsCard(game)}${renderCategoryCard(game)}${renderHowToPlayCard(game)}${renderVariationsCard(game)}${renderBibleConnectionsCard(game)}${renderTipsCard(game)}`;
+}
+
+function renderMaterialsCard(game) {
+  const materials = hpGameMaterialsLabel(game);
+  return renderGameInfoSection('Materials', 'box', materials);
+}
+
+function renderCategoryCard(game) {
+  const category = game.categoryText || gameDetailCategory(game);
+  return renderGameInfoSection('Category', 'book', category);
+}
+
+function renderGameDifficultyCard(game) {
+  return renderGameInfoSection('Difficulty', 'checklist', hpGameDifficultyLabel(game));
 }
 
 function renderLockedGameDetailCard(game) {
@@ -616,23 +1145,41 @@ function renderLockedGameDetailCard(game) {
 }
 
 function renderHowToPlayCard(game) {
+  if (game.howToPlayText) {
+    return renderGameInfoSection('How to Play', 'lightbulb', game.howToPlayText);
+  }
+
   const rules = Array.isArray(game.howToPlay) && game.howToPlay.length ? game.howToPlay : ['Explain the game clearly.', 'Play one practice round.', 'Lead the group through the activity.'];
-  return `<section class="hp-detail-section-card hp-how-to-play-section"><div class="hp-detail-section-icon">${gameDetailIcon('lightbulb')}</div><div class="hp-detail-section-content"><h2>How to Play</h2><h3>Game Setup</h3><p>${escapeHTML(game.setup || 'Prepare the play area and explain the boundaries before the game begins.')}</p><h3>Rules</h3><ol>${rules.map(rule => `<li>${escapeHTML(rule)}</li>`).join('')}</ol></div></section>`;
+  const fallback = `Game Setup\n${game.setup || 'Prepare the play area and explain the boundaries before the game begins.'}\n\nRules\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`;
+  return renderGameInfoSection('How to Play', 'lightbulb', fallback);
 }
 
 function renderVariationsCard(game) {
+  if (game.variationsText) {
+    return renderGameInfoSection('Variations', 'sparkles', game.variationsText);
+  }
+
   const different = game.variations || 'Try a relay version, silent challenge, team tournament, or shorter round.';
-  return `<section class="hp-detail-section-card hp-variations-section"><div class="hp-detail-section-icon hp-detail-section-icon--purple">${gameDetailIcon('sparkles')}</div><div class="hp-detail-section-content"><h2>Variations</h2><h3>Easier</h3><p>${escapeHTML(game.easier || 'Simplify the rules, reduce the time pressure, or use fewer pieces.')}</p><h3>Harder</h3><p>${escapeHTML(game.harder || 'Add a timer, extra challenge, or communication limit.')}</p><h3>Different</h3><p>${escapeHTML(different)}</p></div></section>`;
+  const fallback = `Easier\n${game.easier || 'Simplify the rules, reduce the time pressure, or use fewer pieces.'}\n\nHarder\n${game.harder || 'Add a timer, extra challenge, or communication limit.'}\n\nDifferent\n${different}`;
+  return renderGameInfoSection('Variations', 'sparkles', fallback);
 }
 
 function renderBibleConnectionsCard(game) {
+  if (game.bibleVerseText) {
+    return renderGameInfoSection('Possible Bible Verse', 'book', game.bibleVerseText);
+  }
+
   const references = Array.isArray(game.scripture) && game.scripture.length ? game.scripture : [];
   const bridge = game.bibleBridge || 'Use this game as a starting point for a short discussion about teamwork, wisdom, perseverance, or listening to God’s Word.';
-  const items = references.length ? references.map(ref => `<article class="hp-bible-connection"><h3>${escapeHTML(ref)}</h3><p>${escapeHTML(bridge)}</p></article>`).join('') : `<article class="hp-bible-connection"><h3>Suggested connection</h3><p>${escapeHTML(bridge)}</p></article>`;
-  return `<section class="hp-detail-section-card hp-bible-section"><div class="hp-detail-section-icon hp-detail-section-icon--blue">${gameDetailIcon('book')}</div><div class="hp-detail-section-content"><h2>Possible Bible Verse Connections</h2>${items}<button class="hp-suggest-bible-button" data-go="/app/games/${game.id}/suggest-bible">Suggest a Bible connection</button></div></section>`;
+  const fallback = references.length ? `${references.join('\n')}\n\n${bridge}` : bridge;
+  return renderGameInfoSection('Possible Bible Verse', 'book', fallback);
 }
 
 function renderTipsCard(game) {
+  if (game.tipsText) {
+    return renderGameInfoSection('Tips', 'checklist', game.tipsText);
+  }
+
   const tips = [
     game.safetyNotes,
     game.requires ? `Requires: ${game.requires}` : '',
@@ -640,7 +1187,7 @@ function renderTipsCard(game) {
     game.leaderScript ? `Leader cue: ${game.leaderScript}` : ''
   ].filter(Boolean);
   const safeTips = tips.length ? tips : ['Prepare materials before the session starts.', 'Demonstrate one full round before beginning.', 'Use clear boundaries and stop play if the group becomes unsafe.'];
-  return `<section class="hp-detail-section-card hp-tips-section"><div class="hp-detail-section-icon hp-detail-section-icon--orange">${gameDetailIcon('checklist')}</div><div class="hp-detail-section-content"><h2>Tips</h2><ul>${safeTips.map(tip => `<li>${escapeHTML(tip)}</li>`).join('')}</ul></div></section>`;
+  return renderGameInfoSection('Tips', 'checklist', safeTips.map(tip => `- ${tip}`).join('\n'));
 }
 
 function renderSuggestBibleConnection(gameId) {
@@ -714,17 +1261,20 @@ function gameDetailRatingText(game) {
 }
 
 function gameDetailTime(game) {
+  if (game.durationText) return game.durationText;
   if (Number(game.timeMin) === Number(game.timeMax)) return `${game.timeMin} min`;
   return `${game.timeMin}–${game.timeMax} min`;
 }
 
 function gameDetailMaterials(game) {
+  if (game.materialsText) return game.materialsText.replace(/^- /gm, '').replace(/\n/g, ', ');
   const materials = game.materials || [];
   if (!materials.length) return 'None';
   return materials.map(item => String(item).replace(/\b\w/g, ch => ch.toUpperCase())).join(', ');
 }
 
 function gameDetailCategory(game) {
+  if (game.categoryText) return game.categoryText;
   const allowed = ['Quick and simple','Wet-n-Wild','Team-building','Teams','Circle','Icebreakers','Adventure','Tag','Sport-n-fitness','Theatrical','Relays'];
   const candidates = [...(game.categories || []), ...(game.tags || []), ...(game.purpose || [])].filter(Boolean);
   const exact = candidates.find(item => allowed.includes(item));
