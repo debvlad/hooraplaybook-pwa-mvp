@@ -337,7 +337,7 @@ function renderPrivateRoute() {
   if (main === 'admin') return renderAdminRoute();
   if (main === 'staff') return renderStaffRoute();
   if (main === 'filter') return renderFilterScreen();
-  if (isStandaloneGameRoute() || route.raw === '/app/materials') return renderAppRoute() + renderAddToPlanModalIfNeeded();
+  if (isStandaloneGameRoute() || isStandaloneModerationRoute() || route.raw === '/app/materials') return renderAppRoute() + renderAddToPlanModalIfNeeded();
   return renderAppShell(renderAppRoute()) + renderAddToPlanModalIfNeeded();
 }
 
@@ -377,6 +377,8 @@ function renderAppRoute() {
   if (p[1] === 'submit') return renderSubmit();
   if (p[1] === 'plan') return renderPlan();
   if (p[1] === 'tools') return renderTools();
+  if (p[1] === 'account' && p[2] === 'moderate-reviews' && p[3]) return renderModerationReviewDetail(p[3]);
+  if (p[1] === 'account' && p[2] === 'moderate-reviews') return renderModerateReviewsList();
   if (p[1] === 'account') return renderAccount();
   return renderFind();
 }
@@ -856,7 +858,13 @@ function handleLeaveReviewSubmit(e) {
     userId,
     rating,
     text,
+    originalReviewText: existing?.originalReviewText || text,
+    moderatedReviewText: text,
+    status: 'pending',
+    reviewerName: currentUser()?.fullName || currentUser()?.email || 'User',
     mediaCount: draft.mediaCount || 0,
+    media: existing?.media || hpBuildReviewMedia(draft.mediaCount || 0, game),
+    submittedAt: existing?.submittedAt || new Date().toISOString(),
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -992,11 +1000,260 @@ Use clear boundaries.</pre></details><button class="btn btn-primary full">Upload
 
 function renderTools() { return `<main class="content"><section class="hero-card"><h1>Icebreaker</h1><p id="icebreaker-prompt">Which animal gives birth to the biggest babies in the world? The blue whale.</p><button class="btn btn-primary full" data-random-icebreaker>Break The Ice</button></section></main>`; }
 
+// HOORAPLAYBOOK_REVIEW_MODERATION_V2_START
+function canModerateReviews() {
+  return isStaff(currentUser());
+}
+
+function isStandaloneModerationRoute() {
+  return route.parts[0] === 'app' && route.parts[1] === 'account' && route.parts[2] === 'moderate-reviews';
+}
+
+function renderModerationAccessDenied() {
+  return `<div class="app-frame hp-mod-frame"><header class="hp-mod-header">${headerBackButton()}${headerBrand()}<span aria-hidden="true"></span></header><main class="hp-mod-page hp-mod-page-no-footer"><section class="hp-mod-empty"><h1>Not authorized</h1><p>Only staff and admin users can moderate reviews.</p><button class="btn btn-primary" data-go="/app/account">Back to Account</button></section></main></div>`;
+}
+
+function hpReviewModerationList() {
+  state.gameReviews = Array.isArray(state.gameReviews) ? state.gameReviews : [];
+  return state.gameReviews
+    .map(hpNormalizeModerationReview)
+    .filter(review => review.status === 'pending')
+    .sort((a, b) => new Date(b.submittedAt || b.createdAt || 0) - new Date(a.submittedAt || a.createdAt || 0));
+}
+
+function hpNormalizeModerationReview(review) {
+  const game = state.games.find(g => g.id === review.gameId) || {};
+  const createdAt = review.submittedAt || review.createdAt || review.updatedAt || new Date().toISOString();
+  const rawSubmittedRating = Number(review.rating || review.submittedRating || review.userRating || 0);
+  const rating = rawSubmittedRating ? Math.max(1, Math.min(5, Math.round(rawSubmittedRating))) : 0;
+  const originalText = review.originalReviewText || review.text || '';
+  const moderatedText = review.moderatedReviewText || review.text || originalText;
+  const media = Array.isArray(review.media) ? review.media : hpBuildReviewMedia(Number(review.mediaCount || 0), game);
+
+  return {
+    ...review,
+    id: review.id,
+    status: review.status || 'pending',
+    gameId: review.gameId,
+    gameTitle: review.gameTitle || game.title || 'Game Review',
+    gameImage: review.gameImage || game.imageUrl || '',
+    gameThumb: game.thumb || 'camp',
+    reviewerName: hpReviewUserName(review.userId) || review.reviewerName || review.userName || review.displayName || 'User',
+    submittedAt: createdAt,
+    rating,
+    publicAverage: Number(game.averageRating || rating || 0),
+    publicRatingCount: Number(game.ratingCount || 0),
+    originalReviewText: originalText,
+    moderatedReviewText: moderatedText,
+    media
+  };
+}
+
+function hpSubmittedRatingText(rating = 0) {
+  const value = Number(rating || 0);
+  if (!value) return 'No rating';
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function hpReviewUserName(userId) {
+  const user = state.users.find(u => u.id === userId);
+  return user ? (user.fullName || user.email || 'User') : '';
+}
+
+function hpBuildReviewMedia(count, game = {}) {
+  const total = Math.max(0, Number(count || 0));
+  return Array.from({ length: total }, (_, index) => ({
+    id: `media-${index + 1}`,
+    type: index === total - 1 && total > 1 ? 'video' : 'image',
+    thumbnailUrl: game.imageUrl || '',
+    url: game.imageUrl || '',
+    status: 'pending',
+    durationSeconds: index === total - 1 && total > 1 ? 18 : undefined
+  }));
+}
+
+function renderModerateReviewsList() {
+  if (!canModerateReviews()) return renderModerationAccessDenied();
+
+  const reviews = hpReviewModerationList();
+  return `<div class="app-frame hp-mod-frame"><header class="hp-mod-header">${headerBackButton()}${headerBrand()}<span aria-hidden="true"></span></header><main class="hp-mod-page"><h1 class="hp-mod-page-title">Moderate Reviews</h1>${reviews.length ? `<section class="hp-mod-review-list" aria-label="Pending reviews">${reviews.map(renderModerationReviewCard).join('')}</section>` : renderModerationEmptyState()}</main>${renderBottomNav()}</div>`;
+}
+
+function renderModerationEmptyState() {
+  return `<section class="hp-mod-empty"><h2>No reviews waiting right now.</h2><p>New reviews will appear here when users submit them.</p><button class="btn btn-secondary" data-go="/app/account">Back to Account</button></section>`;
+}
+
+function renderModerationReviewCard(review) {
+  const mediaCounts = hpCountReviewMedia(review);
+  return `<article class="hp-mod-review-card" data-open-moderation-review="${escapeHTML(review.id)}"><div class="hp-mod-card-image">${renderModerationReviewImage(review)}</div><div class="hp-mod-card-body"><div class="hp-mod-card-title-row"><h2>${escapeHTML(review.gameTitle)}</h2><span class="hp-mod-pending-badge">Pending</span></div><div class="hp-mod-card-rating" aria-label="Submitted user rating ${review.rating} out of 5">${hpModerationStars(review.rating)}<span>${hpSubmittedRatingText(review.rating)}</span></div><p class="hp-mod-card-meta">Submitted by ${escapeHTML(review.reviewerName)} <span aria-hidden="true">•</span> ${hpFormatModerationDate(review.submittedAt)}</p><p class="hp-mod-card-snippet">${escapeHTML(review.moderatedReviewText || review.originalReviewText || 'No written review submitted.')}</p><div class="hp-mod-card-footer"><div class="hp-mod-media-counts"><span>${hpModerationIcon('image')}${mediaCounts.images} ${mediaCounts.images === 1 ? 'image' : 'images'}</span><span aria-hidden="true">•</span><span>${hpModerationIcon('video')}${mediaCounts.videos} ${mediaCounts.videos === 1 ? 'video' : 'videos'}</span></div><button class="hp-open-review-button" type="button" data-go="/app/account/moderate-reviews/${escapeHTML(review.id)}" aria-label="Open review for ${escapeHTML(review.gameTitle)}">Open ${hpModerationIcon('chevron')}</button></div></div></article>`;
+}
+
+function renderModerationReviewImage(review) {
+  const game = state.games.find(g => g.id === review.gameId) || {};
+  if (review.gameImage || game.imageUrl) {
+    return `<img src="${escapeHTML(review.gameImage || game.imageUrl)}" alt="${escapeHTML(review.gameTitle)} review image">`;
+  }
+  return `<div class="hp-mod-thumb hp-mod-thumb-${escapeHTML(review.gameThumb || 'camp')}"><span>${escapeHTML(review.gameTitle)}</span></div>`;
+}
+
+function renderModerationReviewDetail(reviewId) {
+  if (!canModerateReviews()) return renderModerationAccessDenied();
+
+  const storedReview = state.gameReviews.find(review => review.id === reviewId);
+  if (!storedReview) {
+    return `<div class="app-frame hp-mod-detail-frame"><header class="hp-mod-header">${headerBackButton()}${headerBrand()}<span aria-hidden="true"></span></header><main class="hp-mod-detail-page"><section class="hp-mod-empty"><h1>Review not found</h1><button class="btn btn-primary" data-go="/app/account/moderate-reviews">Back to reviews</button></section></main></div>`;
+  }
+
+  const review = hpNormalizeModerationReview(storedReview);
+  const media = (review.media || []).filter(item => item.status !== 'removed_by_staff');
+  const reviewText = review.moderatedReviewText || review.originalReviewText || '';
+
+  return `<div class="app-frame hp-mod-detail-frame"><header class="hp-mod-header">${headerBackButton()}${headerBrand()}<span aria-hidden="true"></span></header><main class="hp-mod-detail-page"><section class="hp-mod-meta-row"><span class="hp-mod-status-pill">Pending review</span><span class="hp-mod-meta-text">Submitted by ${escapeHTML(review.reviewerName)} <span aria-hidden="true">•</span> ${hpFormatModerationDate(review.submittedAt)}</span></section><h1 class="hp-mod-game-title">${escapeHTML(review.gameTitle)}</h1><section class="hp-locked-rating" aria-label="User submitted rating: ${review.rating} out of 5. This rating is locked and cannot be changed."><div class="hp-locked-label">User rating <span>(locked)</span> ${hpModerationIcon('lock')}</div><div class="hp-locked-row"><div class="hp-locked-stars">${hpModerationStars(review.rating, 'large')}</div><div class="hp-locked-submitted"><strong>${hpSubmittedRatingText(review.rating)}</strong> out of 5</div></div><p>This rating was submitted by the user and cannot be changed.</p></section><form id="moderation-detail-form" data-review-id="${escapeHTML(review.id)}"><section class="hp-moderation-review-section"><h2>Review</h2><p>You can remove objectionable wording.</p><div class="hp-review-edit-box"><textarea name="moderatedReviewText" maxlength="1000">${escapeHTML(reviewText)}</textarea><span class="hp-review-edit-count">${reviewText.length} / 1000</span></div></section><section class="hp-submitted-media"><h2>Submitted media (${media.length})</h2>${media.length ? `<div class="hp-submitted-media-grid">${media.map((item, index) => renderModerationMediaThumb(review.id, item, index)).join('')}</div>` : `<p class="hp-no-media">No images or videos were submitted with this review.</p>`}</section><button class="hp-review-approve" type="button" data-approve-moderation-review="${escapeHTML(review.id)}">${hpModerationIcon('check')} Approve</button><button class="hp-review-reject" type="button" data-reject-moderation-review="${escapeHTML(review.id)}">${hpModerationIcon('x')} Reject</button></form></main></div>`;
+}
+
+function renderModerationMediaThumb(reviewId, item, index) {
+  const isVideo = item.type === 'video';
+  const imageUrl = item.thumbnailUrl || item.url || '';
+  const mediaLabel = isVideo ? 'video' : 'image';
+  const visual = imageUrl ? `<img src="${escapeHTML(imageUrl)}" alt="Submitted ${mediaLabel} ${index + 1}">` : `<div class="hp-media-thumb-fallback">${hpModerationIcon(mediaLabel)}</div>`;
+  return `<article class="hp-media-thumb">${visual}<button class="hp-media-thumb-delete" type="button" data-remove-moderation-media="${escapeHTML(reviewId)}:${escapeHTML(item.id)}" aria-label="Remove submitted ${mediaLabel} ${index + 1}">×</button>${isVideo ? `<span class="hp-media-thumb-play">${hpModerationIcon('play')}</span><span class="hp-media-thumb-duration">${hpFormatDuration(item.durationSeconds || 18)}</span>` : ''}</article>`;
+}
+
+function hpCountReviewMedia(review) {
+  const media = (review.media || []).filter(item => item.status !== 'removed_by_staff');
+  return {
+    images: media.filter(item => item.type !== 'video').length,
+    videos: media.filter(item => item.type === 'video').length
+  };
+}
+
+function hpModerationStars(rating = 0, variant = 'small') {
+  const value = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
+  return `<span class="hp-mod-stars hp-mod-stars-${variant}">${[1,2,3,4,5].map(i => `<span class="${i <= value ? 'filled' : 'empty'}">★</span>`).join('')}</span>`;
+}
+
+function hpFormatModerationDate(dateValue) {
+  const date = new Date(dateValue || Date.now());
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function hpFormatDuration(seconds) {
+  const total = Math.max(0, Number(seconds) || 0);
+  const minutes = Math.floor(total / 60);
+  const secs = String(total % 60).padStart(2, '0');
+  return `${minutes}:${secs}`;
+}
+
+function hpRemoveModerationMedia(payload) {
+  const [reviewId, mediaId] = String(payload).split(':');
+  const review = state.gameReviews.find(item => item.id === reviewId);
+  if (!review) return;
+
+  if (!window.confirm('Remove this media?\nThis image/video will not appear publicly if the review is approved.')) return;
+
+  const game = state.games.find(g => g.id === review.gameId) || {};
+  review.media = Array.isArray(review.media) ? review.media : hpBuildReviewMedia(review.mediaCount || 0, game);
+  const media = review.media.find(item => item.id === mediaId);
+  if (media) {
+    media.status = 'removed_by_staff';
+    media.removedBy = currentUser()?.id || '';
+    media.removedAt = new Date().toISOString();
+  }
+  saveState();
+  render();
+}
+
+function hpApproveModerationReview(reviewId) {
+  if (!canModerateReviews()) return;
+
+  const review = state.gameReviews.find(item => item.id === reviewId);
+  const form = byId('moderation-detail-form');
+  if (!review || !form) return;
+
+  const moderatedText = String(new FormData(form).get('moderatedReviewText') || '').trim();
+  if (!moderatedText) {
+    toast('Review text cannot be empty.');
+    return;
+  }
+
+  if (!window.confirm('Approve this review?\nThe edited text and remaining media will become public.')) return;
+
+  review.moderatedReviewText = moderatedText;
+  review.text = moderatedText;
+  review.status = 'approved';
+  review.moderatedBy = currentUser()?.id || '';
+  review.moderatedAt = new Date().toISOString();
+  review.media = Array.isArray(review.media) ? review.media : hpBuildReviewMedia(review.mediaCount || 0, state.games.find(g => g.id === review.gameId));
+
+  saveState();
+  toast('Review approved.');
+  go('/app/account/moderate-reviews');
+}
+
+function hpRejectModerationReview(reviewId) {
+  if (!canModerateReviews()) return;
+
+  const review = state.gameReviews.find(item => item.id === reviewId);
+  if (!review) return;
+
+  if (!window.confirm('Reject this review in its entirety?\nThis review will not appear publicly.')) return;
+
+  review.status = 'rejected';
+  review.moderatedBy = currentUser()?.id || '';
+  review.moderatedAt = new Date().toISOString();
+  hpRemoveRejectedRatingFromAverage(review);
+  saveState();
+  toast('Review rejected.');
+  go('/app/account/moderate-reviews');
+}
+
+function hpRemoveRejectedRatingFromAverage(review) {
+  const game = state.games.find(g => g.id === review.gameId);
+  const rating = Number(review.rating || 0);
+  if (!game || !rating || Number(game.ratingCount || 0) <= 0) return;
+
+  const count = Number(game.ratingCount || 0);
+  const total = Number(game.averageRating || 0) * count;
+  const nextCount = Math.max(0, count - 1);
+  game.ratingCount = nextCount;
+  game.averageRating = nextCount ? Math.round(((total - rating) / nextCount) * 10) / 10 : 0;
+
+  state.userGameRatings = state.userGameRatings || {};
+  const key = `${review.userId || ''}:${review.gameId || ''}`;
+  if (state.userGameRatings[key]) delete state.userGameRatings[key];
+}
+
+function hpUpdateModerationCounter() {
+  const form = byId('moderation-detail-form');
+  if (!form) return;
+  const textarea = form.querySelector('textarea[name="moderatedReviewText"]');
+  const counter = form.querySelector('.hp-review-edit-count');
+  if (!textarea || !counter) return;
+  counter.textContent = `${textarea.value.length} / 1000`;
+}
+
+function hpModerationIcon(name) {
+  const common = 'width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+  const icons = {
+    chevron: `<svg ${common}><path d="m9 18 6-6-6-6"></path></svg>`,
+    image: `<svg ${common}><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>`,
+    video: `<svg ${common}><path d="m16 13 5 3V8l-5 3"></path><rect x="3" y="6" width="13" height="12" rx="2"></rect></svg>`,
+    lock: `<svg ${common}><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>`,
+    check: `<svg ${common}><circle cx="12" cy="12" r="9"></circle><path d="m8 12 2.5 2.5L16 9"></path></svg>`,
+    x: `<svg ${common}><circle cx="12" cy="12" r="9"></circle><path d="m9 9 6 6"></path><path d="m15 9-6 6"></path></svg>`,
+    play: `<svg ${common} fill="currentColor" stroke="currentColor"><path d="M9 7v10l8-5-8-5Z"></path></svg>`
+  };
+  return icons[name] || '';
+}
+// HOORAPLAYBOOK_REVIEW_MODERATION_V2_END
+
 function renderAccount() {
   const u = currentUser();
   const myBatches = (state.importBatches || []).filter(b => b.uploadedBy === u.id).slice(-3).reverse();
   const batchCard = myBatches.length ? `<div class="card" style="padding:18px"><h2>Recent Batch Uploads</h2>${myBatches.map(b=>`<p class="help"><strong>${b.importedCount}/${b.fileCount}</strong> imported · ${b.publishMode === 'publish_now' ? 'published' : 'queued for moderation'}${b.failedCount ? ` · ${b.failedCount} failed` : ''}</p>`).join('')}</div>` : '';
-  return `<main class="content"><section class="hero-card"><h1>Account</h1><p>${u.fullName} · ${u.email}</p><div class="magic-row"><span class="magic-chip">Role: ${u.role}</span><span class="magic-chip">Plan: ${u.plan}</span><span class="magic-chip">Access: ${hasProAccess(u)?'PRO active':'Free'}</span></div></section><div class="game-list"><div class="card" style="padding:18px"><h2>My Plans</h2><p class="help">View, create, modify, rename, and delete your saved plans.</p><button class="btn btn-secondary full" data-go="/app/plan">Open My Plans</button></div><div class="card" style="padding:18px"><h2>Redeem Coupon</h2><form id="redeem-form" class="form-grid"><input class="input" name="code" maxlength="16" placeholder="16-character code"><button class="btn btn-primary full">Redeem one free month</button></form></div>${batchCard}<button class="btn btn-secondary full" data-go="/pricing">Upgrade / Manage Billing</button>${isStaff(u)?'<button class="btn btn-dark full" data-go="/admin">Admin Panel</button>':''}<button class="btn btn-danger full" data-logout>Log out</button><p class="app-version">Version ${APP_VERSION}</p></div></main>`;
+  const moderationCard = isStaff(u) ? `<div class="card" style="padding:18px"><h2>Moderate Reviews</h2><p class="help">Approve, reject, or clean up user-submitted game reviews before they become public.</p><button class="btn btn-secondary full" data-go="/app/account/moderate-reviews">Open Moderate Reviews</button></div>` : '';
+  return `<main class="content"><section class="hero-card"><h1>Account</h1><p>${u.fullName} · ${u.email}</p><div class="magic-row"><span class="magic-chip">Role: ${u.role}</span><span class="magic-chip">Plan: ${u.plan}</span><span class="magic-chip">Access: ${hasProAccess(u)?'PRO active':'Free'}</span></div></section><div class="game-list"><div class="card" style="padding:18px"><h2>My Plans</h2><p class="help">View, create, modify, rename, and delete your saved plans.</p><button class="btn btn-secondary full" data-go="/app/plan">Open My Plans</button></div>${moderationCard}<div class="card" style="padding:18px"><h2>Redeem Coupon</h2><form id="redeem-form" class="form-grid"><input class="input" name="code" maxlength="16" placeholder="16-character code"><button class="btn btn-primary full">Redeem one free month</button></form></div>${batchCard}<button class="btn btn-secondary full" data-go="/pricing">Upgrade / Manage Billing</button>${isStaff(u)?'<button class="btn btn-dark full" data-go="/admin">Admin Panel</button>':''}<button class="btn btn-danger full" data-logout>Log out</button><p class="app-version">Version ${APP_VERSION}</p></div></main>`;
 }
 
 function renderAdminRoute() {
@@ -1064,6 +1321,11 @@ function bindEvents() {
   document.querySelectorAll('[data-review-media-input]').forEach(el => el.addEventListener('change', e => handleReviewMediaChange(e.target))); 
   byId('leave-review-form')?.addEventListener('submit', handleLeaveReviewSubmit);
   byId('bible-suggestion-form')?.addEventListener('submit', handleBibleSuggestion);
+  document.querySelectorAll('[data-open-moderation-review]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('button,a')) return; go(`/app/account/moderate-reviews/${el.dataset.openModerationReview}`); }));
+  document.querySelectorAll('[data-remove-moderation-media]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); hpRemoveModerationMedia(el.dataset.removeModerationMedia); }));
+  document.querySelectorAll('[data-approve-moderation-review]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); hpApproveModerationReview(el.dataset.approveModerationReview); }));
+  document.querySelectorAll('[data-reject-moderation-review]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); hpRejectModerationReview(el.dataset.rejectModerationReview); }));
+  byId('moderation-detail-form')?.addEventListener('input', hpUpdateModerationCounter);
 }
 
 function toggleFilter(f) { state.filters = state.filters.includes(f) ? state.filters.filter(x=>x!==f) : [...state.filters, f]; saveState(); render(); }
