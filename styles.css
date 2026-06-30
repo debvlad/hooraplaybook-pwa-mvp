@@ -1671,3 +1671,55 @@ button.plan-game-remove-x:focus-visible,
     width: 100% !important;
   }
 }
+
+/* HOORAPLAYBOOK_DESKTOP_WIDTH_CONSISTENCY_V1
+   Purpose: prevent the app from shrinking on desktop when opening a game detail page.
+   Scope: desktop width only. Mobile layout remains unchanged.
+*/
+:root {
+  --hp-desktop-app-width: 560px;
+}
+
+/* Keep all main app frames at the same desktop width. */
+@media (min-width: 760px) {
+  .app-frame,
+  .find-shell,
+  .hp-game-detail-frame,
+  .game-page-frame,
+  .fullscreen-page {
+    width: min(var(--hp-desktop-app-width), 100vw) !important;
+    max-width: var(--hp-desktop-app-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* The redesigned individual game page must not force the whole app back to 430px. */
+  .hp-game-detail-frame {
+    max-width: var(--hp-desktop-app-width) !important;
+  }
+
+  .hp-game-detail-frame .hp-game-page {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Keep the universal footer aligned with the wider desktop app width. */
+  .bottom-nav,
+  .bottom-nav.bottom-nav-4,
+  .app-frame .bottom-nav,
+  .find-shell .bottom-nav,
+  .hp-game-detail-frame .bottom-nav {
+    width: 100% !important;
+    max-width: var(--hp-desktop-app-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* Defensive rule for desktop browsers that render the game detail frame from older cached CSS. */
+@media (min-width: 760px) {
+  body .hp-game-detail-frame[style],
+  body .hp-game-detail-frame {
+    width: min(var(--hp-desktop-app-width), 100vw) !important;
+  }
+}
