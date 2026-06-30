@@ -901,9 +901,83 @@ function reviewIcon(name) {
 }
 // HOORAPLAYBOOK_LEAVE_REVIEW_AFTER_VOTE_V1_END
 
+// HOORAPLAYBOOK_APPROVED_REVIEW_PUBLISH_FIX_V8_START
+function hpPublishedReviewsForGame(gameId) {
+  const seededReviews = (Array.isArray(state.ratings) ? state.ratings : [])
+    .filter(review => review.gameId === gameId && review.reviewStatus === 'published');
+
+  const approvedModeratedReviews = (Array.isArray(state.gameReviews) ? state.gameReviews : [])
+    .filter(review => review.gameId === gameId && review.status === 'approved')
+    .map(hpPublicReviewFromModeration);
+
+  const byKey = new Map();
+  [...seededReviews, ...approvedModeratedReviews].forEach(review => {
+    const key = review.moderationReviewId
+      ? `moderation:${review.moderationReviewId}`
+      : `seeded:${review.id || `${review.userId || 'user'}:${review.gameId || gameId}:${review.createdAt || ''}`}`;
+
+    if (!byKey.has(key)) byKey.set(key, review);
+  });
+
+  return [...byKey.values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
+function hpPublicReviewFromModeration(review = {}) {
+  const normalized = typeof hpNormalizeModerationReview === 'function' ? hpNormalizeModerationReview(review) : review;
+  const visibleMedia = hpVisibleModerationMedia(normalized);
+
+  return {
+    id: `public-${review.id || makeId('review')}`,
+    moderationReviewId: review.id || '',
+    source: 'moderation',
+    userId: review.userId || '',
+    gameId: review.gameId || '',
+    rating: Number(normalized.rating || review.rating || 0),
+    reviewText: normalized.moderatedReviewText || normalized.text || normalized.originalReviewText || review.moderatedReviewText || review.text || review.originalReviewText || '',
+    createdAt: review.moderatedAt || normalized.moderatedAt || normalized.submittedAt || normalized.createdAt || review.submittedAt || review.createdAt || new Date().toISOString(),
+    reviewStatus: 'published',
+    mediaStatus: 'approved',
+    media: visibleMedia
+  };
+}
+
+function hpVisibleModerationMedia(review = {}) {
+  return (Array.isArray(review.media) ? review.media : [])
+    .filter(item => item && item.status !== 'removed_by_staff')
+    .map(item => ({ ...item, mediaStatus: 'approved' }));
+}
+
+function hpPublishApprovedModerationReview(review) {
+  if (!review || !review.id) return;
+
+  state.ratings = Array.isArray(state.ratings) ? state.ratings : [];
+  const publishedReview = hpPublicReviewFromModeration(review);
+  const existing = state.ratings.find(item =>
+    item.moderationReviewId === review.id ||
+    (item.source === 'moderation' && item.gameId === review.gameId && item.userId === review.userId)
+  );
+
+  if (existing) {
+    Object.assign(existing, publishedReview, { id: existing.id || publishedReview.id });
+  } else {
+    state.ratings.push(publishedReview);
+  }
+}
+
+function hpUnpublishModeratedReview(review) {
+  if (!review) return;
+
+  state.ratings = Array.isArray(state.ratings) ? state.ratings : [];
+  state.ratings = state.ratings.filter(item =>
+    item.moderationReviewId !== review.id &&
+    !(item.source === 'moderation' && item.gameId === review.gameId && item.userId === review.userId)
+  );
+}
+// HOORAPLAYBOOK_APPROVED_REVIEW_PUBLISH_FIX_V8_END
+
 function renderReviewsScreen(id) {
   const g = state.games.find(x=>x.id===id); if (!g) return '';
-  const reviews = state.ratings.filter(r=>r.gameId===id && r.reviewStatus==='published');
+  const reviews = hpPublishedReviewsForGame(id);
   return `<div class="app-frame game-page-frame"><header class="topbar light-header">${headerBackButton()}<div class="topbar-title">REVIEWS</div><div></div></header><main class="content"><div class="card review-summary"><div class="review-score">${g.averageRating.toFixed(1)}</div><div>${stars(g.averageRating)}<div class="review-meta">${g.ratingCount} ratings and ${reviews.filter(r=>r.reviewText).length} reviews</div></div></div><button class="btn btn-primary full" style="margin:18px 0" data-go="/app/games/${id}/rate">Rate This Game</button><section><h2 style="text-transform:uppercase">Reviews:</h2>${reviews.map(renderReviewRow).join('') || '<p class="help">No written reviews yet.</p>'}</section></main></div>`;
 }
 function renderReviewRow(r) { const u = state.users.find(x=>x.id===r.userId) || {fullName:'HooraPlaybook User'}; return `<div class="review-row"><div class="avatar">${initials(u.fullName)}</div><div><div class="review-name">${u.fullName}</div><div>${stars(r.rating,true)} <span class="review-meta">${new Date(r.createdAt).toLocaleString()}</span></div>${r.reviewText?`<p class="help" style="font-size:15px">${escapeHTML(r.reviewText)}</p>`:''}</div></div>`; }
@@ -1186,6 +1260,7 @@ function hpApproveModerationReview(reviewId) {
   review.moderatedAt = new Date().toISOString();
   review.media = Array.isArray(review.media) ? review.media : hpBuildReviewMedia(review.mediaCount || 0, state.games.find(g => g.id === review.gameId));
 
+  hpPublishApprovedModerationReview(review);
   saveState();
   toast('Review approved.');
   go('/app/account/moderate-reviews');
@@ -1202,6 +1277,7 @@ function hpRejectModerationReview(reviewId) {
   review.status = 'rejected';
   review.moderatedBy = currentUser()?.id || '';
   review.moderatedAt = new Date().toISOString();
+  hpUnpublishModeratedReview(review);
   hpRemoveRejectedRatingFromAverage(review);
   saveState();
   toast('Review rejected.');
