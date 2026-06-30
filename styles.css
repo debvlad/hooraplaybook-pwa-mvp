@@ -2783,3 +2783,69 @@ button.plan-game-remove-x:focus-visible,
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* HOORAPLAYBOOK_MODERATION_MEDIA_DOWNLOAD_V12
+   Scope: moderation submitted-media thumbnails only.
+*/
+.hp-media-thumb-download {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  padding: 0;
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  color: inherit;
+  text-align: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hp-media-thumb-download img,
+.hp-media-thumb-download .hp-media-thumb-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.hp-media-thumb-download:focus-visible {
+  outline: 3px solid rgba(93, 139, 63, 0.35);
+  outline-offset: 2px;
+}
+
+.hp-media-thumb-download-badge {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(17, 18, 47, 0.72);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.hp-media-thumb-download-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.hp-media-thumb:hover .hp-media-thumb-download-badge,
+.hp-media-thumb:focus-within .hp-media-thumb-download-badge {
+  opacity: 1;
+}
+
+.hp-media-thumb-delete {
+  z-index: 5;
+}
+
+.hp-media-thumb-play,
+.hp-media-thumb-duration {
+  pointer-events: none;
+}

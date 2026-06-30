@@ -989,28 +989,40 @@ async function hpReviewMediaFromFiles(files = [], game = {}) {
   for (const [index, file] of files.entries()) {
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
+    const mediaId = `media-${Date.now().toString(36)}-${index}`;
+    const localBlobKey = `review-media-${mediaId}`;
+
+    let blobStored = false;
+    try {
+      await hpStoreReviewMediaBlob(localBlobKey, file);
+      blobStored = true;
+    } catch (error) {
+      console.warn('Could not store original review media blob locally.', error);
+    }
 
     if (isImage) {
       const thumbnailUrl = await hpCreateCompressedImagePreview(file);
       media.push({
-        id: `media-${Date.now().toString(36)}-${index}`,
+        id: mediaId,
         type: 'image',
         name: file.name || `Image ${index + 1}`,
         size: file.size || 0,
-        mimeType: file.type || 'image',
+        mimeType: file.type || 'image/jpeg',
         thumbnailUrl,
         url: thumbnailUrl,
+        localBlobKey: blobStored ? localBlobKey : '',
         status: 'pending'
       });
     } else if (isVideo) {
       media.push({
-        id: `media-${Date.now().toString(36)}-${index}`,
+        id: mediaId,
         type: 'video',
         name: file.name || `Video ${index + 1}`,
         size: file.size || 0,
-        mimeType: file.type || 'video',
+        mimeType: file.type || 'video/mp4',
         thumbnailUrl: game.imageUrl || '',
         url: '',
+        localBlobKey: blobStored ? localBlobKey : '',
         status: 'pending',
         durationSeconds: 0
       });
@@ -1389,8 +1401,178 @@ function renderModerationMediaThumb(reviewId, item, index) {
   const imageUrl = item.thumbnailUrl || item.url || '';
   const mediaLabel = isVideo ? 'video' : 'image';
   const visual = imageUrl ? `<img src="${escapeHTML(imageUrl)}" alt="Submitted ${mediaLabel} ${index + 1}">` : `<div class="hp-media-thumb-fallback">${hpModerationIcon(mediaLabel)}</div>`;
-  return `<article class="hp-media-thumb">${visual}<button class="hp-media-thumb-delete" type="button" data-remove-moderation-media="${escapeHTML(reviewId)}:${escapeHTML(item.id)}" aria-label="Remove submitted ${mediaLabel} ${index + 1}">×</button>${isVideo ? `<span class="hp-media-thumb-play">${hpModerationIcon('play')}</span><span class="hp-media-thumb-duration">${hpFormatDuration(item.durationSeconds || 18)}</span>` : ''}</article>`;
+  return `<article class="hp-media-thumb"><button class="hp-media-thumb-download" type="button" data-download-moderation-media="${escapeHTML(reviewId)}:${escapeHTML(item.id)}" aria-label="Download submitted ${mediaLabel} ${index + 1}">${visual}${isVideo ? `<span class="hp-media-thumb-play">${hpModerationIcon('play')}</span><span class="hp-media-thumb-duration">${hpFormatDuration(item.durationSeconds || 18)}</span>` : ''}<span class="hp-media-thumb-download-badge" aria-hidden="true">${hpModerationIcon('download')}</span></button><button class="hp-media-thumb-delete" type="button" data-remove-moderation-media="${escapeHTML(reviewId)}:${escapeHTML(item.id)}" aria-label="Remove submitted ${mediaLabel} ${index + 1}">×</button></article>`;
 }
+
+// HOORAPLAYBOOK_MODERATION_MEDIA_DOWNLOAD_V12_START
+async function hpDownloadModerationMedia(payload) {
+  if (!canModerateReviews()) return;
+
+  const [reviewId, mediaId] = String(payload || '').split(':');
+  const review = (Array.isArray(state.gameReviews) ? state.gameReviews : []).find(item => item.id === reviewId);
+  if (!review) {
+    toast('Review media was not found.');
+    return;
+  }
+
+  const media = (Array.isArray(review.media) ? review.media : []).find(item => item.id === mediaId);
+  if (!media || media.status === 'removed_by_staff') {
+    toast('This media is no longer available.');
+    return;
+  }
+
+  try {
+    const blob = await hpBlobForReviewMedia(media);
+    const filename = hpReviewMediaDownloadName(review, media);
+    if (blob) {
+      hpDownloadBlob(blob, filename);
+      return;
+    }
+
+    const fallbackUrl = media.url || media.thumbnailUrl || '';
+    if (fallbackUrl) {
+      hpDownloadUrl(fallbackUrl, filename);
+      return;
+    }
+
+    toast('This media file is not available for download.');
+  } catch (error) {
+    console.warn('Could not download moderation media.', error);
+    toast('Could not download this media.');
+  }
+}
+
+async function hpBlobForReviewMedia(media = {}) {
+  if (media.localBlobKey) {
+    const storedBlob = await hpGetReviewMediaBlob(media.localBlobKey);
+    if (storedBlob) return storedBlob;
+  }
+
+  const source = media.url || media.thumbnailUrl || '';
+  if (!source) return null;
+
+  if (source.startsWith('data:')) return hpDataUrlToBlob(source, media.mimeType || '');
+  return null;
+}
+
+function hpDownloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  hpDownloadUrl(url, filename);
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+}
+
+function hpDownloadUrl(url, filename) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || 'review-media';
+  link.rel = 'noopener';
+  link.target = '_blank';
+  document.body.appendChild(link);
+
+  try {
+    link.click();
+  } finally {
+    link.remove();
+  }
+
+  toast('Download started.');
+}
+
+function hpReviewMediaDownloadName(review = {}, media = {}) {
+  const game = state.games.find(g => g.id === review.gameId) || {};
+  const base = hpSafeFileName(`${game.title || review.gameTitle || 'review'}-${media.type || 'media'}-${media.id || Date.now()}`);
+  const ext = hpReviewMediaExtension(media);
+  return `${base}.${ext}`;
+}
+
+function hpReviewMediaExtension(media = {}) {
+  const name = String(media.name || '');
+  const match = name.match(/\.([a-z0-9]{2,5})$/i);
+  if (match) return match[1].toLowerCase();
+
+  const mime = String(media.mimeType || '').toLowerCase();
+  if (mime.includes('png')) return 'png';
+  if (mime.includes('webp')) return 'webp';
+  if (mime.includes('gif')) return 'gif';
+  if (mime.includes('heic')) return 'heic';
+  if (mime.includes('quicktime')) return 'mov';
+  if (mime.includes('mp4')) return 'mp4';
+  if (mime.includes('webm')) return 'webm';
+  if (media.type === 'video') return 'mp4';
+  return 'jpg';
+}
+
+function hpSafeFileName(value = 'review-media') {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 90) || 'review-media';
+}
+
+function hpDataUrlToBlob(dataUrl, fallbackMime = '') {
+  const parts = String(dataUrl).split(',');
+  if (parts.length < 2) return null;
+  const header = parts[0] || '';
+  const mime = (header.match(/data:([^;]+)/) || [])[1] || fallbackMime || 'application/octet-stream';
+  const binary = atob(parts.slice(1).join(','));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+function hpOpenReviewMediaDb() {
+  return new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) {
+      reject(new Error('IndexedDB is not available.'));
+      return;
+    }
+
+    const request = indexedDB.open('hooraplaybook-review-media', 1);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('media')) db.createObjectStore('media');
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Could not open review media database.'));
+  });
+}
+
+async function hpStoreReviewMediaBlob(key, blob) {
+  const db = await hpOpenReviewMediaDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('media', 'readwrite');
+    tx.objectStore('media').put(blob, key);
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error || new Error('Could not store review media blob.'));
+    };
+  });
+}
+
+async function hpGetReviewMediaBlob(key) {
+  const db = await hpOpenReviewMediaDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('media', 'readonly');
+    const request = tx.objectStore('media').get(key);
+
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error || new Error('Could not read review media blob.'));
+    tx.oncomplete = () => db.close();
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error || new Error('Could not read review media blob.'));
+    };
+  });
+}
+// HOORAPLAYBOOK_MODERATION_MEDIA_DOWNLOAD_V12_END
 
 function hpCountReviewMedia(review) {
   const media = (review.media || []).filter(item => item.status !== 'removed_by_staff');
@@ -1513,6 +1695,7 @@ function hpModerationIcon(name) {
   const icons = {
     chevron: `<svg ${common}><path d="m9 18 6-6-6-6"></path></svg>`,
     image: `<svg ${common}><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>`,
+    download: `<svg ${common}><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>`,
     video: `<svg ${common}><path d="m16 13 5 3V8l-5 3"></path><rect x="3" y="6" width="13" height="12" rx="2"></rect></svg>`,
     lock: `<svg ${common}><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>`,
     check: `<svg ${common}><circle cx="12" cy="12" r="9"></circle><path d="m8 12 2.5 2.5L16 9"></path></svg>`,
@@ -1598,6 +1781,7 @@ function bindEvents() {
   byId('leave-review-form')?.addEventListener('submit', handleLeaveReviewSubmit);
   byId('bible-suggestion-form')?.addEventListener('submit', handleBibleSuggestion);
   document.querySelectorAll('[data-open-moderation-review]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('button,a')) return; go(`/app/account/moderate-reviews/${el.dataset.openModerationReview}`); }));
+  document.querySelectorAll('[data-download-moderation-media]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); hpDownloadModerationMedia(el.dataset.downloadModerationMedia); }));
   document.querySelectorAll('[data-remove-moderation-media]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); hpRemoveModerationMedia(el.dataset.removeModerationMedia); }));
   document.querySelectorAll('[data-approve-moderation-review]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); hpApproveModerationReview(el.dataset.approveModerationReview); }));
   document.querySelectorAll('[data-reject-moderation-review]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); hpRejectModerationReview(el.dataset.rejectModerationReview); }));
