@@ -129,3 +129,36 @@ Stabilize plan card behavior after the first live `3fd5a76` revision so users ca
 - Do not change unrelated plan screens.
 - Do not change unrelated Account/Favorites/Icebreakers pages.
 - Preserve all locked plan creation, remove, reorder, and Find Games behaviors.
+
+
+## 2026-06-30 Sprint Update — Hide My Plans Drag Handles V2 Verified
+
+### Completed Locally
+- P3 — Hide Drag Handles on Main My Plans Page
+  - V1 failed and should not be committed.
+  - V1 broke My Plans card layout on desktop and mobile.
+  - V2 restored My Plans layout on desktop.
+  - V2 restored My Plans layout on mobile.
+  - V2 hides drag handles on main My Plans page.
+  - V2 keeps Modify Plan drag handles working.
+  - V2 keeps Modify Plan drag sorting working.
+  - V2 keeps red X remove behavior working.
+  - V2 preserves Find Games redesign.
+  - V2 preserves Game Page redesign.
+  - V2 preserves universal light footer.
+  - V2 preserves desktop width consistency.
+
+### Recommended Next Focus
+- P3 — Replace Find Game Controller Icon with Magnifying Glass Icon
+
+### Do Not Touch
+- Do not reintroduce My Plans drag handles on the main My Plans page.
+- Do not collapse or squeeze My Plans game rows.
+- Do not let red X remove overlap text unreadably.
+- Do not break Modify Plan drag handles.
+- Do not break Modify Plan drag sorting.
+- Do not break red X remove behavior.
+- Do not break Find Games redesign.
+- Do not break Game Page redesign.
+- Do not break universal light footer.
+- Do not break desktop width consistency.

@@ -292,3 +292,51 @@
   - Existing Add to Plan picker and mobile plan creation are not broken.
   - Existing My Plans red X remove is not broken.
   - Existing Modify Plan drag sorting is not broken.
+
+
+## Ticket Update / Done Locally
+
+### P3 — Hide Drag Handles on Main My Plans Page
+
+- Type: UI/UX
+- Area: My Plans / Plan Cards
+- Status: Done
+- Deployment Status: Not deployed yet
+- Commit: Not provided in PM note
+- Description:
+  Hide drag handles on the main `My Plans` page while preserving Modify Plan drag handles, Modify Plan drag sorting, red X remove behavior, and normal My Plans card layout.
+- V1 Test Result:
+  - Failed.
+  - V1 broke the My Plans page layout on desktop and mobile.
+  - Game rows inside saved plan cards collapsed into a very narrow text column.
+  - Game titles and descriptions became squeezed and hard to read.
+  - Red X remove button floated over the squeezed text area.
+  - V1 should not be committed.
+- Corrective Subtask:
+  - Install and test V2 layout fix.
+- V2 Verified Result:
+  - V2 restored My Plans layout on desktop.
+  - V2 restored My Plans layout on mobile.
+  - Drag handles are hidden on the main My Plans page.
+  - Modify Plan drag handles still work.
+  - Modify Plan drag sorting still works.
+  - Red X remove behavior still works.
+  - Find Games redesign still works.
+  - Game Page redesign still works.
+  - Universal light footer still works.
+  - Desktop width consistency still works.
+- Acceptance Criteria:
+  - Main `My Plans` page does not display drag handles on game cards.
+  - My Plans game rows do not collapse or squeeze.
+  - Game titles and descriptions remain readable.
+  - Red X remove does not overlap text unreadably.
+  - Modify Plan still displays drag/reorder affordance where needed.
+  - Mobile drag reorder in `Modify Plan` remains working.
+  - Order persistence remains working after going back/reopening.
+  - Order persistence remains working after refresh.
+  - Red X remove remains visible and working on `My Plans`.
+  - Red X remove remains visible and working on `Modify Plan`.
+  - No up/down reorder buttons return.
+  - No unrelated plan card layout changes.
+  - Works on desktop.
+  - Works on mobile.

@@ -87,3 +87,18 @@ When fixing the red X remove button:
 - Swipe left must reveal only the red X circle icon.
 - Red X remove must continue working after swipe reveal.
 - Fixes to unrelated UI polish must not break plan creation, red X remove, drag reorder, or order persistence.
+
+
+## Locked after Hide Drag Handles V2 verification — 2026-06-30
+
+- Main My Plans game rows must not collapse into a narrow text column.
+- Main My Plans game titles and descriptions must remain readable.
+- Red X remove buttons must not overlap My Plans game text unreadably.
+- Main My Plans page must not show drag handles on game rows.
+- Modify Plan drag handles must remain available where drag sorting is intended.
+- Modify Plan drag sorting must continue working.
+- Red X remove behavior must continue working.
+- Find Games redesign must continue working.
+- Game Page redesign must continue working.
+- Universal light footer must continue working.
+- Desktop width consistency must continue working.

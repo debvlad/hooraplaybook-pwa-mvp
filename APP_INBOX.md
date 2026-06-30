@@ -69,3 +69,22 @@
 - Use these as the source of truth for the next single coding ticket:
   - P1 — Redesign Game Page Layout and Functionality
 - The ticket should stay scoped only to the individual Game Page.
+
+
+## 2026-06-30 — Regression Captured: Hide Drag Handles V1 Broke My Plans Layout
+
+### Regression — Hide Drag Handles V1 broke My Plans card layout on desktop/mobile
+- Source: Local testing of P3 — Hide Drag Handles on Main My Plans Page.
+- V1 failed and should not be committed.
+- Regression details:
+  - My Plans page layout broke on desktop and mobile.
+  - Game rows inside saved plan cards collapsed into a narrow text column.
+  - Game titles and descriptions became squeezed and hard to read.
+  - Red X remove button floated over the squeezed text area.
+  - Plan cards no longer looked visually correct.
+- Corrective fix:
+  - V2 restored My Plans layout on desktop.
+  - V2 restored My Plans layout on mobile.
+  - V2 hides drag handles only on the main My Plans page.
+  - V2 keeps Modify Plan drag handles visible and working.
+  - V2 keeps red X remove controls visible and working.

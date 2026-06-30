@@ -171,3 +171,66 @@
 - Mark P1 mobile Modify Plan reorder / swipe behavior as fixed and verified.
 - Lock the working drag reorder, persistence, swipe-left red X reveal, and red X remove behaviors.
 - Do not commit `_backups/`.
+
+
+## 2026-06-30 — Local Test — P3 Hide Drag Handles on Main My Plans Page — V1 Failed, V2 Verified
+
+### Revision tested
+- Ticket: P3 — Hide Drag Handles on Main My Plans Page
+- Test phase:
+  - V1 failed / regression found.
+  - V2 fix tested locally and confirmed working.
+- Deployment status: Not deployed yet.
+- Commit: Not provided in PM note.
+
+### What was tested
+- Account > My Plans on desktop.
+- Account > My Plans on mobile.
+- Main saved plan cards with games inside them.
+- Red X remove buttons inside saved plans.
+- Modify Plan drag handles and drag sorting.
+- Existing Find Games redesign.
+- Existing Game Page redesign.
+- Universal light footer.
+- Desktop width consistency.
+
+### V1 result — Failed / regression
+- The app still opened.
+- My Plans page was reachable.
+- Red X remove buttons were still visible.
+- However, the V1 drag-handle hiding fix broke the My Plans page layout on both desktop and mobile.
+- Game rows inside saved plan cards collapsed into a very narrow text column.
+- Game titles and descriptions became squeezed and hard to read.
+- The red X remove button floated over the squeezed text area.
+- The plan cards no longer looked visually correct.
+- V1 should not be committed.
+
+### V2 result — Fixed / verified locally
+- V2 restored My Plans layout on desktop.
+- V2 restored My Plans layout on mobile.
+- Drag handles are hidden on the main My Plans page.
+- Modify Plan drag handles still work.
+- Modify Plan drag sorting still works.
+- Red X remove behavior still works.
+- Find Games redesign still works.
+- Game Page redesign still works.
+- Universal light footer still works.
+- Desktop width consistency still works.
+
+### Console errors
+- Not reported.
+
+### Desktop result
+- V1: broken layout; My Plans game rows squeezed/collapsed.
+- V2: layout restored; drag handles hidden on main My Plans page.
+
+### Mobile result
+- V1: broken layout; game content squeezed and red X overlapped text.
+- V2: layout restored; drag handles hidden on main My Plans page.
+
+### Decision
+- Do not commit V1.
+- Treat V1 as failed.
+- Treat V2 as the successful corrective fix.
+- Mark P3 — Hide Drag Handles on Main My Plans Page as fixed and locally verified after V2.
+- Do not update `RELEASE_NOTES.md` until this batch is deployed live.
