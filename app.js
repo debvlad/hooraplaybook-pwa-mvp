@@ -976,9 +976,22 @@ function hpUnpublishModeratedReview(review) {
 // HOORAPLAYBOOK_APPROVED_REVIEW_PUBLISH_FIX_V8_END
 
 function renderReviewsScreen(id) {
-  const g = state.games.find(x=>x.id===id); if (!g) return '';
-  const reviews = hpPublishedReviewsForGame(id);
-  return `<div class="app-frame game-page-frame"><header class="topbar light-header">${headerBackButton()}<div class="topbar-title">REVIEWS</div><div></div></header><main class="content"><div class="card review-summary"><div class="review-score">${g.averageRating.toFixed(1)}</div><div>${stars(g.averageRating)}<div class="review-meta">${g.ratingCount} ratings and ${reviews.filter(r=>r.reviewText).length} reviews</div></div></div><button class="btn btn-primary full" style="margin:18px 0" data-go="/app/games/${id}/rate">Rate This Game</button><section><h2 style="text-transform:uppercase">Reviews:</h2>${reviews.map(renderReviewRow).join('') || '<p class="help">No written reviews yet.</p>'}</section></main></div>`;
+  const game = state.games.find(x => x.id === id);
+  if (!game) return `<div class="app-frame hp-public-reviews-frame"><main class="hp-public-reviews-page"><header class="hp-public-reviews-header"><button class="icon-btn hp-game-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<span aria-hidden="true"></span></header><section class="hp-public-reviews-empty"><h1>Game not found</h1><button class="btn btn-primary full" data-go="/app/find">Back to Find Games</button></section></main></div>`;
+
+  const reviews = typeof hpPublishedReviewsForGame === 'function'
+    ? hpPublishedReviewsForGame(id)
+    : state.ratings.filter(r => r.gameId === id && r.reviewStatus === 'published');
+
+  return `<div class="app-frame hp-public-reviews-frame"><main class="hp-public-reviews-page" aria-label="${escapeHTML(game.title)} reviews page"><header class="hp-public-reviews-header"><button class="icon-btn hp-game-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<span aria-hidden="true"></span></header><section class="hp-public-reviews-title-section"><h1>${escapeHTML(game.title)}</h1><div class="hp-public-rating-block" aria-label="${Number(game.averageRating || 0).toFixed(1)} average rating from ${Number(game.ratingCount || 0)} ratings"><div class="hp-detail-stars">${gameDetailStars(Number(game.averageRating || 0))}</div><span><strong>${Number(game.averageRating || 0).toFixed(1)}</strong> (${Number(game.ratingCount || 0)} ${Number(game.ratingCount || 0) === 1 ? 'rating' : 'ratings'} · ${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'})</span></div><button class="hp-rate-this-game-button" data-go="/app/games/${game.id}/leave-review">Rate This Game</button></section><section class="hp-public-review-list-section"><h2>REVIEWS:</h2>${reviews.length ? `<div class="hp-public-review-list">${reviews.map(renderPublicReviewRow).join('')}</div>` : `<p class="hp-public-no-reviews">No written reviews yet.</p>`}</section></main></div>`;
+}
+function renderPublicReviewRow(review) {
+  const user = state.users.find(x => x.id === review.userId) || { fullName: 'HooraPlaybook User', email: '' };
+  const displayName = user.fullName || user.email || review.reviewerName || 'HooraPlaybook User';
+  const date = new Date(review.createdAt || review.submittedAt || Date.now());
+  const safeDate = Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const reviewText = review.reviewText || review.moderatedReviewText || review.text || '';
+  return `<article class="hp-public-review-row"><h3>${escapeHTML(displayName)}</h3><div class="hp-public-review-meta"><div class="hp-detail-stars">${gameDetailStars(Number(review.rating || 0))}</div><span>${escapeHTML(safeDate)}</span></div>${reviewText ? `<p>${escapeHTML(reviewText)}</p>` : ''}</article>`;
 }
 function renderReviewRow(r) { const u = state.users.find(x=>x.id===r.userId) || {fullName:'HooraPlaybook User'}; return `<div class="review-row"><div class="avatar">${initials(u.fullName)}</div><div><div class="review-name">${u.fullName}</div><div>${stars(r.rating,true)} <span class="review-meta">${new Date(r.createdAt).toLocaleString()}</span></div>${r.reviewText?`<p class="help" style="font-size:15px">${escapeHTML(r.reviewText)}</p>`:''}</div></div>`; }
 function initials(name='User') { return name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(); }
