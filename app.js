@@ -258,7 +258,7 @@ function goBack() {
 }
 function headerBackButton() { return `<button class="icon-btn back-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>`; }
 function headerBrand() { return `<div class="logo header-brand"><img class="brand-mark" src="/assets/hooraplaybook-logo.png" alt=""><span class="brand-text">${APP_LOGO}</span></div>`; }
-function headerActions() { return `<div class="header-actions"><button class="icon-btn icon-image-btn" data-open-sort title="Sort" aria-label="Sort"><img src="/assets/sort.png" alt=""></button><button class="icon-btn icon-image-btn" data-go="/filter" title="Filter" aria-label="Filter"><img src="/assets/filter.png" alt=""></button></div>`; }
+function headerActions() { return `<div class="header-actions"><button class="icon-btn icon-image-btn" data-go="/filter" title="Filter" aria-label="Open filters">${typeof hpIcon === 'function' ? hpIcon('filter') : '<img src="/assets/filter.png" alt="">'}</button><button class="icon-btn icon-image-btn" data-open-sort title="Sort" aria-label="Sort games">${typeof hpIcon === 'function' ? hpIcon('sort') : '<img src="/assets/sort.png" alt="">'}</button></div>`; }
 
 function parseRoute() {
   const raw = window.location.hash.replace(/^#/, '') || '/';
@@ -347,15 +347,19 @@ function isStandaloneGameRoute() {
 
 function renderAppShell(inner, opts = {}) {
   const title = opts.title || '';
-  return `<div class="app-frame">${!navigator.onLine ? '<div class="offline-banner">Offline mode: payments, uploads, and submissions are disabled.</div>' : ''}<header class="topbar light-header">${headerBackButton()}${title ? `<div class="topbar-title">${title}</div>` : headerBrand()}${headerActions()}</header>${inner}${renderBottomNav()}</div>`;
+  const shellClass = route.raw === '/app/find' || route.raw === '/app' ? 'app-frame find-shell' : 'app-frame';
+  return `<div class="${shellClass}">${!navigator.onLine ? '<div class="offline-banner">Offline mode: payments, uploads, and submissions are disabled.</div>' : ''}<header class="topbar light-header">${headerBackButton()}${title ? `<div class="topbar-title">${title}</div>` : headerBrand()}${headerActions()}</header>${inner}${renderBottomNav()}</div>`;
 }
 
 function renderBottomNav() {
   const active = route.raw;
   const items = [
-    ['/app/find','🎮','Find'], ['/app/favorites','♡','Favorites'], ['/app/submit','＋','Add'], ['/app/account','♙','Account']
+    ['/app/find', hpIcon('search'), 'Find'],
+    ['/app/favorites', hpIcon('heart'), 'Favorites'],
+    ['/app/tools', hpIcon('smile'), 'Icebreakers'],
+    ['/app/account', hpIcon('account'), 'Account']
   ];
-  return `<nav class="bottom-nav bottom-nav-4">${items.map(([path,icon,label])=>`<button class="nav-item ${active.startsWith(path)?'active':''}" data-go="${path}"><span class="nav-icon">${icon}</span><span>${label}</span></button>`).join('')}</nav>`;
+  return `<nav class="bottom-nav bottom-nav-4" aria-label="Main navigation">${items.map(([path,icon,label])=>`<button class="nav-item ${active.startsWith(path)?'active':''}" data-go="${path}"><span class="nav-icon">${icon}</span><span>${label}</span></button>`).join('')}</nav>`;
 }
 
 function renderAppRoute() {
@@ -376,8 +380,7 @@ function renderAppRoute() {
 
 function renderFind() {
   const games = getFilteredGames();
-  const user = currentUser();
-  return `<main class="content"><div class="search-row single-search"><div class="search-box"><span class="search-icon">⌕</span><input id="search-input" value="${escapeHTML(state.search)}" placeholder="Search games, categories, materials…"></div></div>${renderMagicFinder()}<div class="section-title"><h2>Explore… ${games.length} games</h2><span>${hasProAccess(user)?'PRO access':'Free plan'}</span></div><div class="sort-row"><strong style="font-size:20px;color:var(--gp-muted);font-style:italic">SORT GAMES BY:</strong><button class="sort-trigger" data-open-sort>${state.sort}<span>⌄</span></button></div><div class="game-list">${games.map(renderGameCard).join('') || renderNoResults()}</div></main>${renderSortModalIfNeeded()}`;
+  return `<main class="content find-page"><section class="find-title-block"><h1>Find Games</h1></section><section class="find-search-wrap"><label class="sr-only" for="search-input">Search games</label><div class="find-search-field"><span class="find-search-icon">${hpIcon('search')}</span><input id="search-input" type="search" value="${escapeHTML(state.search)}" placeholder="Search games, categories, or themes" autocomplete="off"></div></section>${renderFindActiveChips()}<section class="find-games-list" aria-label="Games">${games.map(renderFindGameCard).join('') || renderFindNoResults()}</section></main>${renderSortModalIfNeeded()}`;
 }
 
 function renderMagicFinder() {
@@ -386,6 +389,118 @@ function renderMagicFinder() {
   const category = normalizeCategory(f.category || f.purpose || 'Team-building');
   return `<section class="hero-card"><h1>Tell us what you have.</h1><p>Smart Finder recommends games by age, group size, time, space, categories, materials, and safety.</p><form id="finder-form" class="form-grid"><div class="two-col"><label><span class="label">Group size</span><input class="input" name="groupSize" type="number" value="${f.groupSize}"></label><label><span class="label">Minutes</span><input class="input" name="time" type="number" value="${f.time}"></label></div><div class="two-col"><label><span class="label">Ages from</span><input class="input" name="ageMin" type="number" value="${f.ageMin}"></label><label><span class="label">Ages to</span><input class="input" name="ageMax" type="number" value="${f.ageMax}"></label></div><label><span class="label">Available Materials</span><button type="button" class="selector-row" data-go="/app/materials"><span>${escapeHTML(materialsText)}</span><strong>›</strong></button><input type="hidden" name="materials" value="${escapeHTML(materialsText)}"></label><div class="two-col"><label><span class="label">Space</span><select class="input" name="space"><option ${f.space==='indoor'?'selected':''}>indoor</option><option ${f.space==='outdoor'?'selected':''}>outdoor</option><option ${f.space==='both'?'selected':''}>both</option></select></label><label><span class="label">Category</span><select class="input" name="category">${STANDARD_CATEGORIES.map(x=>`<option ${category===x?'selected':''}>${x}</option>`).join('')}</select></label></div><button class="btn btn-primary full">Find 3 Great Games</button></form></section>`;
 }
+
+// HOORAPLAYBOOK_FIND_GAMES_REDESIGN_V1_START
+function renderFindActiveChips() {
+  const chips = [];
+  const f = state.finder || {};
+
+  if (Number.isFinite(Number(f.ageMin)) && Number.isFinite(Number(f.ageMax)) && Number(f.ageMin) > 0 && Number(f.ageMax) < 99) {
+    chips.push({ key: 'age', icon: hpIcon('users'), label: `Ages ${f.ageMin}–${f.ageMax}` });
+  }
+
+  if (Number.isFinite(Number(f.groupSize)) && Number(f.groupSize) > 0) {
+    chips.push({ key: 'group', icon: hpIcon('users'), label: `${f.groupSize} players` });
+  }
+
+  if (Number.isFinite(Number(f.time)) && Number(f.time) > 0) {
+    chips.push({ key: 'time', icon: hpIcon('clock'), label: `${f.time} min` });
+  }
+
+  if (f.space && f.space !== 'both') {
+    chips.push({ key: 'space', icon: hpIcon('home'), label: String(f.space).charAt(0).toUpperCase() + String(f.space).slice(1) });
+  }
+
+  (state.filters || []).forEach(filter => {
+    chips.push({ key: `filter:${filter}`, icon: hpIcon('tag'), label: filter });
+  });
+
+  if (!chips.length) return '';
+
+  return `<section class="active-filters" aria-label="Active filters">${chips.map(chip => `<button class="filter-chip" data-remove-find-chip="${escapeHTML(chip.key)}" aria-label="Remove ${escapeHTML(chip.label)} filter"><span class="chip-icon">${chip.icon}</span><span>${escapeHTML(chip.label)}</span><span class="chip-x" aria-hidden="true">×</span></button>`).join('')}</section>`;
+}
+
+function removeFindChip(kind) {
+  state.finder = state.finder || {};
+  if (kind === 'age') {
+    state.finder.ageMin = 0;
+    state.finder.ageMax = 99;
+  } else if (kind === 'group') {
+    state.finder.groupSize = 0;
+  } else if (kind === 'time') {
+    state.finder.time = 0;
+  } else if (kind === 'space') {
+    state.finder.space = 'both';
+  } else if (String(kind).startsWith('filter:')) {
+    const filter = String(kind).slice('filter:'.length);
+    state.filters = (state.filters || []).filter(item => item !== filter);
+  }
+  saveState();
+  render();
+}
+
+function renderFindGameCard(game) {
+  const user = currentUser();
+  const locked = game.accessLevel === 'pro' && !hasProAccess(user);
+  const fav = isFavorite(game.id);
+  const inPlan = isGameInAnyPlan(game.id);
+
+  return `<article class="hp-find-game-card" data-game-card="${game.id}"><div class="hp-card-media-row"><div class="hp-game-image-wrap">${renderFindGameVisual(game)}</div><div class="hp-card-actions"><button class="hp-favorite-button ${fav?'active':''}" data-toggle-favorite="${game.id}" aria-label="${fav ? 'Remove' : 'Add'} ${escapeHTML(game.title)} ${fav ? 'from' : 'to'} favorites">${fav ? hpIcon('heartFilled') : hpIcon('heart')}</button><button class="hp-plan-button ${inPlan?'added':''}" data-add-to-plan="${game.id}" aria-label="Add ${escapeHTML(game.title)} to Plan"><span>+</span> Plan</button></div></div><div class="hp-card-body"><h2 class="hp-game-title">${escapeHTML(game.title)}</h2><div class="hp-meta-grid">${renderFindGameMeta(game)}</div></div>${locked?`<div class="hp-lock-note"><strong>PRO</strong> Upgrade to unlock full instructions.</div>`:''}</article>`;
+}
+
+function renderFindGameVisual(game) {
+  return `<div class="hp-game-image hp-thumb-${escapeHTML(game.thumb || 'camp')}"><span>${escapeHTML(game.title)}</span></div>`;
+}
+
+function renderFindGameMeta(game) {
+  const items = [
+    [hpIcon('users'), `${game.groupSizeMin}–${game.groupSizeMax} players`],
+    [hpIcon('user'), `Ages ${game.bestAgeMin}–${game.bestAgeMax}`],
+    [hpIcon('clock'), game.timeMin === game.timeMax ? `${game.timeMin} min` : `${game.timeMin}–${game.timeMax} min`],
+    [hpIcon('book'), hpPrimaryCategory(game)],
+    [hpIcon('box'), hpMaterialLabel(game)]
+  ];
+
+  return items.map(([icon, label]) => `<span class="hp-meta-item">${icon}<span>${escapeHTML(label)}</span></span>`).join('');
+}
+
+function hpPrimaryCategory(game) {
+  const candidates = [...(game.purpose || []), ...(game.tags || [])].filter(Boolean);
+  const preferred = candidates.find(item => !/pro|indoor|outdoor|low prep|no prep|cups|paper|balls|chairs|rope|balloons|cones|tape/i.test(item));
+  return preferred || candidates[0] || 'Game';
+}
+
+function hpMaterialLabel(game) {
+  const materials = game.materials || [];
+  if (!materials.length) return 'No Materials';
+  return materials.map(item => String(item).replace(/\b\w/g, ch => ch.toUpperCase())).join(' & ');
+}
+
+function renderFindNoResults() {
+  return `<div class="hp-empty-card"><h2>No perfect matches yet.</h2><p>Try removing one filter, allowing substitute materials, or choosing a wider time range.</p><div class="hp-empty-actions"><button class="btn btn-primary" data-clear-filters>Clear Filters</button><button class="btn btn-secondary" data-go="/filter">Adjust Filters</button></div></div>`;
+}
+
+function hpIcon(name) {
+  const common = 'width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+  const icons = {
+    search: `<svg ${common}><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>`,
+    heart: `<svg ${common}><path d="M20.8 4.6a5.2 5.2 0 0 0-7.4 0L12 6l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 20.8l8.8-8.8a5.2 5.2 0 0 0 0-7.4Z"></path></svg>`,
+    heartFilled: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.8 4.6a5.2 5.2 0 0 0-7.4 0L12 6l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 20.8l8.8-8.8a5.2 5.2 0 0 0 0-7.4Z"></path></svg>`,
+    users: `<svg ${common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+    user: `<svg ${common}><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+    clock: `<svg ${common}><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>`,
+    book: `<svg ${common}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"></path></svg>`,
+    box: `<svg ${common}><path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg>`,
+    filter: `<svg ${common}><path d="M4 6h10"></path><path d="M18 6h2"></path><circle cx="16" cy="6" r="2"></circle><path d="M4 12h3"></path><path d="M11 12h9"></path><circle cx="9" cy="12" r="2"></circle><path d="M4 18h12"></path><path d="M20 18h0"></path><circle cx="18" cy="18" r="2"></circle></svg>`,
+    sort: `<svg ${common}><path d="M8 4v16"></path><path d="m4 8 4-4 4 4"></path><path d="M16 20V4"></path><path d="m12 16 4 4 4-4"></path></svg>`,
+    smile: `<svg ${common}><circle cx="12" cy="12" r="9"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></svg>`,
+    account: `<svg ${common}><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+    home: `<svg ${common}><path d="m3 10 9-7 9 7"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>`,
+    tag: `<svg ${common}><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"></path><circle cx="7.5" cy="7.5" r=".5"></circle></svg>`
+  };
+  return icons[name] || '';
+}
+// HOORAPLAYBOOK_FIND_GAMES_REDESIGN_V1_END
 
 function renderGameCard(game) {
   const user = currentUser();
@@ -604,6 +719,7 @@ function bindEvents() {
   document.querySelectorAll('[data-back]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); goBack(); }));
   document.querySelectorAll('[data-filter-chip]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toggleFilter(el.dataset.filterChip); }));
   document.querySelectorAll('[data-material-chip]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toggleMaterial(el.dataset.materialChip); }));
+  document.querySelectorAll('[data-remove-find-chip]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); removeFindChip(el.dataset.removeFindChip); }));
   byId('search-input')?.addEventListener('input', handleSearchInput);
   byId('finder-form')?.addEventListener('submit', handleFinder);
   byId('login-form')?.addEventListener('submit', handleLogin);
