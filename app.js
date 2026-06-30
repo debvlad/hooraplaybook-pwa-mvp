@@ -368,6 +368,7 @@ function renderAppRoute() {
   if (p[0] !== 'app') return `<main class="content"><button class="btn btn-primary" data-go="/app/find">Open HooraPlaybook</button></main>`;
   if (p[1] === 'materials') return renderMaterialsSelector();
   if (p[1] === 'games' && p[2] && p[3] === 'rate') return renderRateScreen(p[2]);
+  if (p[1] === 'games' && p[2] && p[3] === 'leave-review') return renderLeaveReviewPage(p[2]);
   if (p[1] === 'games' && p[2] && p[3] === 'reviews') return renderReviewsScreen(p[2]);
   if (p[1] === 'games' && p[2] && p[3] === 'notes') return renderNotesScreen(p[2]);
   if (p[1] === 'games' && p[2] && p[3] === 'suggest-bible') return renderSuggestBibleConnection(p[2]);
@@ -764,6 +765,134 @@ function gameDetailIcon(name) {
 }
 // HOORAPLAYBOOK_GAME_PAGE_REDESIGN_V1_END
 
+// HOORAPLAYBOOK_LEAVE_REVIEW_AFTER_VOTE_V1_START
+function renderLeaveReviewPage(gameId) {
+  const game = state.games.find(g => g.id === gameId);
+  if (!game) return renderAppShell(`<main class="content"><h1>Game not found</h1></main>`);
+
+  const userRating = getUserGameRating(gameId) || 0;
+  const reviewDraft = getUserReviewDraft(gameId);
+
+  return `<div class="app-frame hp-review-frame"><main class="hp-review-page" aria-label="Leave a review for ${escapeHTML(game.title)}"><header class="hp-review-header"><button class="icon-btn hp-review-header-btn" data-back aria-label="Back"><img class="back-icon" src="/assets/back_button.png" alt=""></button>${headerBrand()}<span aria-hidden="true"></span></header><section class="hp-review-title-section"><h1>${escapeHTML(game.title)}</h1></section><section class="hp-review-rating-section" aria-label="Your rating"><h2>Your rating</h2><div class="hp-review-star-row" role="radiogroup" aria-label="Select your star rating">${[1,2,3,4,5].map(value => `<button class="hp-review-star ${value <= userRating ? 'is-selected' : ''}" type="button" data-review-star="${game.id}:${value}" role="radio" aria-checked="${value === userRating ? 'true' : 'false'}" aria-label="${value} star${value === 1 ? '' : 's'}">★</button>`).join('')}</div><p>Tap a star to rate. Your rating updates the public average.</p><div class="hp-current-average-card"><div class="hp-current-average-stars" aria-label="${game.averageRating || 0} out of 5 stars">${reviewAverageStars(game.averageRating || 0)}</div><span>Current average</span><strong>${reviewRatingText(game)}</strong></div></section><form id="leave-review-form" class="hp-review-form" data-game-id="${game.id}"><label class="hp-review-textarea-label"><span>Review</span><textarea name="review" placeholder="Share what worked, what didn’t, and any tips for other leaders...">${escapeHTML(reviewDraft.text || '')}</textarea></label><input id="review-media-input" class="hp-review-file-input" type="file" accept="image/*,video/*" multiple data-review-media-input="${game.id}"><button class="hp-add-media-button" type="button" data-review-media-button="${game.id}">${reviewIcon('media')}<span>${reviewDraft.mediaCount ? `${reviewDraft.mediaCount} file${reviewDraft.mediaCount === 1 ? '' : 's'} selected` : 'Add images or Video'}</span></button><button class="hp-submit-review-button" type="submit">Submit Review</button></form></main></div>`;
+}
+
+function getReviewUserId() {
+  return currentUser()?.id || 'guest';
+}
+
+function getUserGameRating(gameId) {
+  state.userGameRatings = state.userGameRatings || {};
+  return Number(state.userGameRatings[`${getReviewUserId()}:${gameId}`] || 0);
+}
+
+function setUserGameRating(payload) {
+  const [gameId, rawValue] = String(payload).split(':');
+  const rating = Math.max(1, Math.min(5, Number(rawValue) || 0));
+  const game = state.games.find(g => g.id === gameId);
+  if (!game || !rating) return;
+
+  state.userGameRatings = state.userGameRatings || {};
+  const key = `${getReviewUserId()}:${gameId}`;
+  const previous = Number(state.userGameRatings[key] || 0);
+  const currentCount = Number(game.ratingCount || 0);
+  const currentAverage = Number(game.averageRating || 0);
+  const currentTotal = currentAverage * currentCount;
+
+  if (previous > 0 && currentCount > 0) {
+    game.averageRating = (currentTotal - previous + rating) / currentCount;
+  } else {
+    game.ratingCount = currentCount + 1;
+    game.averageRating = (currentTotal + rating) / game.ratingCount;
+  }
+
+  game.averageRating = Math.round(Number(game.averageRating || 0) * 10) / 10;
+  state.userGameRatings[key] = rating;
+  saveState();
+  render();
+}
+
+function getUserReviewDraft(gameId) {
+  state.reviewDrafts = state.reviewDrafts || {};
+  return state.reviewDrafts[`${getReviewUserId()}:${gameId}`] || { text: '', mediaCount: 0 };
+}
+
+function saveUserReviewDraft(gameId, patch = {}) {
+  state.reviewDrafts = state.reviewDrafts || {};
+  const key = `${getReviewUserId()}:${gameId}`;
+  state.reviewDrafts[key] = { ...getUserReviewDraft(gameId), ...patch };
+  saveState();
+}
+
+function handleReviewMediaButton(gameId) {
+  const input = document.getElementById('review-media-input');
+  input?.click();
+}
+
+function handleReviewMediaChange(input) {
+  const gameId = input.dataset.reviewMediaInput;
+  const count = input.files ? input.files.length : 0;
+  saveUserReviewDraft(gameId, { mediaCount: count });
+  render();
+}
+
+function handleLeaveReviewSubmit(e) {
+  e.preventDefault();
+  const gameId = e.target.dataset.gameId;
+  const game = state.games.find(g => g.id === gameId);
+  if (!game) return;
+
+  const fd = new FormData(e.target);
+  const text = String(fd.get('review') || '').trim();
+  const rating = getUserGameRating(gameId);
+  const draft = getUserReviewDraft(gameId);
+
+  state.gameReviews = Array.isArray(state.gameReviews) ? state.gameReviews : [];
+  const userId = getReviewUserId();
+  const existing = state.gameReviews.find(review => review.gameId === gameId && review.userId === userId);
+
+  const savedReview = {
+    id: existing?.id || makeId('review'),
+    gameId,
+    userId,
+    rating,
+    text,
+    mediaCount: draft.mediaCount || 0,
+    createdAt: existing?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (existing) {
+    Object.assign(existing, savedReview);
+  } else {
+    state.gameReviews.push(savedReview);
+  }
+
+  saveUserReviewDraft(gameId, { text, mediaCount: draft.mediaCount || 0 });
+  saveState();
+  toast('Review submitted.');
+  go(`/app/games/${gameId}`);
+}
+
+function reviewAverageStars(rating = 0) {
+  const rounded = Math.round(Number(rating) || 0);
+  return [1,2,3,4,5].map(i => `<span class="${i <= rounded ? 'is-filled' : 'is-empty'}">★</span>`).join('');
+}
+
+function reviewRatingText(game) {
+  const count = Number(game.ratingCount || 0);
+  if (!count) return 'No ratings yet';
+  return `${Number(game.averageRating || 0).toFixed(1)} (${count} ${count === 1 ? 'rating' : 'ratings'})`;
+}
+
+function reviewIcon(name) {
+  const common = 'width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+  const icons = {
+    media: `<svg ${common}><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path><path d="M18 3v4"></path><path d="M16 5h4"></path></svg>`
+  };
+  return icons[name] || '';
+}
+// HOORAPLAYBOOK_LEAVE_REVIEW_AFTER_VOTE_V1_END
+
 function renderReviewsScreen(id) {
   const g = state.games.find(x=>x.id===id); if (!g) return '';
   const reviews = state.ratings.filter(r=>r.gameId===id && r.reviewStatus==='published');
@@ -929,7 +1058,11 @@ function bindEvents() {
   document.querySelectorAll('[data-upgrade]').forEach(el => el.addEventListener('click', () => handleUpgrade(el.dataset.upgrade)));
   document.querySelectorAll('[data-share-game]').forEach(el => el.addEventListener('click', () => shareGame(el.dataset.shareGame)));
   document.querySelectorAll('[data-random-icebreaker]').forEach(el => el.addEventListener('click', randomIcebreaker));
-  document.querySelectorAll('[data-game-vote]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleGameVote(el.dataset.gameVote); }));
+  document.querySelectorAll('[data-game-vote]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleGameVote(el.dataset.gameVote); const gameId = String(el.dataset.gameVote || '').split(':')[0]; if (gameId) go(`/app/games/${gameId}/leave-review`); }));
+  document.querySelectorAll('[data-review-star]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); setUserGameRating(el.dataset.reviewStar); }));
+  document.querySelectorAll('[data-review-media-button]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); handleReviewMediaButton(el.dataset.reviewMediaButton); }));
+  document.querySelectorAll('[data-review-media-input]').forEach(el => el.addEventListener('change', e => handleReviewMediaChange(e.target))); 
+  byId('leave-review-form')?.addEventListener('submit', handleLeaveReviewSubmit);
   byId('bible-suggestion-form')?.addEventListener('submit', handleBibleSuggestion);
 }
 
